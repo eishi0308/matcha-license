@@ -1,0 +1,113 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap');
+@import 'leaflet/dist/leaflet.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-inter: 'Inter', system-ui, sans-serif;
+  --font-playfair: 'Playfair Display', Georgia, serif;
+}
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-inter);
+  background: #fdfcf7;
+  color: #1a1a1a;
+  overflow-x: hidden;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #c2e1b5; border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: #6eb35c; }
+
+/* Leaflet overrides */
+.leaflet-container {
+  font-family: var(--font-inter) !important;
+  background: #f0ede4 !important;
+}
+
+.leaflet-tile-pane { filter: saturate(0.8) brightness(1.02); }
+
+.custom-pin {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+  border: 2.5px solid rgba(255,255,255,0.9);
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+.custom-pin:hover { transform: rotate(-45deg) scale(1.15); }
+.custom-pin .pin-inner {
+  transform: rotate(45deg);
+  font-size: 13px;
+  font-weight: 700;
+  color: white;
+  letter-spacing: -0.5px;
+}
+
+.pin-a { background: #2e6027; }
+.pin-b { background: #6eb35c; }
+.pin-c { background: #9ca3af; }
+.pin-d { background: #d1d5db; }
+
+/* Glassmorphism utility */
+.glass {
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.glass-dark {
+  background: rgba(15, 32, 16, 0.82);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(78, 151, 64, 0.2);
+}
+
+/* Level badge */
+.level-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.level-a { background: #e0f0d8; color: #2e6027; }
+.level-b { background: #d4edcc; color: #3a7a30; }
+.level-c { background: #f3f4f6; color: #6b7280; }
+.level-d { background: #fafafa; color: #9ca3af; }
+
+@layer utilities {
+  .text-balance { text-wrap: balance; }
+  .animate-delay-100 { animation-delay: 0.1s; }
+  .animate-delay-200 { animation-delay: 0.2s; }
+  .animate-delay-300 { animation-delay: 0.3s; }
+  .animate-delay-400 { animation-delay: 0.4s; }
+  .animate-delay-500 { animation-delay: 0.5s; }
+}
