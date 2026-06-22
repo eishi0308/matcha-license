@@ -1,12 +1,13 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Search, SlidersHorizontal, X, Leaf, ChevronDown, MapPin } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import CafeDetailPanel from "@/components/CafeDetailPanel";
-import { cafes, Cafe, levelConfig, TransparencyLevel, City, CafeType } from "@/data/cafes";
+import { Cafe, levelConfig, TransparencyLevel, City, CafeType } from "@/data/cafes";
+import { fetchCafes } from "@/lib/api";
 
 const MapClient = dynamic(() => import("@/components/MapClient"), {
   ssr: false,
@@ -67,12 +68,21 @@ const itemVariants = {
 };
 
 export default function MapPage() {
-  const [query,       setQuery]       = useState("");
-  const [levelFilter, setLevelFilter] = useState<LevelFilter>("All");
-  const [cityFilter,  setCityFilter]  = useState<CityFilter>("All");
-  const [typeFilter,  setTypeFilter]  = useState<CafeType | "All">("All");
+  const [cafes,        setCafes]       = useState<Cafe[]>([]);
+  const [loading,      setLoading]     = useState(true);
+  const [query,        setQuery]       = useState("");
+  const [levelFilter,  setLevelFilter] = useState<LevelFilter>("All");
+  const [cityFilter,   setCityFilter]  = useState<CityFilter>("All");
+  const [typeFilter,   setTypeFilter]  = useState<CafeType | "All">("All");
   const [selectedCafe, setSelectedCafe] = useState<Cafe | null>(null);
   const [sidebarOpen,  setSidebarOpen]  = useState(true);
+
+  useEffect(() => {
+    fetchCafes()
+      .then(setCafes)
+      .catch(() => setCafes([]))
+      .finally(() => setLoading(false));
+  }, []);
 
   const filtered = useMemo(() => cafes.filter((c) => {
     const q = query.toLowerCase();
@@ -93,6 +103,21 @@ export default function MapPage() {
   const activeFilters = [levelFilter, cityFilter, typeFilter].filter((f) => f !== "All").length;
 
   const clearAll = () => { setLevelFilter("All"); setCityFilter("All"); setTypeFilter("All"); setQuery(""); };
+
+  if (loading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-cream-50">
+        <div className="flex flex-col items-center gap-3">
+          <motion.div
+            className="w-10 h-10 rounded-full border-2 border-matcha-500 border-t-transparent"
+            animate={{ rotate: 360 }}
+            transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
+          />
+          <span className="text-sm text-gray-400">Loading cafes…</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-cream-50">
