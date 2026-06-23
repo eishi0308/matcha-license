@@ -18,3 +18,5 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 backend/target/
+backend/data/
+backend/src/main/resources/application.properties

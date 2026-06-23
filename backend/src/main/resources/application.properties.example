@@ -2,12 +2,12 @@
 server.port=8080
 
 # ── Database (H2 in-memory — zero setup required) ─────────────────────────────
-spring.datasource.url=jdbc:h2:mem:matchadb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+spring.datasource.url=jdbc:h2:file:./data/matchadb;AUTO_SERVER=TRUE
 spring.datasource.driver-class-name=org.h2.Driver
 spring.datasource.username=sa
 spring.datasource.password=
 spring.jpa.database-platform=org.hibernate.dialect.H2Dialect
-spring.jpa.hibernate.ddl-auto=create-drop
+spring.jpa.hibernate.ddl-auto=update
 spring.jpa.show-sql=false
 
 # H2 console (visit http://localhost:8080/h2-console while backend is running)
@@ -17,11 +17,11 @@ spring.h2.console.path=/h2-console
 # ── Google Places API ─────────────────────────────────────────────────────────
 # Required for cafe discovery. Get a key at: https://console.cloud.google.com
 # Enable "Places API (New)" on your project, then paste the key below.
-google.places.api.key=${GOOGLE_PLACES_API_KEY:}
+google.places.api.key=YOUR_GOOGLE_PLACES_API_KEY
 
 # ── OpenAI API ────────────────────────────────────────────────────────────────
-# Set OPENAI_API_KEY as an environment variable, or paste directly here
-openai.api.key=${OPENAI_API_KEY:}
+# Get a key at: https://platform.openai.com/api-keys
+openai.api.key=YOUR_OPENAI_API_KEY
 
 # ── Discovery Scheduler ────────────────────────────────────────────────────────
 # Set to true to enable weekly automatic discovery
