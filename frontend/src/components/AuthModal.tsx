@@ -34,7 +34,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab = "login" }: Aut
         // Backdrop
         <motion.div
           key="auth-backdrop"
-          className="fixed inset-0 z-[200] flex items-center justify-center p-4"
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
           style={{ backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)" }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
