@@ -92,7 +92,7 @@ export default function MapPage() {
       (cityFilter  === "All" || c.city  === cityFilter) &&
       (typeFilter  === "All" || c.type  === typeFilter)
     );
-  }), [query, levelFilter, cityFilter, typeFilter]);
+  }), [cafes, query, levelFilter, cityFilter, typeFilter]);
 
   const levelCounts = useMemo(() => {
     const counts: Record<string, number> = { A: 0, B: 0, C: 0, D: 0 };
