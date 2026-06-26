@@ -26,6 +26,7 @@ export async function fetchStats(): Promise<{
   byLevel: Record<string, number>;
   sydney: number;
   melbourne: number;
+  discovering: boolean;
 }> {
   const res = await fetch(`${API_URL}/api/cafes/stats`, { cache: "no-store" });
   if (!res.ok) throw new Error("Failed to fetch stats");

@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import CafeDetailPanel from "@/components/CafeDetailPanel";
 import { Cafe, levelConfig, TransparencyLevel, City, CafeType } from "@/data/cafes";
-import { fetchCafes } from "@/lib/api";
+import { fetchCafes, fetchStats } from "@/lib/api";
 
 const MapClient = dynamic(() => import("@/components/MapClient"), {
   ssr: false,
@@ -70,6 +70,7 @@ const itemVariants = {
 export default function MapPage() {
   const [cafes,        setCafes]       = useState<Cafe[]>([]);
   const [loading,      setLoading]     = useState(true);
+  const [discovering,  setDiscovering] = useState(false);
   const [query,        setQuery]       = useState("");
   const [levelFilter,  setLevelFilter] = useState<LevelFilter>("All");
   const [cityFilter,   setCityFilter]  = useState<CityFilter>("All");
@@ -78,10 +79,36 @@ export default function MapPage() {
   const [sidebarOpen,  setSidebarOpen]  = useState(true);
 
   useEffect(() => {
-    fetchCafes()
-      .then(setCafes)
-      .catch(() => setCafes([]))
-      .finally(() => setLoading(false));
+    let pollInterval: ReturnType<typeof setInterval> | null = null;
+
+    const load = async () => {
+      try {
+        const [cafesData, stats] = await Promise.all([fetchCafes(), fetchStats()]);
+        setCafes(cafesData);
+        setDiscovering(stats.discovering);
+
+        // If discovery is running and no cafes yet, poll every 5s
+        if (stats.discovering) {
+          pollInterval = setInterval(async () => {
+            try {
+              const [newCafes, newStats] = await Promise.all([fetchCafes(), fetchStats()]);
+              setCafes(newCafes);
+              setDiscovering(newStats.discovering);
+              if (!newStats.discovering) {
+                clearInterval(pollInterval!);
+              }
+            } catch {}
+          }, 5000);
+        }
+      } catch {
+        setCafes([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    load();
+    return () => { if (pollInterval) clearInterval(pollInterval); };
   }, []);
 
   const filtered = useMemo(() => cafes.filter((c) => {
@@ -213,6 +240,27 @@ export default function MapPage() {
         >
           {filtered.length} cafe{filtered.length !== 1 ? "s" : ""}
         </motion.span>
+
+        {/* Discovery in-progress badge */}
+        <AnimatePresence>
+          {discovering && (
+            <motion.div
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium"
+              style={{ background: "#e6f4e0", color: "#2e6027" }}
+              initial={{ opacity: 0, scale: 0.85 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.85 }}
+              transition={{ duration: 0.2 }}
+            >
+              <motion.div
+                className="w-2 h-2 rounded-full bg-matcha-600"
+                animate={{ opacity: [1, 0.3, 1] }}
+                transition={{ duration: 1.2, repeat: Infinity }}
+              />
+              Discovering…
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.div>
 
       {/* ── MAIN ─────────────────────────────────────────────────────── */}
@@ -293,8 +341,22 @@ export default function MapPage() {
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.25 }}
                   >
-                    <div className="text-2xl mb-2">🍵</div>
-                    <p className="text-sm text-gray-400">No cafes match your filters.</p>
+                    {discovering && cafes.length === 0 ? (
+                      <>
+                        <motion.div
+                          className="w-8 h-8 rounded-full border-2 border-matcha-500 border-t-transparent mx-auto mb-3"
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 0.9, repeat: Infinity, ease: "linear" }}
+                        />
+                        <p className="text-sm font-medium text-matcha-700">Discovering cafes…</p>
+                        <p className="text-xs text-gray-400 mt-1">Searching Google Maps & analysing menus</p>
+                      </>
+                    ) : (
+                      <>
+                        <div className="text-2xl mb-2">🍵</div>
+                        <p className="text-sm text-gray-400">No cafes match your filters.</p>
+                      </>
+                    )}
                   </motion.div>
                 ) : (
                   <motion.div
