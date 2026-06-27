@@ -27,10 +27,10 @@ const SPRING = { type: "spring" as const, stiffness: 300, damping: 28 };
 // ── Data ──────────────────────────────────────────────────────────────────
 
 const STATS = [
-  { value: 16,  suffix: "",  label: "Cafes Mapped" },
-  { value: 7,   suffix: "",  label: "Level A Verified" },
-  { value: 2,   suffix: "",  label: "Cities Covered" },
-  { value: 100, suffix: "%", label: "Evidence-Backed" },
+  { value: 33, suffix: "",  label: "Cafes Scanned" },
+  { value: 15, suffix: "",  label: "Mention Japanese Origin" },
+  { value: 2,  suffix: "",  label: "Cities Covered" },
+  { value: 11, suffix: "",  label: "Name Specific Source" },
 ];
 
 const LEVEL_CARDS = [
@@ -217,8 +217,7 @@ export default function HomePage() {
             initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.72, delay: 1.15, ease: EASE }}
           >
-            The first evidence-backed transparency map for Japanese matcha in Australia.
-            Every listing verified against public sources — no guessing, no marketing fluff.
+            We scan each cafe's official website and show you exactly what they publicly claim about their matcha sourcing — no opinions, no guesses, just their own words.
           </motion.p>
 
           {/* CTAs */}
