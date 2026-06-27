@@ -213,7 +213,8 @@ public class CafeService {
 
             if (analysis.evidenceQuote() != null) {
                 cafe.setEvidenceQuote(analysis.evidenceQuote());
-                cafe.setEvidenceSource(place.website());
+                String src = place.website() != null && place.website().length() > 250 ? place.website().substring(0, 250) : place.website();
+                cafe.setEvidenceSource(src);
                 cafe.setEvidenceSourceLabel("Official Website");
                 cafe.setEvidenceVerifiedDate(verifiedDate);
             }
@@ -227,7 +228,8 @@ public class CafeService {
         }
 
         if (place.website() != null) {
-            cafe.setWebsite(place.website().replaceFirst("^https?://", "").replaceAll("/$", ""));
+            String w = place.website().replaceFirst("^https?://", "").replaceAll("/$", "");
+            cafe.setWebsite(w.length() > 250 ? w.substring(0, 250) : w);
         }
 
         return cafe;

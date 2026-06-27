@@ -27,10 +27,10 @@ const SPRING = { type: "spring" as const, stiffness: 300, damping: 28 };
 // ── Data ──────────────────────────────────────────────────────────────────
 
 const STATS = [
-  { value: 33, suffix: "+", label: "Cafes Indexed & Growing" },
-  { value: 15, suffix: "",  label: "Mention Japanese Origin" },
-  { value: 2,  suffix: "",  label: "Cities Covered" },
-  { value: 11, suffix: "",  label: "Name Specific Source" },
+  { value: 823, suffix: "+", label: "Cafes Indexed & Growing" },
+  { value: 50,  suffix: "",  label: "Mention Japanese Origin" },
+  { value: 2,   suffix: "",  label: "Cities Covered" },
+  { value: 37,  suffix: "",  label: "Name Specific Source" },
 ];
 
 const LEVEL_CARDS = [

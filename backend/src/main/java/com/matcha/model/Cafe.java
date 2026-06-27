@@ -27,11 +27,13 @@ public class Cafe {
     // Evidence stored as flat columns
     @Column(columnDefinition = "TEXT")
     private String evidenceQuote;
+    @Column(length = 1000)
     private String evidenceSource;
     private String evidenceSourceLabel;
     private String evidenceVerifiedDate;
 
     private String instagram;
+    @Column(length = 1000)
     private String website;
     private String priceRange;
 
