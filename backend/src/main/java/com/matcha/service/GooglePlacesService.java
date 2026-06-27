@@ -14,6 +14,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -48,9 +49,74 @@ public class GooglePlacesService {
             String address
     ) {}
 
+    // Key suburbs to search per city for maximum coverage
+    private static final Map<String, List<SuburbCoord>> CITY_SUBURBS = Map.of(
+        "Sydney", List.of(
+            new SuburbCoord("Sydney CBD",        -33.8688, 151.2093),
+            new SuburbCoord("Newtown",            -33.8979, 151.1783),
+            new SuburbCoord("Surry Hills",        -33.8853, 151.2115),
+            new SuburbCoord("Haymarket",          -33.8783, 151.2017),
+            new SuburbCoord("Chippendale",        -33.8855, 151.1996),
+            new SuburbCoord("Chatswood",          -33.7969, 151.1824),
+            new SuburbCoord("Bondi Junction",     -33.8914, 151.2490),
+            new SuburbCoord("Darlinghurst",       -33.8762, 151.2199),
+            new SuburbCoord("Redfern",            -33.8930, 151.2034),
+            new SuburbCoord("Glebe",              -33.8797, 151.1869),
+            new SuburbCoord("Parramatta",         -33.8150, 151.0011),
+            new SuburbCoord("Burwood",            -33.8775, 151.1036),
+            new SuburbCoord("Hurstville",         -33.9667, 151.1000),
+            new SuburbCoord("Strathfield",        -33.8750, 151.0833)
+        ),
+        "Melbourne", List.of(
+            new SuburbCoord("Melbourne CBD",      -37.8136, 144.9631),
+            new SuburbCoord("Fitzroy",            -37.7964, 144.9784),
+            new SuburbCoord("Collingwood",        -37.8036, 144.9860),
+            new SuburbCoord("Richmond",           -37.8183, 144.9986),
+            new SuburbCoord("South Yarra",        -37.8386, 144.9919),
+            new SuburbCoord("Brunswick",          -37.7699, 144.9600),
+            new SuburbCoord("Carlton",            -37.7988, 144.9657),
+            new SuburbCoord("St Kilda",           -37.8676, 144.9820),
+            new SuburbCoord("Hawthorn",           -37.8224, 145.0282),
+            new SuburbCoord("Prahran",            -37.8497, 144.9919),
+            new SuburbCoord("Footscray",          -37.8003, 144.8997),
+            new SuburbCoord("Box Hill",           -37.8196, 145.1239),
+            new SuburbCoord("Docklands",          -37.8148, 144.9468),
+            new SuburbCoord("Southbank",          -37.8230, 144.9631)
+        )
+    );
+
+    private record SuburbCoord(String name, double lat, double lng) {}
+
+    // City-wide query terms
+    private static final String[] CITY_QUERIES = {
+        "matcha cafe",
+        "matcha latte",
+        "japanese matcha",
+        "matcha bar",
+        "matcha dessert",
+        "matcha soft serve",
+        "hojicha cafe",
+        "japanese tea house",
+        "ceremonial matcha",
+        "matcha ice cream",
+        "japanese cafe",
+        "tea bar",
+        "wagashi",
+        "japanese dessert cafe",
+        "korean cafe matcha",
+    };
+
+    // Suburb-level terms (shorter, more targeted)
+    private static final String[] SUBURB_QUERIES = {
+        "matcha cafe",
+        "matcha latte",
+        "japanese cafe",
+        "hojicha",
+        "matcha dessert",
+    };
+
     /**
-     * Search for matcha cafes near the given city centre using multiple query terms.
-     * Results from all queries are deduplicated by Google Place ID.
+     * Search for matcha cafes using city-wide queries + suburb-level searches for full coverage.
      */
     public List<PlaceInfo> searchMatchaCafes(String cityName, double lat, double lng) throws Exception {
         if (apiKey == null || apiKey.isBlank()) {
@@ -61,26 +127,30 @@ public class GooglePlacesService {
             );
         }
 
-        // Multiple queries to maximise coverage
-        String[] queries = {
-            "matcha cafe " + cityName + " Australia",
-            "matcha latte " + cityName + " Australia",
-            "japanese matcha " + cityName + " Australia",
-            "matcha bar " + cityName + " Australia",
-        };
-
         Set<String>     seenIds = new HashSet<>();
         List<PlaceInfo> results = new ArrayList<>();
 
-        for (String query : queries) {
+        // 1. City-wide searches
+        for (String term : CITY_QUERIES) {
+            String query = term + " " + cityName + " Australia";
             System.out.printf("[GooglePlaces] Searching: \"%s\"%n", query);
-            List<PlaceInfo> batch = searchWithQuery(query, lat, lng);
-            for (PlaceInfo p : batch) {
-                if (seenIds.add(p.googleId())) {
-                    results.add(p);
-                }
+            for (PlaceInfo p : searchWithQuery(query, lat, lng)) {
+                if (seenIds.add(p.googleId())) results.add(p);
             }
-            Thread.sleep(500); // avoid hammering the API
+            Thread.sleep(500);
+        }
+
+        // 2. Suburb-level searches for maximum coverage
+        List<SuburbCoord> suburbs = CITY_SUBURBS.getOrDefault(cityName, List.of());
+        for (SuburbCoord suburb : suburbs) {
+            for (String term : SUBURB_QUERIES) {
+                String query = term + " " + suburb.name() + " Australia";
+                System.out.printf("[GooglePlaces] Searching suburb: \"%s\"%n", query);
+                for (PlaceInfo p : searchWithQuery(query, suburb.lat(), suburb.lng())) {
+                    if (seenIds.add(p.googleId())) results.add(p);
+                }
+                Thread.sleep(400);
+            }
         }
 
         System.out.printf("[GooglePlaces] Total unique places found in %s: %d%n", cityName, results.size());
@@ -92,7 +162,7 @@ public class GooglePlacesService {
     private List<PlaceInfo> searchWithQuery(String query, double lat, double lng) throws Exception {
         List<PlaceInfo> results   = new ArrayList<>();
         String          pageToken = null;
-        int             maxPages  = 3; // up to 60 results (20 per page)
+        int             maxPages  = 5; // up to 100 results (20 per page)
 
         for (int page = 0; page < maxPages; page++) {
             ObjectNode body = objectMapper.createObjectNode();
@@ -106,7 +176,7 @@ public class GooglePlacesService {
             ObjectNode center       = circle.putObject("center");
             center.put("latitude",  lat);
             center.put("longitude", lng);
-            circle.put("radius", 20000.0); // 20 km
+            circle.put("radius", 35000.0); // 35 km
 
             if (pageToken != null) {
                 body.put("pageToken", pageToken);

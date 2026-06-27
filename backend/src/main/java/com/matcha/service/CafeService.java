@@ -39,16 +39,24 @@ public class CafeService {
 
     @PostConstruct
     public void initialize() {
-        // If Google Places API key is set, run full discovery in the background
+        long count = cafeRepository.count();
+
+        if (count > 0) {
+            // DB already has data — load instantly, no discovery needed
+            System.out.printf("[CafeService] Database has %d cafes — ready instantly. Use POST /api/cafes/discover to refresh.%n", count);
+            return;
+        }
+
+        // Empty DB — run full discovery for the first time
         if (googlePlacesApiKey != null && !googlePlacesApiKey.isBlank()) {
-            System.out.println("[CafeService] Google Places API key detected — starting background discovery...");
+            System.out.println("[CafeService] Empty database — starting first-time discovery...");
             discovering = true;
             Thread thread = new Thread(() -> {
                 try {
                     int found = discoverAndSave();
-                    System.out.printf("[CafeService] Background discovery complete — %d new cafes added.%n", found);
+                    System.out.printf("[CafeService] First-time discovery complete — %d cafes added.%n", found);
                 } catch (Exception e) {
-                    System.err.println("[CafeService] Background discovery failed: " + e.getMessage());
+                    System.err.println("[CafeService] Discovery failed: " + e.getMessage());
                 } finally {
                     discovering = false;
                 }
@@ -56,7 +64,7 @@ public class CafeService {
             thread.setDaemon(true);
             thread.start();
         } else {
-            System.out.println("[CafeService] No Google Places API key — skipping discovery. Set GOOGLE_PLACES_API_KEY to enable.");
+            System.out.println("[CafeService] No Google Places API key — skipping discovery.");
         }
     }
 
@@ -148,28 +156,21 @@ public class CafeService {
 
                 String content = combined.toString().strip();
 
-                // Skip if no matcha content and name doesn't mention matcha
-                if (!scraperService.mentionsMatcha(content) && !place.name().toLowerCase().contains("matcha")) {
+                // Google already filtered for matcha via search query — trust it.
+                // Only skip if AI explicitly says it does NOT serve matcha (and name has no matcha either).
+                OpenAiService.CafeAnalysis analysis = null;
+                if (!content.isBlank()) {
+                    System.out.printf("[Discovery] → Sending to OpenAI for analysis...%n");
+                    analysis = openAiService.analyze(place.name(), place.website(), content);
+                }
+
+                if (analysis != null && !analysis.servesMatcha() && !place.name().toLowerCase().contains("matcha")) {
+                    // AI confirmed it does NOT serve matcha — skip
                     sleep(500);
                     continue;
                 }
 
-                System.out.printf("[Discovery] → Matcha found! Sending to Claude...%n");
-                OpenAiService.CafeAnalysis analysis = null;
-                if (!content.isBlank()) {
-                    analysis = openAiService.analyze(place.name(), place.website(), content);
-                }
-
-                if (analysis == null || !analysis.servesMatcha()) {
-                    // Name contains matcha but AI couldn't confirm — save as C
-                    if (place.name().toLowerCase().contains("matcha")) {
-                        Cafe cafe = buildDiscoveredCafe(place, city.name(), null, verifiedDate);
-                        cafeRepository.save(cafe);
-                        discovered++;
-                    }
-                    sleep(1000);
-                    continue;
-                }
+                System.out.printf("[Discovery] → Matcha confirmed! Saving...%n");
 
                 Cafe cafe = buildDiscoveredCafe(place, city.name(), analysis, verifiedDate);
                 cafeRepository.save(cafe);
