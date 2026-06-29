@@ -8,7 +8,9 @@ import org.springframework.stereotype.Service;
 
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Scrapes cafe websites and Instagram profiles for matcha sourcing content.
@@ -38,6 +40,44 @@ public class ScraperService {
     );
 
     // ── Public API ─────────────────────────────────────────────────────────────
+
+    /** Result of scrapeWithTracking — combined text plus per-page breakdown. */
+    public record ScrapeResult(String combinedText, Map<String, String> pageTexts) {}
+
+    /**
+     * Same as scrape() but also returns a map of {pageUrl → pageText} so callers
+     * can identify which specific page a quote came from.
+     * Current scraping logic is identical — this just tracks page sources.
+     */
+    public ScrapeResult scrapeWithTracking(String url) {
+        Document homepage = fetchDocument(url);
+        if (homepage == null) return null;
+
+        homepage.select("script, style, nav, footer, header, noscript, iframe, svg").remove();
+        String homeText = homepage.body().text();
+
+        Map<String, String> pageTexts = new LinkedHashMap<>();
+        pageTexts.put(url, homeText);
+
+        List<String> subpageUrls = findContentSubpages(homepage, url);
+        int scraped = 0;
+        for (String subUrl : subpageUrls) {
+            if (scraped >= MAX_SUBPAGES) break;
+            Document subDoc = fetchDocument(subUrl);
+            if (subDoc == null) continue;
+            subDoc.select("script, style, nav, footer, header, noscript, iframe, svg").remove();
+            pageTexts.put(subUrl, subDoc.body().text());
+            scraped++;
+            sleep(500);
+        }
+
+        StringBuilder combined = new StringBuilder();
+        pageTexts.values().forEach(t -> combined.append(t).append(" "));
+        String text = combined.toString().replaceAll("\\s+", " ").strip();
+        String truncated = text.length() > MAX_TEXT_LENGTH ? text.substring(0, MAX_TEXT_LENGTH) : text;
+
+        return new ScrapeResult(truncated, pageTexts);
+    }
 
     /**
      * Scrape a website URL: homepage + relevant sub-pages.

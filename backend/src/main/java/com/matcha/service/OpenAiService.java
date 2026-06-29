@@ -95,7 +95,7 @@ public class OpenAiService {
                 {
                   "servesMatcha": true,
                   "level": "A",
-                  "evidenceQuote": "exact quote from the content that shows sourcing info, or null",
+                  "evidenceQuote": "VERBATIM copy-paste from the Content above that proves the level, or null",
                   "tagline": "one short sentence describing their matcha offering, or null",
                   "description": "two sentences about their matcha program, or null",
                   "specialties": ["Matcha Latte", "Hojicha"],
@@ -108,6 +108,11 @@ public class OpenAiService {
                 C = Serves matcha but zero sourcing information disclosed
                 D = Not enough information to classify (but does serve matcha)
                 null = Does not serve matcha at all
+
+                CRITICAL RULES for evidenceQuote:
+                - It MUST be copied word-for-word from the Content above. Do NOT paraphrase, rewrite, or invent.
+                - If you cannot find an exact verbatim passage in the Content supporting level A or B, set evidenceQuote to null and use level C instead.
+                - Never fabricate or summarize text for evidenceQuote.
 
                 Type options: "specialty", "cafe", "dessert", "chain"
                 """.formatted(cafeName, website, content);

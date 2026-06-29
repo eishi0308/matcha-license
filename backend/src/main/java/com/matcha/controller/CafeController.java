@@ -50,6 +50,15 @@ public class CafeController {
     }
 
     /**
+     * POST /api/cafes/cleanup-evidence
+     * Re-scrapes all cafe websites and removes hallucinated evidence quotes.
+     */
+    @PostMapping("/cleanup-evidence")
+    public ResponseEntity<Map<String, Object>> cleanupEvidence() {
+        return ResponseEntity.ok(cafeService.cleanupEvidenceQuotes());
+    }
+
+    /**
      * POST /api/cafes/discover
      * Triggers the full Overpass → scrape → Claude pipeline.
      * This is a long-running operation — expect 5–15 minutes.

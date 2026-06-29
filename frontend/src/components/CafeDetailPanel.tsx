@@ -101,9 +101,11 @@ export default function CafeDetailPanel({ cafe, onClose }: Props) {
                 animate="show"
               >
                 {/* Description */}
-                <motion.p className="text-sm text-gray-600 leading-relaxed" variants={rowVariants}>
-                  {cafe.description}
-                </motion.p>
+                {cafe.description && (
+                  <motion.p className="text-sm text-gray-600 leading-relaxed" variants={rowVariants}>
+                    {cafe.description}
+                  </motion.p>
+                )}
 
                 {/* Meta tags */}
                 <motion.div className="flex flex-wrap gap-2" variants={rowVariants}>
