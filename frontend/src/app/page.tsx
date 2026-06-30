@@ -188,7 +188,7 @@ export default function HomePage() {
               transition={{ duration: 2.2, repeat: Infinity }}
             />
             <span className="text-white/55 text-[11px] font-medium tracking-[0.18em] uppercase">
-              Sydney & Melbourne · May 2026
+              Sydney & Melbourne
             </span>
           </motion.div>
 
@@ -342,7 +342,7 @@ export default function HomePage() {
                   </div>
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-matcha-700 font-semibold">✓ Official Website</span>
-                    <span style={{ color: "rgba(107,114,128,0.65)" }}>Verified May 2026</span>
+                    <span style={{ color: "rgba(107,114,128,0.65)" }}>Verified</span>
                   </div>
                 </div>
               </motion.div>
