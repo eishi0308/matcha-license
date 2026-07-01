@@ -27,10 +27,10 @@ const SPRING = { type: "spring" as const, stiffness: 300, damping: 28 };
 // ── Data ──────────────────────────────────────────────────────────────────
 
 const STATS = [
-  { value: 823, suffix: "+", label: "Cafes Indexed & Growing" },
-  { value: 50,  suffix: "",  label: "Mention Japanese Origin" },
-  { value: 2,   suffix: "",  label: "Cities Covered" },
-  { value: 37,  suffix: "",  label: "Name Specific Source" },
+  { value: 823, suffix: "+", label: "Cafes Indexed", sublabel: "& still growing", icon: "map" },
+  { value: 50,  suffix: "",  label: "Mention Japanese Origin", sublabel: "on their menu or site", icon: "leaf" },
+  { value: 2,   suffix: "",  label: "Cities Covered", sublabel: "Sydney & Melbourne", icon: "cities" },
+  { value: 37,  suffix: "",  label: "Name a Specific Source", sublabel: "farm, region or supplier", icon: "file" },
 ];
 
 const LEVEL_CARDS = [
@@ -243,18 +243,36 @@ export default function HomePage() {
           </motion.div>
 
           {/* Animated stats */}
-          <motion.div className="grid grid-cols-2 sm:grid-cols-4 gap-px rounded-2xl overflow-hidden w-full max-w-2xl"
-            style={{ background: "rgba(255,255,255,0.06)" }}
+          <motion.div
+            className="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full max-w-3xl"
             initial={{ opacity: 0, y: 28 }} animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.72, delay: 1.45, ease: EASE }}
           >
-            {STATS.map((s) => (
-              <div key={s.label} className="flex flex-col items-center py-6 px-4" style={{ background: "rgba(0,0,0,0.24)" }}>
-                <span className="font-display text-3xl font-bold text-white">
+            {STATS.map((s, i) => (
+              <motion.div
+                key={s.label}
+                className="relative flex flex-col items-center text-center px-4 py-6 rounded-2xl overflow-hidden"
+                style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.11)", backdropFilter: "blur(12px)" }}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 1.55 + i * 0.1, ease: EASE }}
+              >
+                {/* icon */}
+                <div className="mb-3 w-8 h-8 rounded-full flex items-center justify-center" style={{ background: "rgba(255,255,255,0.1)" }}>
+                  {s.icon === "map"    && <Map     size={15} className="text-white/70" />}
+                  {s.icon === "leaf"   && <Leaf    size={15} className="text-white/70" />}
+                  {s.icon === "cities" && <TrendingUp size={15} className="text-white/70" />}
+                  {s.icon === "file"   && <FileText size={15} className="text-white/70" />}
+                </div>
+                {/* number */}
+                <span className="font-display font-black text-white leading-none" style={{ fontSize: "clamp(2rem,5vw,3rem)", letterSpacing: "-0.03em" }}>
                   <CountUp to={s.value} suffix={s.suffix} />
                 </span>
-                <span className="text-[11px] mt-1.5 tracking-wide" style={{ color: "rgba(255,255,255,0.38)" }}>{s.label}</span>
-              </div>
+                {/* label */}
+                <span className="mt-2 text-[12px] font-semibold leading-tight text-white/80">{s.label}</span>
+                {/* sublabel */}
+                <span className="mt-0.5 text-[10px] leading-tight" style={{ color: "rgba(255,255,255,0.38)" }}>{s.sublabel}</span>
+              </motion.div>
             ))}
           </motion.div>
         </motion.div>
