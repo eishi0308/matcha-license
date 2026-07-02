@@ -376,7 +376,7 @@ export default function HomePage() {
             <SectionLabel icon={TrendingUp} text="Classification System" />
             <Reveal delay={0.05}>
               <h2 className="font-display text-4xl sm:text-5xl font-bold text-gray-900 mb-5" style={{ letterSpacing: "-0.02em" }}>
-                Four levels of transparency
+                <span style={{ color: "#4a9a3a", fontFeatureSettings: '"lnum" 1' }}>4</span> levels of transparency
               </h2>
             </Reveal>
             <Reveal delay={0.1}>
