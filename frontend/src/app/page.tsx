@@ -153,7 +153,7 @@ export default function HomePage() {
 
       {/* ── HERO ──────────────────────────────────────────────────────── */}
       <section
-        className="relative min-h-screen flex flex-col items-center justify-center text-center px-5 pt-24 pb-20 overflow-hidden"
+        className="relative h-[100dvh] flex flex-col items-center justify-center text-center px-5 pt-20 pb-6 overflow-hidden"
         style={{ background: "linear-gradient(145deg, #060e07 0%, #0c1c0d 30%, #162e17 62%, #1e4a1a 100%)" }}
       >
         {/* Animated glow orbs */}
@@ -181,7 +181,7 @@ export default function HomePage() {
             initial={{ opacity: 0, scale: 0.88, y: -16 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ duration: 0.65, ease: EASE }}
-            className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full border border-white/10 bg-white/5 backdrop-blur-sm mb-12"
+            className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full border border-white/10 bg-white/5 backdrop-blur-sm mb-5"
           >
             <motion.span className="w-1.5 h-1.5 rounded-full bg-matcha-400"
               animate={{ scale: [1, 1.7, 1], opacity: [1, 0.45, 1] }}
@@ -193,8 +193,8 @@ export default function HomePage() {
           </motion.div>
 
           {/* Headline — word split with perspective */}
-          <h1 className="font-display font-bold text-white leading-[0.92] tracking-tight mb-8"
-            style={{ fontSize: "clamp(2.8rem, 8vw, 6.8rem)", perspective: "800px" }}
+          <h1 className="font-display font-bold text-white leading-[0.92] tracking-tight mb-4"
+            style={{ fontSize: "clamp(2rem, 5.5vw, 4.8rem)", perspective: "800px" }}
           >
             <div className="mb-1 overflow-visible">
               <SplitWords text="Find cafes that are" delay={0.25} />
@@ -212,7 +212,7 @@ export default function HomePage() {
           </h1>
 
           {/* Sub-headline */}
-          <motion.p className="text-lg sm:text-xl max-w-2xl leading-relaxed mb-12"
+          <motion.p className="text-sm sm:text-base max-w-xl leading-relaxed mb-5"
             style={{ color: "rgba(255,255,255,0.48)" }}
             initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.72, delay: 1.15, ease: EASE }}
@@ -221,19 +221,19 @@ export default function HomePage() {
           </motion.p>
 
           {/* CTAs */}
-          <motion.div className="flex flex-col sm:flex-row items-center gap-3 mb-16"
+          <motion.div className="flex flex-col sm:flex-row items-center gap-3 mb-5"
             initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.72, delay: 1.3, ease: EASE }}
           >
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.96 }}>
-              <Link href="/map" className="inline-flex items-center gap-2.5 px-8 py-4 rounded-full font-semibold text-white text-sm"
+              <Link href="/map" className="inline-flex items-center gap-2.5 px-7 py-3 rounded-full font-semibold text-white text-sm"
                 style={{ background: "linear-gradient(135deg, #2d6025, #5aab47)", boxShadow: "0 0 48px rgba(90,171,71,0.42), 0 4px 24px rgba(0,0,0,0.35)" }}
               >
                 <Map size={16} />Explore the Map<ArrowRight size={14} />
               </Link>
             </motion.div>
             <motion.button onClick={() => setAuthOpen(true)}
-              className="inline-flex items-center gap-2.5 px-8 py-4 rounded-full font-semibold text-sm border"
+              className="inline-flex items-center gap-2.5 px-7 py-3 rounded-full font-semibold text-sm border"
               style={{ color: "rgba(255,255,255,0.78)", borderColor: "rgba(255,255,255,0.14)", background: "rgba(255,255,255,0.05)" }}
               whileHover={{ scale: 1.05, backgroundColor: "rgba(255,255,255,0.1)", borderColor: "rgba(255,255,255,0.28)" } as any}
               whileTap={{ scale: 0.96 }}
@@ -251,21 +251,21 @@ export default function HomePage() {
             {STATS.map((s, i) => (
               <motion.div
                 key={s.label}
-                className="relative flex flex-col items-center text-center px-4 py-6 rounded-2xl overflow-hidden"
+                className="relative flex flex-col items-center text-center px-3 py-4 rounded-2xl overflow-hidden"
                 style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.11)", backdropFilter: "blur(12px)" }}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 1.55 + i * 0.1, ease: EASE }}
               >
                 {/* icon */}
-                <div className="mb-3 w-8 h-8 rounded-full flex items-center justify-center" style={{ background: "rgba(255,255,255,0.1)" }}>
+                <div className="mb-2 w-7 h-7 rounded-full flex items-center justify-center" style={{ background: "rgba(255,255,255,0.1)" }}>
                   {s.icon === "map"    && <Map     size={15} className="text-white/70" />}
                   {s.icon === "leaf"   && <Leaf    size={15} className="text-white/70" />}
                   {s.icon === "cities" && <TrendingUp size={15} className="text-white/70" />}
                   {s.icon === "file"   && <FileText size={15} className="text-white/70" />}
                 </div>
                 {/* number */}
-                <span className="font-display font-black text-white leading-none" style={{ fontSize: "clamp(2rem,5vw,3rem)", letterSpacing: "-0.03em" }}>
+                <span className="font-display font-black text-white leading-none" style={{ fontSize: "clamp(1.5rem,3.5vw,2.25rem)", letterSpacing: "-0.03em" }}>
                   <CountUp to={s.value} suffix={s.suffix} />
                 </span>
                 {/* label */}
