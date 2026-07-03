@@ -290,8 +290,8 @@ export default function HomePage() {
 
                 {/* labels bottom */}
                 <div>
-                  <div className="text-[13px] font-semibold text-white/85 leading-snug">{s.label}</div>
-                  <div className="text-[11px] mt-0.5 leading-snug" style={{ color: "rgba(255,255,255,0.38)" }}>{s.sublabel}</div>
+                  <div className="text-[15px] font-semibold text-white/90 leading-snug">{s.label}</div>
+                  <div className="text-[13px] mt-1 leading-snug" style={{ color: "rgba(255,255,255,0.5)" }}>{s.sublabel}</div>
                 </div>
               </motion.div>
             ))}
