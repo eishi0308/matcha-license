@@ -260,12 +260,12 @@ export default function HomePage() {
             {STATS.map((s, i) => (
               <motion.div
                 key={s.label}
-                className="flex flex-col justify-between p-6 rounded-3xl"
+                className="flex flex-col justify-between p-5 rounded-3xl"
                 style={{
                   background: "rgba(255,255,255,0.06)",
                   border: "1px solid rgba(255,255,255,0.1)",
                   backdropFilter: "blur(16px)",
-                  aspectRatio: "1 / 1",
+                  minHeight: "160px",
                 }}
                 initial={{ opacity: 0, y: 24 }}
                 animate={{ opacity: 1, y: 0 }}
