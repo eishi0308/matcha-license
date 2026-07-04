@@ -260,38 +260,38 @@ export default function HomePage() {
             {STATS.map((s, i) => (
               <motion.div
                 key={s.label}
-                className="flex flex-col justify-between p-5 rounded-3xl"
+                className="flex flex-col items-start p-6 rounded-3xl gap-4"
                 style={{
                   background: "rgba(255,255,255,0.06)",
                   border: "1px solid rgba(255,255,255,0.1)",
                   backdropFilter: "blur(16px)",
-                  minHeight: "160px",
+                  minHeight: "180px",
                 }}
                 initial={{ opacity: 0, y: 24 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 1.5 + i * 0.1, ease: EASE }}
                 whileHover={{ background: "rgba(255,255,255,0.09)", borderColor: "rgba(255,255,255,0.18)" } as any}
               >
-                {/* icon top-left */}
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: "rgba(255,255,255,0.1)" }}>
-                  {s.icon === "map"    && <Map       size={17} className="text-white/70" />}
-                  {s.icon === "leaf"   && <Leaf      size={17} className="text-white/70" />}
-                  {s.icon === "cities" && <TrendingUp size={17} className="text-white/70" />}
-                  {s.icon === "file"   && <FileText  size={17} className="text-white/70" />}
+                {/* icon */}
+                <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style={{ background: "rgba(255,255,255,0.1)" }}>
+                  {s.icon === "map"    && <Map       size={15} className="text-white/70" />}
+                  {s.icon === "leaf"   && <Leaf      size={15} className="text-white/70" />}
+                  {s.icon === "cities" && <TrendingUp size={15} className="text-white/70" />}
+                  {s.icon === "file"   && <FileText  size={15} className="text-white/70" />}
                 </div>
 
-                {/* number centre */}
+                {/* number */}
                 <span
                   className="font-display font-black text-white leading-none"
-                  style={{ fontSize: "clamp(2.8rem, 5vw, 4.5rem)", letterSpacing: "-0.04em" }}
+                  style={{ fontSize: "clamp(2.2rem, 3.5vw, 3.5rem)", letterSpacing: "-0.04em" }}
                 >
                   <CountUp to={s.value} suffix={s.suffix} />
                 </span>
 
-                {/* labels bottom */}
-                <div>
-                  <div className="text-[15px] font-semibold text-white/90 leading-snug">{s.label}</div>
-                  <div className="text-[13px] mt-1 leading-snug" style={{ color: "rgba(255,255,255,0.5)" }}>{s.sublabel}</div>
+                {/* labels */}
+                <div className="mt-auto">
+                  <div className="text-[13px] font-semibold text-white/90 leading-snug">{s.label}</div>
+                  <div className="text-[11px] mt-0.5 leading-snug" style={{ color: "rgba(255,255,255,0.45)" }}>{s.sublabel}</div>
                 </div>
               </motion.div>
             ))}
