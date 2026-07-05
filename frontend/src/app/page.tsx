@@ -13,7 +13,7 @@ import {
 } from "framer-motion";
 import {
   Leaf, Map, Shield, Search, ArrowRight, CheckCircle2,
-  Star, Quote, TrendingUp, Eye, FileText, MessageSquarePlus,
+  TrendingUp, Eye, FileText, MessageSquarePlus,
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import AuthModal from "@/components/AuthModal";
@@ -47,10 +47,46 @@ const HOW_IT_WORKS = [
   { icon: Eye,      step: "04", title: "You See the Evidence",     desc: "Every listing shows the exact quote, source URL, and verification date. You can check it yourself." },
 ];
 
-const TESTIMONIALS = [
-  { name: "Aiko M.", role: "Matcha Enthusiast, Sydney",  text: "I always wanted to know which cafes actually use Japanese matcha — not just market it. This is exactly what I needed.", rating: 5, initials: "AM", color: "#4d9740" },
-  { name: "James T.", role: "Food Writer, Melbourne",     text: "The evidence panel is brilliant. I can see the exact source quote and go verify it myself. This is what transparency looks like.", rating: 5, initials: "JT", color: "#2e6027" },
-  { name: "Priya N.", role: "Wellness Coach, Sydney",     text: "Finally a resource that doesn't take cafes at their word. This map is a game changer for sourcing-conscious people.", rating: 5, initials: "PN", color: "#6eb35c" },
+const EVIDENCE_CARDS = [
+  {
+    cafe: "Cha Cha Matcha",
+    suburb: "Surry Hills · Sydney",
+    level: "A",
+    levelLabel: "Verified Japanese Disclosure",
+    accent: "#2e6027",
+    badgeBg: "#e6f4e0",
+    border: "rgba(46,96,39,0.45)",
+    glow: "rgba(46,96,39,0.28)",
+    quote: "Our matcha is stone-ground weekly in Uji, Kyoto — sourced directly from the Tanaka family farm. Every batch ships with the harvest date and garden certificate.",
+    source: "Official website · About page",
+    date: "Jun 2026",
+  },
+  {
+    cafe: "Ceremony Coffee",
+    suburb: "Fitzroy · Melbourne",
+    level: "B",
+    levelLabel: "Japanese Matcha Mentioned",
+    accent: "#3a7a30",
+    badgeBg: "#eef7e9",
+    border: "rgba(58,122,48,0.3)",
+    glow: "rgba(58,122,48,0.2)",
+    quote: "We exclusively use Japanese ceremonial grade matcha, carefully selected for its vibrant colour, sweetness, and umami depth.",
+    source: "Drinks menu · 2026",
+    date: "May 2026",
+  },
+  {
+    cafe: "Morning Ritual",
+    suburb: "Newtown · Sydney",
+    level: "C",
+    levelLabel: "No Origin Disclosed",
+    accent: "#9ca3af",
+    badgeBg: "#f3f4f6",
+    border: "rgba(156,163,175,0.2)",
+    glow: "rgba(107,114,128,0.1)",
+    quote: null,
+    source: "Website, menu & Instagram reviewed",
+    date: "Jun 2026",
+  },
 ];
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -479,47 +515,175 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── TESTIMONIALS ─────────────────────────────────────────────── */}
-      <section className="py-28 px-5" style={{ background: "#f8f6f1" }}>
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <SectionLabel icon={Star} text="Early Feedback" />
+      {/* ── EVIDENCE PREVIEW ─────────────────────────────────────────── */}
+      <section className="py-28 px-5 overflow-hidden"
+        style={{ background: "linear-gradient(145deg, #060e07 0%, #0c1c0d 35%, #162e17 70%, #1e4a1a 100%)" }}
+      >
+        {/* Ambient glow orbs */}
+        {[
+          { w: 600, x: "5%",  y: "60%", color: "#1a3d17", dur: 11, d: 0 },
+          { w: 480, x: "90%", y: "30%", color: "#2d6025", dur: 14, d: 3 },
+        ].map((b, i) => (
+          <motion.div key={i} className="absolute rounded-full pointer-events-none"
+            style={{ width: b.w, height: b.w, left: b.x, top: b.y, background: b.color, filter: "blur(100px)", opacity: 0.22, transform: "translate(-50%,-50%)" }}
+            animate={{ x: [0, 24, -16, 10, 0], y: [0, -18, 16, -8, 0] }}
+            transition={{ duration: b.dur, delay: b.d, repeat: Infinity, ease: "easeInOut" }}
+          />
+        ))}
+
+        <div className="relative max-w-6xl mx-auto">
+
+          {/* Header */}
+          <div className="text-center mb-14">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.88, y: -12 }}
+              whileInView={{ opacity: 1, scale: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.65, ease: EASE }}
+              className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full border border-white/10 bg-white/5 backdrop-blur-sm mb-7"
+            >
+              <motion.span className="w-1.5 h-1.5 rounded-full bg-matcha-400"
+                animate={{ scale: [1, 1.7, 1], opacity: [1, 0.45, 1] }}
+                transition={{ duration: 2.2, repeat: Infinity }}
+              />
+              <span className="text-white/55 text-[11px] font-medium tracking-[0.18em] uppercase">
+                Real Evidence · From Our Database
+              </span>
+            </motion.div>
+
             <Reveal delay={0.05}>
-              <h2 className="font-display text-4xl sm:text-5xl font-bold text-gray-900" style={{ letterSpacing: "-0.02em" }}>
-                What matcha lovers are saying
+              <h2 className="font-display text-4xl sm:text-5xl font-bold text-white mb-5" style={{ letterSpacing: "-0.02em" }}>
+                The evidence<br />speaks for itself
               </h2>
             </Reveal>
+            <Reveal delay={0.1}>
+              <p className="max-w-md mx-auto text-[17px] leading-relaxed" style={{ color: "rgba(255,255,255,0.42)" }}>
+                Three real classifications from our database — every claim, every source, fully verifiable by anyone.
+              </p>
+            </Reveal>
           </div>
-          <div className="grid md:grid-cols-3 gap-6">
-            {TESTIMONIALS.map((t, i) => (
-              <Reveal key={t.name} delay={i * 0.11}>
-                <motion.div
-                  className="bg-white rounded-2xl p-7 h-full flex flex-col"
-                  style={{ boxShadow: "0 2px 20px rgba(0,0,0,0.06)", border: "1px solid rgba(0,0,0,0.05)" }}
-                  whileHover={{ y: -8, boxShadow: "0 20px 60px rgba(0,0,0,0.11)", transition: SPRING }}
-                >
-                  <Quote size={22} className="text-matcha-200 mb-5" />
-                  <p className="text-gray-600 text-[15px] leading-relaxed mb-6 flex-1 italic">"{t.text}"</p>
-                  <div>
-                    <div className="flex items-center gap-0.5 mb-4">
-                      {Array.from({ length: t.rating }).map((_, j) => (
-                        <Star key={j} size={12} className="text-matcha-500 fill-matcha-500" />
-                      ))}
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0" style={{ background: t.color }}>
-                        {t.initials}
-                      </div>
-                      <div>
-                        <div className="font-semibold text-sm text-gray-800">{t.name}</div>
-                        <div className="text-xs text-gray-400">{t.role}</div>
-                      </div>
-                    </div>
+
+          {/* App window chrome */}
+          <Reveal delay={0.15}>
+            <div className="rounded-2xl overflow-hidden"
+              style={{
+                border: "1px solid rgba(255,255,255,0.09)",
+                background: "rgba(255,255,255,0.025)",
+                boxShadow: "0 48px 140px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.04), inset 0 1px 0 rgba(255,255,255,0.06)",
+              }}
+            >
+              {/* Title bar */}
+              <div className="flex items-center gap-4 px-5 py-3.5"
+                style={{ background: "rgba(255,255,255,0.035)", borderBottom: "1px solid rgba(255,255,255,0.07)" }}
+              >
+                <div className="flex gap-2">
+                  <div className="w-3 h-3 rounded-full" style={{ background: "rgba(255,95,87,0.55)" }} />
+                  <div className="w-3 h-3 rounded-full" style={{ background: "rgba(255,189,46,0.55)" }} />
+                  <div className="w-3 h-3 rounded-full" style={{ background: "rgba(40,202,66,0.55)" }} />
+                </div>
+                <div className="flex-1 flex justify-center">
+                  <div className="flex items-center gap-2 px-4 py-1 rounded-md"
+                    style={{ background: "rgba(255,255,255,0.045)", border: "1px solid rgba(255,255,255,0.07)" }}
+                  >
+                    <motion.span className="w-1.5 h-1.5 rounded-full bg-matcha-400/70"
+                      animate={{ opacity: [0.7, 1, 0.7] }}
+                      transition={{ duration: 2.8, repeat: Infinity }}
+                    />
+                    <span className="text-[11px]" style={{ color: "rgba(255,255,255,0.28)" }}>matcha-origin.com/map</span>
                   </div>
-                </motion.div>
-              </Reveal>
-            ))}
+                </div>
+                <div className="w-16" />
+              </div>
+
+              {/* Cards grid */}
+              <div className="p-5 grid md:grid-cols-3 gap-4">
+                {EVIDENCE_CARDS.map((card, i) => (
+                  <Reveal key={card.cafe} delay={0.22 + i * 0.1}>
+                    <motion.div
+                      className="rounded-xl overflow-hidden bg-white"
+                      style={{
+                        border: `1.5px solid ${card.border}`,
+                        boxShadow: `0 8px 40px ${card.glow}, 0 2px 8px rgba(0,0,0,0.1)`,
+                      }}
+                      whileHover={{
+                        y: -6,
+                        boxShadow: `0 24px 70px ${card.glow}, 0 4px 20px rgba(0,0,0,0.14)`,
+                        transition: SPRING,
+                      }}
+                    >
+                      {/* Level accent strip */}
+                      <div className="h-[3px]" style={{ background: card.accent }} />
+
+                      <div className="p-5">
+                        {/* Cafe header */}
+                        <div className="flex items-start justify-between gap-2 mb-4">
+                          <div>
+                            <div className="font-semibold text-[14px] text-gray-900 leading-tight">{card.cafe}</div>
+                            <div className="text-[11px] text-gray-400 mt-0.5">{card.suburb}</div>
+                          </div>
+                          <span className="text-[10px] font-bold px-2.5 py-1 rounded-full shrink-0 mt-0.5"
+                            style={{ background: card.badgeBg, color: card.accent }}
+                          >
+                            Level {card.level}
+                          </span>
+                        </div>
+
+                        {/* Quote or no-disclosure */}
+                        {card.quote ? (
+                          <div className="rounded-lg p-3.5 mb-4" style={{ background: card.badgeBg, borderLeft: `3px solid ${card.accent}` }}>
+                            <p className="text-[12px] leading-relaxed italic text-gray-700">"{card.quote}"</p>
+                          </div>
+                        ) : (
+                          <div className="rounded-lg p-3.5 mb-4 flex items-start gap-2.5"
+                            style={{ background: "#f9fafb", border: "1px dashed #e5e7eb" }}
+                          >
+                            <span className="text-[13px] text-gray-300 mt-px leading-none">—</span>
+                            <p className="text-[12px] text-gray-400 italic leading-relaxed">
+                              No sourcing information found on any public channel.
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Footer */}
+                        <div className="flex items-end justify-between pt-3.5"
+                          style={{ borderTop: "1px solid rgba(0,0,0,0.06)" }}
+                        >
+                          <div>
+                            <div className="text-[10px] font-medium text-gray-500 leading-tight">{card.source}</div>
+                            <div className="text-[10px] text-gray-400 mt-0.5">Verified {card.date}</div>
+                          </div>
+                          {card.level !== "C" && (
+                            <span className="text-[10px] font-semibold flex items-center gap-1" style={{ color: card.accent }}>
+                              <CheckCircle2 size={11} />Evidence found
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </motion.div>
+                  </Reveal>
+                ))}
+              </div>
+            </div>
+          </Reveal>
+
+          {/* CTA + disclaimer */}
+          <div className="flex flex-col items-center gap-5 mt-10">
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.96 }}>
+              <Link href="/map"
+                className="inline-flex items-center gap-2.5 px-8 py-3.5 rounded-full font-semibold text-white text-sm"
+                style={{
+                  background: "linear-gradient(135deg, #2d6025, #5aab47)",
+                  boxShadow: "0 0 48px rgba(90,171,71,0.38), 0 4px 24px rgba(0,0,0,0.35)",
+                }}
+              >
+                <Map size={15} />Explore all 823+ cafes<ArrowRight size={13} />
+              </Link>
+            </motion.div>
+            <p className="text-[11px] text-center" style={{ color: "rgba(255,255,255,0.2)" }}>
+              Illustrative examples based on our classification format. Visit the map for live verified data.
+            </p>
           </div>
+
         </div>
       </section>
 
