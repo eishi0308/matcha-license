@@ -1,24 +1,69 @@
+import { supabase } from "./supabase";
 import { Cafe } from "@/data/cafes";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+function rowToCafe(row: Record<string, unknown>): Cafe {
+  const evidence =
+    row.evidence_quote
+      ? {
+          quote: row.evidence_quote as string,
+          source: row.evidence_source as string,
+          sourceLabel: row.evidence_source_label as string,
+          verifiedDate: row.evidence_verified_date as string,
+        }
+      : null;
+
+  return {
+    id: row.id as string,
+    name: row.name as string,
+    city: row.city as Cafe["city"],
+    suburb: row.suburb as string,
+    address: row.address as string,
+    lat: row.lat as number,
+    lng: row.lng as number,
+    level: row.level as Cafe["level"],
+    type: row.type as Cafe["type"],
+    tagline: row.tagline as string,
+    description: row.description as string,
+    evidence,
+    instagram: row.instagram as string | undefined,
+    website: row.website as string | undefined,
+    priceRange: row.price_range as Cafe["priceRange"],
+    specialties: Array.isArray(row.specialties)
+      ? row.specialties as string[]
+      : typeof row.specialties === "string" && (row.specialties as string).length > 0
+        ? (row.specialties as string).split(",").map((s) => s.trim())
+        : [],
+    coverColor: row.cover_color as string,
+  };
+}
 
 export async function fetchCafes(params?: {
   city?: string;
   level?: string;
 }): Promise<Cafe[]> {
-  const url = new URL(`${API_URL}/api/cafes`);
-  if (params?.city && params.city !== "All") url.searchParams.set("city", params.city);
-  if (params?.level && params.level !== "All") url.searchParams.set("level", params.level);
+  let query = supabase.from("cafes").select("*").order("name");
 
-  const res = await fetch(url.toString(), { cache: "no-store" });
-  if (!res.ok) throw new Error(`Failed to fetch cafes: ${res.status}`);
-  return res.json();
+  if (params?.city && params.city !== "All") {
+    query = query.eq("city", params.city);
+  }
+  if (params?.level && params.level !== "All") {
+    query = query.eq("level", params.level);
+  }
+
+  const { data, error } = await query;
+  if (error) throw new Error(error.message);
+  return (data ?? []).map(rowToCafe);
 }
 
 export async function fetchCafe(id: string): Promise<Cafe> {
-  const res = await fetch(`${API_URL}/api/cafes/${id}`, { cache: "no-store" });
-  if (!res.ok) throw new Error(`Cafe not found: ${id}`);
-  return res.json();
+  const { data, error } = await supabase
+    .from("cafes")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if (error) throw new Error(error.message);
+  return rowToCafe(data);
 }
 
 export async function fetchStats(): Promise<{
@@ -28,13 +73,19 @@ export async function fetchStats(): Promise<{
   melbourne: number;
   discovering: boolean;
 }> {
-  const res = await fetch(`${API_URL}/api/cafes/stats`, { cache: "no-store" });
-  if (!res.ok) throw new Error("Failed to fetch stats");
-  return res.json();
-}
+  const { data, error } = await supabase.from("cafes").select("level, city");
+  if (error) throw new Error(error.message);
 
-export async function triggerDiscovery(): Promise<{ status: string; discovered: number }> {
-  const res = await fetch(`${API_URL}/api/cafes/discover`, { method: "POST" });
-  if (!res.ok) throw new Error("Discovery failed");
-  return res.json();
+  const rows = data ?? [];
+  const byLevel: Record<string, number> = { A: 0, B: 0, C: 0, D: 0 };
+  let sydney = 0;
+  let melbourne = 0;
+
+  for (const row of rows) {
+    byLevel[row.level] = (byLevel[row.level] ?? 0) + 1;
+    if (row.city === "Sydney") sydney++;
+    if (row.city === "Melbourne") melbourne++;
+  }
+
+  return { total: rows.length, byLevel, sydney, melbourne, discovering: false };
 }

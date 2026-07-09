@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { X, Eye, EyeOff, Leaf } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { supabase } from "@/lib/supabase";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -17,15 +18,45 @@ export default function AuthModal({ isOpen, onClose, defaultTab = "login" }: Aut
   const [tab, setTab]               = useState<"login" | "signup">(defaultTab);
   const [showPassword, setShowPass] = useState(false);
   const [loading, setLoading]       = useState(false);
+  const [error, setError]           = useState<string | null>(null);
   const [form, setForm]             = useState({ name: "", email: "", password: "" });
 
   // Sync tab when modal opens with a different defaultTab
-  useEffect(() => { setTab(defaultTab); }, [defaultTab, isOpen]);
+  useEffect(() => { setTab(defaultTab); setError(null); }, [defaultTab, isOpen]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setTimeout(() => { setLoading(false); onClose(); }, 1500);
+    setError(null);
+
+    try {
+      if (tab === "login") {
+        const { error } = await supabase.auth.signInWithPassword({
+          email: form.email,
+          password: form.password,
+        });
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.auth.signUp({
+          email: form.email,
+          password: form.password,
+          options: { data: { full_name: form.name } },
+        });
+        if (error) throw error;
+      }
+      onClose();
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Something went wrong");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogle = async () => {
+    await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: window.location.origin },
+    });
   };
 
   return (
@@ -134,6 +165,12 @@ export default function AuthModal({ isOpen, onClose, defaultTab = "login" }: Aut
                       : "Create a free account to track your favourite transparent cafes."}
                   </p>
 
+                  {error && (
+                    <div className="mb-4 px-4 py-3 rounded-xl bg-red-50 border border-red-200 text-sm text-red-600">
+                      {error}
+                    </div>
+                  )}
+
                   <form onSubmit={handleSubmit} className="space-y-4">
                     {tab === "signup" && (
                       <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} transition={{ duration: 0.25, ease: EASE }}>
@@ -226,6 +263,8 @@ export default function AuthModal({ isOpen, onClose, defaultTab = "login" }: Aut
 
               {/* Google SSO */}
               <motion.button
+                onClick={handleGoogle}
+                type="button"
                 className="w-full flex items-center justify-center gap-3 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
                 whileHover={{ scale: 1.02, borderColor: "#d1d5db" } as any}
                 whileTap={{ scale: 0.98 }}

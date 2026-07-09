@@ -165,6 +165,150 @@ function TiltCard({ children, className, style }: { children: React.ReactNode; c
   );
 }
 
+function FactList({ items }: { items: string[] }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: true, margin: "-80px" });
+  return (
+    <div ref={ref}>
+      {items.map((item, i) => (
+        <div key={item}>
+          <motion.div
+            className="flex items-start gap-5 py-5"
+            initial={{ opacity: 0, x: -24 }}
+            animate={inView ? { opacity: 1, x: 0 } : {}}
+            transition={{ duration: 0.55, delay: i * 0.1, ease: EASE_EXPO }}
+          >
+            <span
+              className="font-display font-bold text-[11px] tracking-[0.2em] shrink-0 mt-0.5 tabular-nums"
+              style={{ color: "#7dd56f" }}
+            >
+              0{i + 1}
+            </span>
+            <span className="text-[15px] text-gray-700 leading-relaxed">{item}</span>
+          </motion.div>
+          <motion.div
+            className="h-px"
+            style={{
+              background: "linear-gradient(90deg, rgba(77,151,64,0.22) 0%, rgba(77,151,64,0.06) 55%, transparent 100%)",
+              originX: 0,
+            }}
+            initial={{ scaleX: 0 }}
+            animate={inView ? { scaleX: 1 } : {}}
+            transition={{ duration: 0.85, delay: i * 0.1 + 0.08, ease: EASE }}
+          />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ComparisonCard() {
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: true, margin: "-80px" });
+  return (
+    <div ref={ref} className="relative w-full max-w-[420px]">
+      {/* Ambient glow */}
+      <motion.div
+        className="absolute inset-0 rounded-2xl pointer-events-none"
+        style={{ boxShadow: "0 48px 110px rgba(46,96,39,0.14), 0 10px 40px rgba(0,0,0,0.08)" }}
+        initial={{ opacity: 0 }}
+        animate={inView ? { opacity: 1 } : {}}
+        transition={{ duration: 1.2, delay: 0.4 }}
+      />
+
+      <motion.div
+        className="rounded-2xl overflow-hidden relative"
+        style={{ border: "1.5px solid #e5e7eb" }}
+        initial={{ opacity: 0, y: 52 }}
+        animate={inView ? { opacity: 1, y: 0 } : {}}
+        transition={{ duration: 0.88, ease: EASE_EXPO }}
+      >
+        {/* WITHOUT section */}
+        <div style={{ background: "#f9f9f9" }}>
+          <div className="px-7 pt-7 pb-6">
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-[9px] uppercase tracking-[0.22em] font-semibold" style={{ color: "#9ca3af" }}>
+                Without Origin Disclosure
+              </span>
+              <span className="text-[10px] font-bold px-2.5 py-1 rounded-full" style={{ background: "#fef2f2", color: "#dc2626" }}>
+                Level C
+              </span>
+            </div>
+            <p className="text-sm leading-relaxed italic mb-5" style={{ color: "#9ca3af" }}>
+              "Premium authentic Japanese matcha, ceremonial grade experience crafted with care and passion..."
+            </p>
+            <div className="space-y-2.5">
+              {["No source URL provided", "Country of origin not stated", "Cannot be independently verified"].map((t) => (
+                <div key={t} className="flex items-center gap-2.5">
+                  <span className="text-[11px]" style={{ color: "#fca5a5" }}>✕</span>
+                  <span className="text-[12px]" style={{ color: "#d1d5db" }}>{t}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Animated divider */}
+        <div className="relative h-px overflow-hidden">
+          <div className="absolute inset-0" style={{ background: "#e5e7eb" }} />
+          <motion.div
+            className="absolute inset-0"
+            style={{
+              background: "linear-gradient(90deg, transparent 0%, #4d9740 35%, #7dd56f 55%, #4d9740 75%, transparent 100%)",
+              originX: 0,
+            }}
+            initial={{ scaleX: 0 }}
+            animate={inView ? { scaleX: 1 } : {}}
+            transition={{ duration: 1.05, delay: 0.55, ease: EASE }}
+          />
+        </div>
+
+        {/* WITH section — clip-path reveal */}
+        <motion.div
+          style={{ background: "#ffffff" }}
+          initial={{ clipPath: "inset(0% 0% 100% 0%)" }}
+          animate={inView ? { clipPath: "inset(0% 0% 0% 0%)" } : {}}
+          transition={{ duration: 0.82, delay: 0.68, ease: EASE_EXPO }}
+        >
+          <div className="px-7 pt-6 pb-7">
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-[9px] uppercase tracking-[0.22em] text-matcha-700 font-semibold">
+                With Origin Disclosure
+              </span>
+              <span className="text-[10px] font-bold px-2.5 py-1 rounded-full" style={{ background: "#e6f4e0", color: "#2e6027" }}>
+                Level A
+              </span>
+            </div>
+            <div className="rounded-xl p-4 mb-5" style={{ background: "#f2f8f0", borderLeft: "3px solid #4d9740" }}>
+              <p className="text-[13px] leading-relaxed italic text-gray-700">
+                "Our matcha is sourced exclusively from Uji, Kyoto. Each tin includes the harvest date and garden name."
+              </p>
+            </div>
+            <div className="flex items-center justify-between pt-4" style={{ borderTop: "1px solid rgba(0,0,0,0.06)" }}>
+              <div className="flex items-center gap-1.5 text-[11px] font-semibold text-matcha-700">
+                <CheckCircle2 size={12} />Official Website
+              </div>
+              <span className="text-[10px] text-gray-400">Verified Jun 2026</span>
+            </div>
+          </div>
+        </motion.div>
+      </motion.div>
+
+      {/* Floating verify badge */}
+      <motion.div
+        className="absolute -right-3 -bottom-4 flex items-center gap-2 px-4 py-2 rounded-full bg-white text-[11px] font-semibold text-matcha-700"
+        style={{ boxShadow: "0 8px 28px rgba(46,96,39,0.18), 0 2px 8px rgba(0,0,0,0.07)", border: "1px solid #b3dda6" }}
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={inView ? { opacity: 1, scale: 1 } : {}}
+        transition={{ duration: 0.5, delay: 1.15, ease: EASE_EXPO }}
+      >
+        <CheckCircle2 size={12} className="text-matcha-500" />
+        You can verify this yourself
+      </motion.div>
+    </div>
+  );
+}
+
 function SectionLabel({ icon: Icon, text }: { icon: React.ElementType; text: string }) {
   return (
     <Reveal>
@@ -344,12 +488,17 @@ export default function HomePage() {
       </section>
 
       {/* ── WHY TRANSPARENCY ──────────────────────────────────────────── */}
-      <section className="py-28 px-5 max-w-7xl mx-auto">
-        <div className="grid lg:grid-cols-2 gap-20 items-center">
+      <section className="py-32 px-5 max-w-7xl mx-auto">
+        <div className="grid lg:grid-cols-2 gap-16 xl:gap-24 items-center">
+
+          {/* LEFT: copy */}
           <div>
             <SectionLabel icon={Leaf} text="The Problem" />
             <Reveal delay={0.05}>
-              <h2 className="font-display text-4xl sm:text-5xl font-bold text-gray-900 leading-tight mb-6" style={{ letterSpacing: "-0.02em" }}>
+              <h2
+                className="font-display text-4xl sm:text-5xl font-bold text-gray-900 leading-tight mb-7"
+                style={{ letterSpacing: "-0.02em" }}
+              >
                 "Premium", "ceremonial",<br />"authentic" — but from{" "}
                 <span className="italic text-matcha-700">where</span>?
               </h2>
@@ -366,63 +515,19 @@ export default function HomePage() {
                 publicly disclose where their matcha actually comes from.
               </p>
             </Reveal>
-            <div className="space-y-4">
-              {[
-                "No Australian law mandates matcha origin disclosure on menus",
-                '"Ceremonial grade" has no legal definition in Australia',
-                "Many cafes use Chinese-sourced matcha marketed as Japanese",
-                "Consumers currently rely entirely on trust — not evidence",
-              ].map((item, i) => (
-                <Reveal key={item} delay={0.18 + i * 0.07}>
-                  <div className="flex items-start gap-3.5">
-                    <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5" style={{ background: "#e6f4e0" }}>
-                      <CheckCircle2 size={11} className="text-matcha-700" />
-                    </div>
-                    <span className="text-sm text-gray-600 leading-relaxed">{item}</span>
-                  </div>
-                </Reveal>
-              ))}
-            </div>
+            <FactList items={[
+              "No Australian law mandates matcha origin disclosure on menus",
+              '"Ceremonial grade" has no legal definition in Australia',
+              "Many cafes use Chinese-sourced matcha marketed as Japanese",
+              "Consumers currently rely entirely on trust — not evidence",
+            ]} />
           </div>
 
-          {/* Floating card comparison */}
-          <div className="relative h-[460px] flex items-center justify-center" style={{ perspective: "1000px" }}>
-            <Reveal delay={0.2} className="absolute" style={{ top: "4%", left: "0%", zIndex: 1 }}>
-              <motion.div className="w-80 rounded-2xl"
-                style={{ background: "#f7f7f7", border: "1px solid #e8e8e8", rotate: "6deg", opacity: 0.62 }}
-              >
-                <div className="p-6">
-                  <div className="text-[9px] uppercase tracking-[0.22em] text-gray-400 mb-3">Without Origin Disclosure</div>
-                  <div className="text-sm text-gray-500 italic leading-relaxed mb-4">"Premium authentic Japanese matcha, ceremonial grade experience..."</div>
-                  <div className="text-xs text-red-400/60 flex items-center gap-1.5"><span>✕</span> No source · No evidence · No verification date</div>
-                </div>
-              </motion.div>
-            </Reveal>
-
-            <Reveal delay={0.35} className="absolute" style={{ top: "26%", left: "13%", zIndex: 2 }}>
-              <motion.div className="w-80 rounded-2xl"
-                style={{ background: "#fff", border: "1.5px solid #b3dda6", boxShadow: "0 24px 64px rgba(46,96,39,0.14), 0 4px 20px rgba(0,0,0,0.08)" }}
-                animate={{ y: [0, -10, 0] }}
-                transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
-              >
-                <div className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="text-[9px] uppercase tracking-[0.22em] text-matcha-700 font-semibold">With Origin Disclosure</div>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: "#e6f4e0", color: "#2e6027" }}>Level A</span>
-                  </div>
-                  <div className="text-xs leading-relaxed italic p-3.5 rounded-xl mb-4"
-                    style={{ background: "#f2f8f0", borderLeft: "3px solid #4d9740", color: "#374151" }}
-                  >
-                    "Our matcha is sourced exclusively from Uji, Kyoto. Each tin includes the harvest date and garden name."
-                  </div>
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-matcha-700 font-semibold">✓ Official Website</span>
-                    <span style={{ color: "rgba(107,114,128,0.65)" }}>Verified</span>
-                  </div>
-                </div>
-              </motion.div>
-            </Reveal>
+          {/* RIGHT: comparison card */}
+          <div className="hidden lg:flex items-center justify-center py-8">
+            <ComparisonCard />
           </div>
+
         </div>
       </section>
 
