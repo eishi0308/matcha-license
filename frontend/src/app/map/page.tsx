@@ -100,7 +100,8 @@ export default function MapPage() {
             } catch {}
           }, 5000);
         }
-      } catch {
+      } catch (err) {
+        console.error("[Map load error]", err);
         setCafes([]);
       } finally {
         setLoading(false);

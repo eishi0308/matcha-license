@@ -51,7 +51,11 @@ export async function fetchCafes(params?: {
   }
 
   const { data, error } = await query;
-  if (error) throw new Error(error.message);
+  if (error) {
+    console.error("[Supabase fetchCafes error]", error);
+    throw new Error(error.message);
+  }
+  console.log("[Supabase] fetchCafes returned", data?.length, "rows");
   return (data ?? []).map(rowToCafe);
 }
 
