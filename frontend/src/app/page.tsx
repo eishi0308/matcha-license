@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import AuthModal from "@/components/AuthModal";
+import { fetchStats } from "@/lib/api";
 
 // ── Constants ──────────────────────────────────────────────────────────────
 
@@ -26,8 +27,8 @@ const SPRING = { type: "spring" as const, stiffness: 300, damping: 28 };
 
 // ── Data ──────────────────────────────────────────────────────────────────
 
-const STATS = [
-  { value: 823, suffix: "+", label: "Cafes Indexed", sublabel: "& still growing", icon: "map" },
+const DEFAULT_STATS = [
+  { value: 1147, suffix: "+", label: "Cafes Indexed", sublabel: "& still growing", icon: "map" },
   { value: 50,  suffix: "",  label: "Mention Japanese Origin", sublabel: "on their menu or site", icon: "leaf" },
   { value: 2,   suffix: "",  label: "Cities Covered", sublabel: "Sydney & Melbourne", icon: "cities" },
   { value: 37,  suffix: "",  label: "Name a Specific Source", sublabel: "farm, region or supplier", icon: "file" },
@@ -323,7 +324,19 @@ function SectionLabel({ icon: Icon, text }: { icon: React.ElementType; text: str
 
 export default function HomePage() {
   const [authOpen, setAuthOpen] = useState(false);
+  const [stats, setStats] = useState(DEFAULT_STATS);
   const { scrollY } = useScroll();
+
+  useEffect(() => {
+    fetchStats().then((s) => {
+      setStats([
+        { value: s.total, suffix: "+", label: "Cafes Indexed", sublabel: "& still growing", icon: "map" },
+        { value: (s.byLevel.A ?? 0) + (s.byLevel.B ?? 0), suffix: "", label: "Mention Japanese Origin", sublabel: "on their menu or site", icon: "leaf" },
+        { value: 2, suffix: "", label: "Cities Covered", sublabel: "Sydney & Melbourne", icon: "cities" },
+        { value: s.byLevel.A ?? 0, suffix: "", label: "Name a Specific Source", sublabel: "farm, region or supplier", icon: "file" },
+      ]);
+    }).catch(() => {/* keep defaults */});
+  }, []);
   const heroY = useTransform(scrollY, [0, 700], [0, -140]);
   const heroOpacity = useTransform(scrollY, [0, 480], [1, 0]);
 
@@ -437,7 +450,7 @@ export default function HomePage() {
             initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, delay: 1.4, ease: EASE }}
           >
-            {STATS.map((s, i) => (
+            {stats.map((s, i) => (
               <motion.div
                 key={s.label}
                 className="flex flex-col items-start p-6 rounded-3xl gap-4"
@@ -781,7 +794,7 @@ export default function HomePage() {
                   boxShadow: "0 0 48px rgba(90,171,71,0.38), 0 4px 24px rgba(0,0,0,0.35)",
                 }}
               >
-                <Map size={15} />Explore all 823+ cafes<ArrowRight size={13} />
+                <Map size={15} />Explore all {stats[0].value}+ cafes<ArrowRight size={13} />
               </Link>
             </motion.div>
             <p className="text-[11px] text-center" style={{ color: "rgba(255,255,255,0.2)" }}>
