@@ -10,7 +10,8 @@
       "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(f''''{len\\(d\\)} cafes, first: {d[0][\"\"name\"\"] if d else \"\"none\"\"}''''\\)\")",
       "Bash(python3 -c \":*)",
       "Bash(/opt/homebrew/bin/mvn spring-boot:run -q)",
-      "Bash(curl -s -X POST http://localhost:8080/api/cafes/cleanup-evidence)"
+      "Bash(curl -s -X POST http://localhost:8080/api/cafes/cleanup-evidence)",
+      "Read(//usr/local/**)"
     ]
   }
 }
