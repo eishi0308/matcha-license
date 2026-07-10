@@ -58,7 +58,7 @@ export default function Navbar() {
               <span className="font-semibold text-sm tracking-tight transition-colors duration-300"
                 style={{ color: light ? "#fff" : "#1a1a1a" }}
               >
-                Matcha Origin
+                MatchaScope
               </span>
               <span className="text-[10px] tracking-widest uppercase font-medium transition-colors duration-300"
                 style={{ color: light ? "rgba(255,255,255,0.65)" : "#6eb35c" }}

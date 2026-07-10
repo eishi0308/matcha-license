@@ -2,11 +2,11 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Matcha Origin — Transparency Map",
+  title: "MatchaScope — Transparency Map",
   description: "Find cafes that publicly disclose using Japanese matcha. Evidence-based, source-verified transparency ratings across Sydney & Melbourne.",
   keywords: "matcha, japanese matcha, cafe transparency, uji matcha, matcha sydney, matcha melbourne",
   openGraph: {
-    title: "Matcha Origin — Transparency Map",
+    title: "MatchaScope — Transparency Map",
     description: "Evidence-backed transparency ratings for matcha cafes across Australia.",
     type: "website",
   },

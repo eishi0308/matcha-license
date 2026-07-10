@@ -119,7 +119,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab = "login" }: Aut
                 >
                   <Leaf size={15} className="text-white" />
                 </motion.div>
-                <span className="font-semibold text-matcha-900 text-sm tracking-wide">Matcha Origin</span>
+                <span className="font-semibold text-matcha-900 text-sm tracking-wide">MatchaScope</span>
               </motion.div>
 
               {/* Tab switcher with sliding pill */}
@@ -157,7 +157,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab = "login" }: Aut
                   transition={{ duration: 0.2, ease: EASE }}
                 >
                   <h2 className="text-2xl font-display font-semibold text-gray-900 mb-1">
-                    {tab === "login" ? "Welcome back" : "Join Matcha Origin"}
+                    {tab === "login" ? "Welcome back" : "Join MatchaScope"}
                   </h2>
                   <p className="text-sm text-gray-500 mb-6">
                     {tab === "login"

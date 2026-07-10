@@ -868,9 +868,9 @@ export default function HomePage() {
             <div className="w-7 h-7 rounded-full flex items-center justify-center" style={{ background: "linear-gradient(135deg, #2e6027, #6eb35c)" }}>
               <Leaf size={12} className="text-white" />
             </div>
-            <span className="text-sm font-semibold text-gray-700">Matcha Origin</span>
+            <span className="text-sm font-semibold text-gray-700">MatchaScope</span>
           </div>
-          <p className="text-xs text-gray-400">© 2026 Matcha Origin. All classifications based on publicly verifiable evidence.</p>
+          <p className="text-xs text-gray-400">© 2026 MatchaScope. All classifications based on publicly verifiable evidence.</p>
           <div className="flex gap-5">
             {["Privacy", "Terms", "Contact"].map((l) => (
               <span key={l} className="text-xs text-gray-400 hover:text-matcha-700 cursor-pointer transition-colors">{l}</span>
