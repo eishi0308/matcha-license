@@ -1,6 +1,20 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
-export const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || "https://rcftroimovojjjrgasjc.supabase.co",
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "sb_publishable_9_Ene4D1c7WYoq4f6en0aw_QsdQP4p1"
-);
+let _client: SupabaseClient | null = null;
+
+function getClient(): SupabaseClient {
+  if (!_client) {
+    _client = createClient(
+      "https://rcftroimovojjjrgasjc.supabase.co",
+      "sb_publishable_9_Ene4D1c7WYoq4f6en0aw_QsdQP4p1"
+    );
+  }
+  return _client;
+}
+
+// Proxy defers createClient until first actual use (inside useEffect, not during SSR pre-render)
+export const supabase = new Proxy({} as SupabaseClient, {
+  get(_, prop) {
+    return (getClient() as any)[prop as any];
+  },
+});
