@@ -65,7 +65,15 @@ public class GooglePlacesService {
             new SuburbCoord("Parramatta",         -33.8150, 151.0011),
             new SuburbCoord("Burwood",            -33.8775, 151.1036),
             new SuburbCoord("Hurstville",         -33.9667, 151.1000),
-            new SuburbCoord("Strathfield",        -33.8750, 151.0833)
+            new SuburbCoord("Strathfield",        -33.8750, 151.0833),
+            new SuburbCoord("Marrickville",       -33.9108, 151.1555),
+            new SuburbCoord("Eastwood",           -33.7900, 151.0817),
+            new SuburbCoord("North Sydney",       -33.8388, 151.2069),
+            new SuburbCoord("Manly",              -33.7969, 151.2874),
+            new SuburbCoord("Ultimo",             -33.8808, 151.1977),
+            new SuburbCoord("Waterloo",           -33.9003, 151.2073),
+            new SuburbCoord("Rhodes",             -33.8283, 151.0875),
+            new SuburbCoord("Cabramatta",         -33.8950, 150.9376)
         ),
         "Melbourne", List.of(
             new SuburbCoord("Melbourne CBD",      -37.8136, 144.9631),
@@ -81,7 +89,15 @@ public class GooglePlacesService {
             new SuburbCoord("Footscray",          -37.8003, 144.8997),
             new SuburbCoord("Box Hill",           -37.8196, 145.1239),
             new SuburbCoord("Docklands",          -37.8148, 144.9468),
-            new SuburbCoord("Southbank",          -37.8230, 144.9631)
+            new SuburbCoord("Southbank",          -37.8230, 144.9631),
+            new SuburbCoord("Glen Waverley",      -37.8785, 145.1635),
+            new SuburbCoord("Northcote",          -37.7699, 145.0087),
+            new SuburbCoord("Clayton",            -37.9191, 145.1238),
+            new SuburbCoord("Camberwell",         -37.8333, 145.0667),
+            new SuburbCoord("Springvale",         -37.9502, 145.1499),
+            new SuburbCoord("Preston",            -37.7444, 145.0131),
+            new SuburbCoord("Moonee Ponds",       -37.7669, 144.9201),
+            new SuburbCoord("Elwood",             -37.8833, 144.9833)
         )
     );
 
