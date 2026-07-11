@@ -459,18 +459,48 @@ export default function MapPage() {
           </div>
         </motion.div>
 
-        {/* Sidebar toggle */}
-        <motion.button
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="absolute bottom-6 z-[60] flex items-center gap-1.5 px-3 py-2 rounded-r-xl text-xs font-medium bg-white border border-l-0 border-gray-200 text-gray-600 hover:bg-gray-50 shadow-sm"
-          animate={{ left: (!isMobile && sidebarOpen) ? 300 : 0 }}
-          transition={SPRING}
-          whileHover={{ paddingRight: "14px" }}
-          whileTap={{ scale: 0.96 }}
-        >
-          <SlidersHorizontal size={13} />
-          {sidebarOpen ? "Hide" : "List"}
-        </motion.button>
+        {/* Desktop sidebar toggle — edge tab */}
+        {!isMobile && (
+          <motion.button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="absolute bottom-6 z-[60] flex items-center gap-1.5 px-3 py-2 rounded-r-xl text-xs font-medium bg-white border border-l-0 border-gray-200 text-gray-600 hover:bg-gray-50 shadow-sm"
+            animate={{ left: sidebarOpen ? 300 : 0 }}
+            transition={SPRING}
+            whileHover={{ paddingRight: "14px" }}
+            whileTap={{ scale: 0.96 }}
+          >
+            <SlidersHorizontal size={13} />
+            {sidebarOpen ? "Hide" : "List"}
+          </motion.button>
+        )}
+
+        {/* Mobile list toggle — prominent floating pill at bottom-center */}
+        <AnimatePresence>
+          {isMobile && (
+            <motion.button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[60] flex items-center gap-2.5 px-5 py-3 rounded-full text-sm font-semibold text-gray-800 bg-white"
+              style={{
+                boxShadow: "0 4px 24px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.06)",
+                border: "1px solid rgba(0,0,0,0.07)",
+              }}
+              initial={{ opacity: 0, y: 16, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 16, scale: 0.9 }}
+              transition={SPRING}
+              whileTap={{ scale: 0.95 }}
+            >
+              <SlidersHorizontal size={15} className="text-matcha-600" />
+              {sidebarOpen ? "Close" : "Cafes"}
+              <span
+                className="flex items-center justify-center min-w-[22px] h-[22px] rounded-full text-[11px] font-bold text-white px-1.5"
+                style={{ background: "#4d9740" }}
+              >
+                {filtered.length}
+              </span>
+            </motion.button>
+          )}
+        </AnimatePresence>
 
         {/* Map */}
         <div className="flex-1 relative overflow-hidden">
