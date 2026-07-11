@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useState, useMemo, useEffect } from "react";
-import { Search, SlidersHorizontal, X, Leaf, ChevronDown, MapPin } from "lucide-react";
+import { Search, SlidersHorizontal, X, ChevronDown, MapPin } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import CafeDetailPanel from "@/components/CafeDetailPanel";
@@ -481,38 +481,54 @@ export default function MapPage() {
             city={cityFilter}
           />
 
-          {/* Map legend overlay */}
-          <motion.div
-            className="absolute bottom-5 left-5 z-[50] rounded-2xl p-3 sm:p-4"
-            style={{
-              background: "rgba(255,255,255,0.92)",
-              backdropFilter: "blur(12px)",
-              WebkitBackdropFilter: "blur(12px)",
-              border: "1px solid rgba(0,0,0,0.06)",
-              boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
-            }}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4, duration: 0.45, ease: EASE }}
-          >
-            <div className="flex items-center gap-1.5 mb-2.5">
-              <Leaf size={12} className="text-matcha-700" />
-              <span className="text-[10px] uppercase tracking-widest text-gray-400 font-semibold">Legend</span>
-            </div>
-            <div className="space-y-1.5">
-              {(["A", "B", "C", "D"] as TransparencyLevel[]).map((lvl) => {
-                const cfg = levelConfig[lvl];
-                return (
-                  <div key={lvl} className="flex items-center gap-2">
-                    <div className="w-4 h-4 rounded-full flex-shrink-0" style={{ background: cfg.color }} />
-                    <span className="text-xs text-gray-600">
-                      <span className="font-semibold">{lvl}</span> — {cfg.shortLabel}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          </motion.div>
+          {/* Legend — only visible when sidebar is closed, bottom-right, doubles as filter */}
+          <AnimatePresence>
+            {!sidebarOpen && (
+              <motion.div
+                className="absolute bottom-5 right-5 z-[50] hidden sm:block"
+                initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                transition={{ duration: 0.22, ease: EASE }}
+              >
+                <div
+                  className="rounded-2xl overflow-hidden"
+                  style={{
+                    background: "rgba(255,255,255,0.94)",
+                    backdropFilter: "blur(16px)",
+                    WebkitBackdropFilter: "blur(16px)",
+                    border: "1px solid rgba(0,0,0,0.07)",
+                    boxShadow: "0 8px 32px rgba(0,0,0,0.1), 0 2px 8px rgba(0,0,0,0.06)",
+                  }}
+                >
+                  {(["A", "B", "C", "D"] as TransparencyLevel[]).map((lvl, i) => {
+                    const cfg = levelConfig[lvl];
+                    const active = levelFilter === lvl;
+                    return (
+                      <motion.button
+                        key={lvl}
+                        onClick={() => setLevelFilter(active ? "All" : lvl)}
+                        className={`flex items-center gap-2.5 w-full px-3.5 py-2.5 text-left ${i < 3 ? "border-b border-gray-100" : ""}`}
+                        style={{ background: active ? cfg.bg : "transparent" }}
+                        whileHover={{ background: active ? cfg.bg : "#f9fafb" } as any}
+                        whileTap={{ scale: 0.97 }}
+                        transition={{ duration: 0.1 }}
+                      >
+                        <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: cfg.color }} />
+                        <span className="text-[11px] whitespace-nowrap text-gray-600">
+                          <span className="font-bold" style={{ color: cfg.color }}>{lvl}</span>
+                          {" — "}{cfg.shortLabel}
+                        </span>
+                        <span className="ml-auto pl-3 text-[10px] font-semibold tabular-nums" style={{ color: cfg.color }}>
+                          {levelCounts[lvl]}
+                        </span>
+                      </motion.button>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         {/* Cafe detail panel */}
