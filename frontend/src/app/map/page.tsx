@@ -492,13 +492,13 @@ export default function MapPage() {
 
                 <button
                   onClick={() => setMobileView("list")}
-                  className="relative z-10 flex items-center gap-1.5 px-5 py-2 rounded-full text-sm font-semibold transition-colors duration-200"
+                  className="relative z-10 flex-1 flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-full text-sm font-semibold transition-colors duration-200"
                   style={{ color: mobileView === "list" ? "#1a1a1a" : "rgba(255,255,255,0.65)" }}
                 >
                   <List size={14} />
                   List
                   <span
-                    className="text-[10px] font-bold px-2 py-0.5 rounded-full transition-colors duration-200"
+                    className="text-[10px] font-bold px-1.5 py-0.5 rounded-full transition-colors duration-200"
                     style={{
                       background: mobileView === "list" ? "#e6f4e0" : "rgba(255,255,255,0.15)",
                       color: mobileView === "list" ? "#2e6027" : "rgba(255,255,255,0.65)",
@@ -510,7 +510,7 @@ export default function MapPage() {
 
                 <button
                   onClick={() => setMobileView("map")}
-                  className="relative z-10 flex items-center gap-1.5 px-5 py-2 rounded-full text-sm font-semibold transition-colors duration-200"
+                  className="relative z-10 flex-1 flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-full text-sm font-semibold transition-colors duration-200"
                   style={{ color: mobileView === "map" ? "#1a1a1a" : "rgba(255,255,255,0.65)" }}
                 >
                   <Map size={14} />

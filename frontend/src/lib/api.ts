@@ -41,22 +41,33 @@ export async function fetchCafes(params?: {
   city?: string;
   level?: string;
 }): Promise<Cafe[]> {
-  let query = supabase.from("cafes").select("*").order("name").limit(10000);
+  const PAGE = 1000;
+  const allRows: Record<string, unknown>[] = [];
+  let from = 0;
 
-  if (params?.city && params.city !== "All") {
-    query = query.eq("city", params.city);
-  }
-  if (params?.level && params.level !== "All") {
-    query = query.eq("level", params.level);
+  while (true) {
+    let query = supabase
+      .from("cafes")
+      .select("*")
+      .order("name")
+      .range(from, from + PAGE - 1);
+
+    if (params?.city && params.city !== "All") query = query.eq("city", params.city);
+    if (params?.level && params.level !== "All") query = query.eq("level", params.level);
+
+    const { data, error } = await query;
+    if (error) {
+      console.error("[Supabase fetchCafes error]", error);
+      throw new Error(error.message);
+    }
+    if (!data || data.length === 0) break;
+    allRows.push(...data);
+    if (data.length < PAGE) break;
+    from += PAGE;
   }
 
-  const { data, error } = await query;
-  if (error) {
-    console.error("[Supabase fetchCafes error]", error);
-    throw new Error(error.message);
-  }
-  console.log("[Supabase] fetchCafes returned", data?.length, "rows");
-  return (data ?? []).map(rowToCafe);
+  console.log("[Supabase] fetchCafes returned", allRows.length, "rows");
+  return allRows.map(rowToCafe);
 }
 
 export async function fetchCafe(id: string): Promise<Cafe> {
@@ -77,19 +88,31 @@ export async function fetchStats(): Promise<{
   melbourne: number;
   discovering: boolean;
 }> {
-  const { data, error } = await supabase.from("cafes").select("level, city").limit(10000);
-  if (error) throw new Error(error.message);
+  const PAGE = 1000;
+  const allRows: { level: string; city: string }[] = [];
+  let from = 0;
 
-  const rows = data ?? [];
+  while (true) {
+    const { data, error } = await supabase
+      .from("cafes")
+      .select("level, city")
+      .range(from, from + PAGE - 1);
+    if (error) throw new Error(error.message);
+    if (!data || data.length === 0) break;
+    allRows.push(...data);
+    if (data.length < PAGE) break;
+    from += PAGE;
+  }
+
   const byLevel: Record<string, number> = { A: 0, B: 0, C: 0, D: 0 };
   let sydney = 0;
   let melbourne = 0;
 
-  for (const row of rows) {
+  for (const row of allRows) {
     byLevel[row.level] = (byLevel[row.level] ?? 0) + 1;
     if (row.city === "Sydney") sydney++;
     if (row.city === "Melbourne") melbourne++;
   }
 
-  return { total: rows.length, byLevel, sydney, melbourne, discovering: false };
+  return { total: allRows.length, byLevel, sydney, melbourne, discovering: false };
 }
