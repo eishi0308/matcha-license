@@ -41,7 +41,7 @@ export async function fetchCafes(params?: {
   city?: string;
   level?: string;
 }): Promise<Cafe[]> {
-  let query = supabase.from("cafes").select("*").order("name");
+  let query = supabase.from("cafes").select("*").order("name").limit(10000);
 
   if (params?.city && params.city !== "All") {
     query = query.eq("city", params.city);
@@ -77,7 +77,7 @@ export async function fetchStats(): Promise<{
   melbourne: number;
   discovering: boolean;
 }> {
-  const { data, error } = await supabase.from("cafes").select("level, city");
+  const { data, error } = await supabase.from("cafes").select("level, city").limit(10000);
   if (error) throw new Error(error.message);
 
   const rows = data ?? [];
