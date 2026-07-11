@@ -370,7 +370,7 @@ export default function HomePage() {
 
         <motion.div
           style={{ y: heroY, opacity: heroOpacity }}
-          className="relative z-10 w-full max-w-7xl mx-auto h-full flex flex-col lg:grid lg:grid-cols-2 lg:gap-12 items-center justify-center px-2"
+          className="relative z-10 w-full max-w-7xl mx-auto flex flex-col lg:grid lg:grid-cols-2 lg:gap-12 items-center justify-center px-2"
         >
           {/* ── LEFT: copy ── */}
           <div className="flex flex-col items-center lg:items-start text-center lg:text-left">
@@ -379,7 +379,7 @@ export default function HomePage() {
               initial={{ opacity: 0, scale: 0.88, y: -16 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               transition={{ duration: 0.65, ease: EASE }}
-              className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full border border-white/10 bg-white/5 backdrop-blur-sm mb-6"
+              className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full border border-white/10 bg-white/5 backdrop-blur-sm mb-4 sm:mb-6"
             >
               <motion.span className="w-1.5 h-1.5 rounded-full bg-matcha-400"
                 animate={{ scale: [1, 1.7, 1], opacity: [1, 0.45, 1] }}
@@ -392,8 +392,8 @@ export default function HomePage() {
 
             {/* Headline */}
             <h1
-              className="font-display font-bold text-white leading-[0.9] tracking-tight mb-6"
-              style={{ fontSize: "clamp(2.6rem, 5.5vw, 5.5rem)", perspective: "800px" }}
+              className="font-display font-bold text-white leading-[0.9] tracking-tight mb-4 sm:mb-6"
+              style={{ fontSize: "clamp(2rem, 5.5vw, 5.5rem)", perspective: "800px" }}
             >
               <div className="mb-1 overflow-visible">
                 <SplitWords text="Find cafes that are" delay={0.25} />
@@ -412,7 +412,7 @@ export default function HomePage() {
 
             {/* Sub-headline */}
             <motion.p
-              className="text-base sm:text-lg max-w-lg leading-relaxed mb-8"
+              className="text-sm sm:text-lg max-w-lg leading-relaxed mb-5 sm:mb-8"
               style={{ color: "rgba(255,255,255,0.52)" }}
               initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.72, delay: 1.15, ease: EASE }}
@@ -446,19 +446,18 @@ export default function HomePage() {
 
           {/* ── RIGHT: stats 2×2 ── */}
           <motion.div
-            className="grid grid-cols-2 gap-3 w-full mt-10 lg:mt-0"
+            className="grid grid-cols-2 gap-2 sm:gap-3 w-full mt-6 lg:mt-0"
             initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, delay: 1.4, ease: EASE }}
           >
             {stats.map((s, i) => (
               <motion.div
                 key={s.label}
-                className="flex flex-col items-start p-6 rounded-3xl gap-4"
+                className="flex flex-col items-start p-3 sm:p-6 rounded-2xl sm:rounded-3xl gap-2 sm:gap-4"
                 style={{
                   background: "rgba(255,255,255,0.06)",
                   border: "1px solid rgba(255,255,255,0.1)",
                   backdropFilter: "blur(16px)",
-                  minHeight: "clamp(130px, 22vw, 180px)",
                 }}
                 initial={{ opacity: 0, y: 24 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -466,7 +465,7 @@ export default function HomePage() {
                 whileHover={{ background: "rgba(255,255,255,0.09)", borderColor: "rgba(255,255,255,0.18)" } as any}
               >
                 {/* icon */}
-                <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style={{ background: "rgba(255,255,255,0.1)" }}>
+                <div className="hidden sm:flex w-8 h-8 rounded-xl items-center justify-center shrink-0" style={{ background: "rgba(255,255,255,0.1)" }}>
                   {s.icon === "map"    && <Map       size={15} className="text-white/70" />}
                   {s.icon === "leaf"   && <Leaf      size={15} className="text-white/70" />}
                   {s.icon === "cities" && <TrendingUp size={15} className="text-white/70" />}
@@ -476,15 +475,15 @@ export default function HomePage() {
                 {/* number */}
                 <span
                   className="font-display font-black text-white leading-none"
-                  style={{ fontSize: "clamp(2.2rem, 3.5vw, 3.5rem)", letterSpacing: "-0.04em" }}
+                  style={{ fontSize: "clamp(1.6rem, 6vw, 3.5rem)", letterSpacing: "-0.04em" }}
                 >
                   <CountUp to={s.value} suffix={s.suffix} />
                 </span>
 
                 {/* labels */}
                 <div className="mt-auto">
-                  <div className="text-[13px] font-semibold text-white/90 leading-snug">{s.label}</div>
-                  <div className="text-[11px] mt-0.5 leading-snug" style={{ color: "rgba(255,255,255,0.45)" }}>{s.sublabel}</div>
+                  <div className="text-[10px] sm:text-[13px] font-semibold text-white/90 leading-snug">{s.label}</div>
+                  <div className="hidden sm:block text-[11px] mt-0.5 leading-snug" style={{ color: "rgba(255,255,255,0.45)" }}>{s.sublabel}</div>
                 </div>
               </motion.div>
             ))}
