@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useState, useMemo, useEffect } from "react";
-import { Search, SlidersHorizontal, X, ChevronDown, MapPin } from "lucide-react";
+import { Search, SlidersHorizontal, X, ChevronDown, MapPin, List, Map } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import CafeDetailPanel from "@/components/CafeDetailPanel";
@@ -77,8 +77,8 @@ export default function MapPage() {
   const [selectedCafe, setSelectedCafe] = useState<Cafe | null>(null);
   const [sidebarOpen,  setSidebarOpen]  = useState(true);
   const [isMobile,     setIsMobile]    = useState(false);
+  const [mobileView,   setMobileView]  = useState<"list" | "map">("map");
 
-  // Detect mobile (used for CafeDetailPanel bottom-sheet and sidebar width)
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
     check();
@@ -135,6 +135,157 @@ export default function MapPage() {
 
   const activeFilters = [levelFilter, cityFilter, typeFilter].filter((f) => f !== "All").length;
   const clearAll = () => { setLevelFilter("All"); setCityFilter("All"); setTypeFilter("All"); setQuery(""); };
+
+  // On mobile list view, tapping a cafe switches to map view then opens detail
+  const handleSelectCafe = (cafe: Cafe | null) => {
+    setSelectedCafe(cafe);
+    if (cafe && isMobile && mobileView === "list") {
+      setMobileView("map");
+    }
+  };
+
+  // Shared list panel content (used in desktop sidebar + mobile full-screen list)
+  const renderListContent = (compact = false) => (
+    <div className={compact ? "w-full" : "w-[300px]"}>
+      {/* Level legend */}
+      <motion.div
+        className="p-4 border-b border-gray-100"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.2, duration: 0.4, ease: EASE }}
+      >
+        <div className="text-[10px] uppercase tracking-widest text-gray-400 font-semibold mb-3">
+          Transparency Levels
+        </div>
+        <div className="space-y-1.5">
+          {(["A", "B", "C", "D"] as TransparencyLevel[]).map((lvl) => {
+            const cfg = levelConfig[lvl];
+            const active = levelFilter === lvl;
+            return (
+              <motion.button
+                key={lvl}
+                onClick={() => setLevelFilter(active ? "All" : lvl)}
+                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left"
+                animate={{
+                  background: active ? cfg.bg : "transparent",
+                  outline: active ? `1.5px solid ${cfg.color}30` : "1.5px solid transparent",
+                }}
+                whileHover={{ background: active ? cfg.bg : "#f9fafb" } as any}
+                whileTap={{ scale: 0.97 }}
+                transition={{ duration: 0.15 }}
+              >
+                <div
+                  className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0"
+                  style={{ background: cfg.color }}
+                >
+                  {lvl}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-xs font-medium text-gray-700 truncate">{cfg.shortLabel}</div>
+                </div>
+                <motion.span
+                  className="text-xs font-bold px-1.5 py-0.5 rounded-md"
+                  style={{ background: cfg.bg, color: cfg.color }}
+                  key={levelCounts[lvl]}
+                  initial={{ scale: 1.25 }}
+                  animate={{ scale: 1 }}
+                  transition={SPRING}
+                >
+                  {levelCounts[lvl]}
+                </motion.span>
+              </motion.button>
+            );
+          })}
+        </div>
+      </motion.div>
+
+      {/* Cafe list */}
+      <div className="p-3">
+        <div className="text-[10px] uppercase tracking-widest text-gray-400 font-semibold mb-3 px-1">
+          Results ({filtered.length})
+        </div>
+
+        <AnimatePresence mode="wait">
+          {filtered.length === 0 ? (
+            <motion.div
+              key="empty"
+              className="text-center py-10"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.25 }}
+            >
+              {discovering && cafes.length === 0 ? (
+                <>
+                  <motion.div
+                    className="w-8 h-8 rounded-full border-2 border-matcha-500 border-t-transparent mx-auto mb-3"
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 0.9, repeat: Infinity, ease: "linear" }}
+                  />
+                  <p className="text-sm font-medium text-matcha-700">Discovering cafes…</p>
+                  <p className="text-xs text-gray-400 mt-1">Searching Google Maps & analysing menus</p>
+                </>
+              ) : (
+                <>
+                  <div className="text-2xl mb-2">🍵</div>
+                  <p className="text-sm text-gray-400">No cafes match your filters.</p>
+                </>
+              )}
+            </motion.div>
+          ) : (
+            <motion.div
+              key={`${levelFilter}-${cityFilter}-${typeFilter}-${query}`}
+              className="space-y-1.5"
+              variants={listVariants}
+              initial="hidden"
+              animate="show"
+            >
+              {filtered.map((cafe) => {
+                const cfg = levelConfig[cafe.level];
+                const isSelected = selectedCafe?.id === cafe.id;
+                return (
+                  <motion.button
+                    key={cafe.id}
+                    onClick={() => handleSelectCafe(isSelected ? null : cafe)}
+                    className="w-full flex items-start gap-3 p-3 rounded-xl text-left"
+                    variants={itemVariants}
+                    animate={{
+                      background: isSelected ? "#f2f8f0" : "transparent",
+                      outline: isSelected ? "1.5px solid #c2e1b5" : "1.5px solid transparent",
+                    }}
+                    whileHover={{ background: isSelected ? "#f2f8f0" : "#fafafa" } as any}
+                    whileTap={{ scale: 0.98 }}
+                    transition={{ duration: 0.12 }}
+                  >
+                    <motion.div
+                      className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0 mt-0.5"
+                      style={{ background: cfg.color }}
+                      whileHover={{ scale: 1.1 }}
+                      transition={SPRING}
+                    >
+                      {cafe.level}
+                    </motion.div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-semibold text-gray-800 truncate">{cafe.name}</div>
+                      <div className="flex items-center gap-1 mt-0.5">
+                        <MapPin size={10} className="text-gray-400" />
+                        <span className="text-xs text-gray-400">{cafe.suburb}, {cafe.city}</span>
+                      </div>
+                    </div>
+                    {isMobile && (
+                      <div className="flex-shrink-0 self-center">
+                        <Map size={13} className="text-gray-300" />
+                      </div>
+                    )}
+                  </motion.button>
+                );
+              })}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </div>
+  );
 
   if (loading) {
     return (
@@ -284,222 +435,181 @@ export default function MapPage() {
       {/* ── MAIN ─────────────────────────────────────────────────────── */}
       <div className="flex flex-1 overflow-hidden relative">
 
-        {/* Sidebar — always in flex flow on every screen size */}
-        <motion.div
-          className="flex-shrink-0 overflow-y-auto border-r border-gray-100 bg-white"
-          animate={{ width: sidebarOpen ? (isMobile ? 260 : 300) : 0 }}
-          transition={SPRING}
-        >
-          <div className={isMobile ? "w-[260px]" : "w-[300px]"}>
-            {/* Level legend */}
+        {isMobile ? (
+          /* ── MOBILE LAYOUT: full-screen Map or full-screen List ─── */
+          <>
+            {/* Map always rendered as base layer — z-[1] creates stacking context to scope Leaflet's internal z-indices */}
+            <div className="absolute inset-0 z-[1]">
+              <MapClient
+                cafes={filtered}
+                selectedCafe={selectedCafe}
+                onSelectCafe={handleSelectCafe}
+                city={cityFilter}
+              />
+            </div>
+
+            {/* List overlay — slides up over the map */}
+            <AnimatePresence>
+              {mobileView === "list" && (
+                <motion.div
+                  key="mobile-list"
+                  className="absolute inset-0 z-[30] bg-white overflow-y-auto"
+                  style={{ paddingBottom: "88px" }}
+                  initial={{ opacity: 0, y: 24 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 24 }}
+                  transition={{ duration: 0.28, ease: EASE }}
+                >
+                  {renderListContent(true)}
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Bottom toggle pill — Map / List switcher */}
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[40] pointer-events-none">
+              <motion.div
+                className="pointer-events-auto relative flex p-1 rounded-full"
+                style={{
+                  background: "rgba(15,15,15,0.82)",
+                  backdropFilter: "blur(16px)",
+                  WebkitBackdropFilter: "blur(16px)",
+                  boxShadow: "0 8px 32px rgba(0,0,0,0.28), 0 2px 8px rgba(0,0,0,0.2)",
+                }}
+                initial={{ opacity: 0, y: 16, scale: 0.9 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ delay: 0.3, ...SPRING }}
+              >
+                {/* Sliding indicator */}
+                <motion.div
+                  className="absolute top-1 bottom-1 rounded-full bg-white"
+                  style={{ boxShadow: "0 1px 6px rgba(0,0,0,0.18)" }}
+                  animate={{
+                    left: mobileView === "list" ? 4 : "50%",
+                    right: mobileView === "list" ? "50%" : 4,
+                  }}
+                  transition={SPRING}
+                />
+
+                <button
+                  onClick={() => setMobileView("list")}
+                  className="relative z-10 flex items-center gap-1.5 px-5 py-2 rounded-full text-sm font-semibold transition-colors duration-200"
+                  style={{ color: mobileView === "list" ? "#1a1a1a" : "rgba(255,255,255,0.65)" }}
+                >
+                  <List size={14} />
+                  List
+                  <span
+                    className="text-[10px] font-bold px-2 py-0.5 rounded-full transition-colors duration-200"
+                    style={{
+                      background: mobileView === "list" ? "#e6f4e0" : "rgba(255,255,255,0.15)",
+                      color: mobileView === "list" ? "#2e6027" : "rgba(255,255,255,0.65)",
+                    }}
+                  >
+                    {filtered.length}
+                  </span>
+                </button>
+
+                <button
+                  onClick={() => setMobileView("map")}
+                  className="relative z-10 flex items-center gap-1.5 px-5 py-2 rounded-full text-sm font-semibold transition-colors duration-200"
+                  style={{ color: mobileView === "map" ? "#1a1a1a" : "rgba(255,255,255,0.65)" }}
+                >
+                  <Map size={14} />
+                  Map
+                </button>
+              </motion.div>
+            </div>
+
+            {/* Cafe detail panel (bottom sheet) */}
+            <CafeDetailPanel cafe={selectedCafe} onClose={() => setSelectedCafe(null)} />
+          </>
+        ) : (
+          /* ── DESKTOP LAYOUT: sidebar + map side by side ─────────── */
+          <>
+            {/* Sidebar */}
             <motion.div
-              className="p-4 border-b border-gray-100"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.2, duration: 0.4, ease: EASE }}
+              className="flex-shrink-0 overflow-y-auto border-r border-gray-100 bg-white"
+              animate={{ width: sidebarOpen ? 300 : 0 }}
+              transition={SPRING}
             >
-              <div className="text-[10px] uppercase tracking-widest text-gray-400 font-semibold mb-3">
-                Transparency Levels
-              </div>
-              <div className="space-y-1.5">
-                {(["A", "B", "C", "D"] as TransparencyLevel[]).map((lvl) => {
-                  const cfg = levelConfig[lvl];
-                  const active = levelFilter === lvl;
-                  return (
-                    <motion.button
-                      key={lvl}
-                      onClick={() => setLevelFilter(active ? "All" : lvl)}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left"
-                      animate={{
-                        background: active ? cfg.bg : "transparent",
-                        outline: active ? `1.5px solid ${cfg.color}30` : "1.5px solid transparent",
-                      }}
-                      whileHover={{ background: active ? cfg.bg : "#f9fafb" } as any}
-                      whileTap={{ scale: 0.97 }}
-                      transition={{ duration: 0.15 }}
-                    >
-                      <div
-                        className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0"
-                        style={{ background: cfg.color }}
-                      >
-                        {lvl}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-xs font-medium text-gray-700 truncate">{cfg.shortLabel}</div>
-                      </div>
-                      <motion.span
-                        className="text-xs font-bold px-1.5 py-0.5 rounded-md"
-                        style={{ background: cfg.bg, color: cfg.color }}
-                        key={levelCounts[lvl]}
-                        initial={{ scale: 1.25 }}
-                        animate={{ scale: 1 }}
-                        transition={SPRING}
-                      >
-                        {levelCounts[lvl]}
-                      </motion.span>
-                    </motion.button>
-                  );
-                })}
-              </div>
+              {renderListContent(false)}
             </motion.div>
 
-            {/* Cafe list */}
-            <div className="p-3">
-              <div className="text-[10px] uppercase tracking-widest text-gray-400 font-semibold mb-3 px-1">
-                Results ({filtered.length})
-              </div>
+            {/* Sidebar toggle */}
+            <motion.button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="absolute bottom-6 z-[60] flex items-center gap-1.5 px-3 py-2 rounded-r-xl text-xs font-medium bg-white border border-l-0 border-gray-200 text-gray-600 hover:bg-gray-50 shadow-sm"
+              animate={{ left: sidebarOpen ? 300 : 0 }}
+              transition={SPRING}
+              whileHover={{ paddingRight: "14px" }}
+              whileTap={{ scale: 0.96 }}
+            >
+              <SlidersHorizontal size={13} />
+              {sidebarOpen ? "Hide" : "List"}
+            </motion.button>
 
-              <AnimatePresence mode="wait">
-                {filtered.length === 0 ? (
+            {/* Map */}
+            <div className="flex-1 relative overflow-hidden">
+              <MapClient
+                cafes={filtered}
+                selectedCafe={selectedCafe}
+                onSelectCafe={setSelectedCafe}
+                city={cityFilter}
+              />
+
+              {/* Legend — only when sidebar is closed */}
+              <AnimatePresence>
+                {!sidebarOpen && (
                   <motion.div
-                    key="empty"
-                    className="text-center py-10"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.25 }}
+                    className="absolute bottom-5 right-5 z-[50]"
+                    initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                    transition={{ duration: 0.22, ease: EASE }}
                   >
-                    {discovering && cafes.length === 0 ? (
-                      <>
-                        <motion.div
-                          className="w-8 h-8 rounded-full border-2 border-matcha-500 border-t-transparent mx-auto mb-3"
-                          animate={{ rotate: 360 }}
-                          transition={{ duration: 0.9, repeat: Infinity, ease: "linear" }}
-                        />
-                        <p className="text-sm font-medium text-matcha-700">Discovering cafes…</p>
-                        <p className="text-xs text-gray-400 mt-1">Searching Google Maps & analysing menus</p>
-                      </>
-                    ) : (
-                      <>
-                        <div className="text-2xl mb-2">🍵</div>
-                        <p className="text-sm text-gray-400">No cafes match your filters.</p>
-                      </>
-                    )}
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key={`${levelFilter}-${cityFilter}-${typeFilter}-${query}`}
-                    className="space-y-1.5"
-                    variants={listVariants}
-                    initial="hidden"
-                    animate="show"
-                  >
-                    {filtered.map((cafe) => {
-                      const cfg = levelConfig[cafe.level];
-                      const isSelected = selectedCafe?.id === cafe.id;
-                      return (
-                        <motion.button
-                          key={cafe.id}
-                          onClick={() => setSelectedCafe(isSelected ? null : cafe)}
-                          className="w-full flex items-start gap-3 p-3 rounded-xl text-left"
-                          variants={itemVariants}
-                          animate={{
-                            background: isSelected ? "#f2f8f0" : "transparent",
-                            outline: isSelected ? "1.5px solid #c2e1b5" : "1.5px solid transparent",
-                          }}
-                          whileHover={{ background: isSelected ? "#f2f8f0" : "#fafafa" } as any}
-                          whileTap={{ scale: 0.98 }}
-                          transition={{ duration: 0.12 }}
-                        >
-                          <motion.div
-                            className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0 mt-0.5"
-                            style={{ background: cfg.color }}
-                            whileHover={{ scale: 1.1 }}
-                            transition={SPRING}
+                    <div
+                      className="rounded-2xl overflow-hidden"
+                      style={{
+                        background: "rgba(255,255,255,0.94)",
+                        backdropFilter: "blur(16px)",
+                        WebkitBackdropFilter: "blur(16px)",
+                        border: "1px solid rgba(0,0,0,0.07)",
+                        boxShadow: "0 8px 32px rgba(0,0,0,0.1), 0 2px 8px rgba(0,0,0,0.06)",
+                      }}
+                    >
+                      {(["A", "B", "C", "D"] as TransparencyLevel[]).map((lvl, i) => {
+                        const cfg = levelConfig[lvl];
+                        const active = levelFilter === lvl;
+                        return (
+                          <motion.button
+                            key={lvl}
+                            onClick={() => setLevelFilter(active ? "All" : lvl)}
+                            className={`flex items-center gap-2.5 w-full px-3.5 py-2.5 text-left ${i < 3 ? "border-b border-gray-100" : ""}`}
+                            style={{ background: active ? cfg.bg : "transparent" }}
+                            whileHover={{ background: active ? cfg.bg : "#f9fafb" } as any}
+                            whileTap={{ scale: 0.97 }}
+                            transition={{ duration: 0.1 }}
                           >
-                            {cafe.level}
-                          </motion.div>
-                          <div className="flex-1 min-w-0">
-                            <div className="text-sm font-semibold text-gray-800 truncate">{cafe.name}</div>
-                            <div className="flex items-center gap-1 mt-0.5">
-                              <MapPin size={10} className="text-gray-400" />
-                              <span className="text-xs text-gray-400">{cafe.suburb}, {cafe.city}</span>
-                            </div>
-                          </div>
-                        </motion.button>
-                      );
-                    })}
+                            <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: cfg.color }} />
+                            <span className="text-[11px] whitespace-nowrap text-gray-600">
+                              <span className="font-bold" style={{ color: cfg.color }}>{lvl}</span>
+                              {" — "}{cfg.shortLabel}
+                            </span>
+                            <span className="ml-auto pl-3 text-[10px] font-semibold tabular-nums" style={{ color: cfg.color }}>
+                              {levelCounts[lvl]}
+                            </span>
+                          </motion.button>
+                        );
+                      })}
+                    </div>
                   </motion.div>
                 )}
               </AnimatePresence>
             </div>
-          </div>
-        </motion.div>
 
-        {/* Sidebar toggle — unified for all screen sizes */}
-        <motion.button
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="absolute bottom-6 z-[60] flex items-center gap-1.5 px-3 py-2 rounded-r-xl text-xs font-medium bg-white border border-l-0 border-gray-200 text-gray-600 hover:bg-gray-50 shadow-sm"
-          animate={{ left: sidebarOpen ? (isMobile ? 260 : 300) : 0 }}
-          transition={SPRING}
-          whileHover={{ paddingRight: "14px" }}
-          whileTap={{ scale: 0.96 }}
-        >
-          <SlidersHorizontal size={13} />
-          {sidebarOpen ? "Hide" : "List"}
-        </motion.button>
-
-        {/* Map */}
-        <div className="flex-1 relative overflow-hidden">
-          <MapClient
-            cafes={filtered}
-            selectedCafe={selectedCafe}
-            onSelectCafe={setSelectedCafe}
-            city={cityFilter}
-          />
-
-          {/* Legend — only visible when sidebar is closed, bottom-right, doubles as filter */}
-          <AnimatePresence>
-            {!sidebarOpen && (
-              <motion.div
-                className="absolute bottom-5 right-5 z-[50] hidden sm:block"
-                initial={{ opacity: 0, y: 8, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: 8, scale: 0.95 }}
-                transition={{ duration: 0.22, ease: EASE }}
-              >
-                <div
-                  className="rounded-2xl overflow-hidden"
-                  style={{
-                    background: "rgba(255,255,255,0.94)",
-                    backdropFilter: "blur(16px)",
-                    WebkitBackdropFilter: "blur(16px)",
-                    border: "1px solid rgba(0,0,0,0.07)",
-                    boxShadow: "0 8px 32px rgba(0,0,0,0.1), 0 2px 8px rgba(0,0,0,0.06)",
-                  }}
-                >
-                  {(["A", "B", "C", "D"] as TransparencyLevel[]).map((lvl, i) => {
-                    const cfg = levelConfig[lvl];
-                    const active = levelFilter === lvl;
-                    return (
-                      <motion.button
-                        key={lvl}
-                        onClick={() => setLevelFilter(active ? "All" : lvl)}
-                        className={`flex items-center gap-2.5 w-full px-3.5 py-2.5 text-left ${i < 3 ? "border-b border-gray-100" : ""}`}
-                        style={{ background: active ? cfg.bg : "transparent" }}
-                        whileHover={{ background: active ? cfg.bg : "#f9fafb" } as any}
-                        whileTap={{ scale: 0.97 }}
-                        transition={{ duration: 0.1 }}
-                      >
-                        <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: cfg.color }} />
-                        <span className="text-[11px] whitespace-nowrap text-gray-600">
-                          <span className="font-bold" style={{ color: cfg.color }}>{lvl}</span>
-                          {" — "}{cfg.shortLabel}
-                        </span>
-                        <span className="ml-auto pl-3 text-[10px] font-semibold tabular-nums" style={{ color: cfg.color }}>
-                          {levelCounts[lvl]}
-                        </span>
-                      </motion.button>
-                    );
-                  })}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-
-        {/* Cafe detail panel */}
-        <CafeDetailPanel cafe={selectedCafe} onClose={() => setSelectedCafe(null)} />
+            {/* Cafe detail panel (right panel) */}
+            <CafeDetailPanel cafe={selectedCafe} onClose={() => setSelectedCafe(null)} />
+          </>
+        )}
       </div>
     </div>
   );
