@@ -393,7 +393,7 @@ export default function HomePage() {
             {/* Headline */}
             <h1
               className="font-display font-bold text-white leading-[0.9] tracking-tight mb-4 sm:mb-6"
-              style={{ fontSize: "clamp(2rem, 5.5vw, 5.5rem)", perspective: "800px" }}
+              style={{ fontSize: "clamp(2.5rem, 10vw, 5.5rem)", perspective: "800px" }}
             >
               <div className="mb-1 overflow-visible">
                 <SplitWords text="Find cafes that are" delay={0.25} />
