@@ -346,7 +346,7 @@ export default function HomePage() {
 
       {/* ── HERO ──────────────────────────────────────────────────────── */}
       <section
-        className="relative h-[100dvh] flex flex-col items-center justify-center text-center px-5 pt-20 pb-6 overflow-hidden"
+        className="relative min-h-[100dvh] flex flex-col items-center justify-center text-center px-5 pt-20 pb-10 overflow-hidden"
         style={{ background: "linear-gradient(145deg, #060e07 0%, #0c1c0d 30%, #162e17 62%, #1e4a1a 100%)" }}
       >
         {/* Animated glow orbs */}
@@ -458,7 +458,7 @@ export default function HomePage() {
                   background: "rgba(255,255,255,0.06)",
                   border: "1px solid rgba(255,255,255,0.1)",
                   backdropFilter: "blur(16px)",
-                  minHeight: "180px",
+                  minHeight: "clamp(130px, 22vw, 180px)",
                 }}
                 initial={{ opacity: 0, y: 24 }}
                 animate={{ opacity: 1, y: 0 }}

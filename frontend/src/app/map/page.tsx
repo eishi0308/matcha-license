@@ -57,7 +57,6 @@ const TYPE_OPTS: { value: CafeType | "All"; label: string }[] = [
 const SPRING = { type: "spring" as const, stiffness: 300, damping: 28 };
 const EASE   = [0.25, 0.46, 0.45, 0.94] as const;
 
-// List item variants for stagger
 const listVariants = {
   hidden: {},
   show:   { transition: { staggerChildren: 0.04 } },
@@ -77,6 +76,19 @@ export default function MapPage() {
   const [typeFilter,   setTypeFilter]  = useState<CafeType | "All">("All");
   const [selectedCafe, setSelectedCafe] = useState<Cafe | null>(null);
   const [sidebarOpen,  setSidebarOpen]  = useState(true);
+  const [isMobile,     setIsMobile]    = useState(false);
+
+  // Detect mobile and default sidebar to closed on small screens
+  useEffect(() => {
+    const check = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      if (mobile) setSidebarOpen(false);
+    };
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
 
   useEffect(() => {
     let pollInterval: ReturnType<typeof setInterval> | null = null;
@@ -87,16 +99,13 @@ export default function MapPage() {
         setCafes(cafesData);
         setDiscovering(stats.discovering);
 
-        // If discovery is running and no cafes yet, poll every 5s
         if (stats.discovering) {
           pollInterval = setInterval(async () => {
             try {
               const [newCafes, newStats] = await Promise.all([fetchCafes(), fetchStats()]);
               setCafes(newCafes);
               setDiscovering(newStats.discovering);
-              if (!newStats.discovering) {
-                clearInterval(pollInterval!);
-              }
+              if (!newStats.discovering) clearInterval(pollInterval!);
             } catch {}
           }, 5000);
         }
@@ -129,7 +138,6 @@ export default function MapPage() {
   }, [filtered]);
 
   const activeFilters = [levelFilter, cityFilter, typeFilter].filter((f) => f !== "All").length;
-
   const clearAll = () => { setLevelFilter("All"); setCityFilter("All"); setTypeFilter("All"); setQuery(""); };
 
   if (loading) {
@@ -148,12 +156,12 @@ export default function MapPage() {
   }
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden bg-cream-50">
+    <div className="flex flex-col h-[100dvh] overflow-hidden bg-cream-50">
       <Navbar />
 
       {/* ── TOOLBAR ──────────────────────────────────────────────────── */}
       <motion.div
-        className="flex-shrink-0 flex items-center gap-3 px-4 py-3 mt-16"
+        className="flex-shrink-0 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 px-4 py-3 mt-16"
         style={{
           background: "rgba(255,255,255,0.92)",
           backdropFilter: "blur(16px)",
@@ -164,113 +172,152 @@ export default function MapPage() {
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.1, duration: 0.55, ease: EASE }}
       >
-        {/* Search */}
-        <div className="relative flex-1 max-w-sm">
-          <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search cafes, suburbs…"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            className="w-full pl-9 pr-9 py-2.5 rounded-xl bg-gray-100 text-sm text-gray-700 placeholder:text-gray-400 outline-none focus:bg-white focus:ring-2 focus:ring-matcha-200 transition-all"
-          />
-          <AnimatePresence>
-            {query && (
-              <motion.button
-                onClick={() => setQuery("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                initial={{ opacity: 0, scale: 0.7 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.7 }}
-                transition={SPRING}
-                whileTap={{ scale: 0.85 }}
+        {/* Row 1: search + mobile count */}
+        <div className="flex items-center gap-3">
+          <div className="relative flex-1 sm:max-w-sm">
+            <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search cafes, suburbs…"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              className="w-full pl-9 pr-9 py-2.5 rounded-xl bg-gray-100 text-sm text-gray-700 placeholder:text-gray-400 outline-none focus:bg-white focus:ring-2 focus:ring-matcha-200 transition-all"
+            />
+            <AnimatePresence>
+              {query && (
+                <motion.button
+                  onClick={() => setQuery("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  initial={{ opacity: 0, scale: 0.7 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.7 }}
+                  transition={SPRING}
+                  whileTap={{ scale: 0.85 }}
+                >
+                  <X size={14} />
+                </motion.button>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* Count — visible only on mobile in this row */}
+          <motion.span
+            key={filtered.length}
+            className="sm:hidden text-xs text-gray-400 whitespace-nowrap"
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            {filtered.length} cafe{filtered.length !== 1 ? "s" : ""}
+          </motion.span>
+        </div>
+
+        {/* Row 2: filters (horizontal scroll on mobile) */}
+        <div className="flex items-center gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden pb-0.5 sm:pb-0">
+          {[
+            { val: levelFilter, opts: LEVEL_OPTS, set: setLevelFilter as (v: string) => void },
+            { val: cityFilter,  opts: CITY_OPTS,  set: setCityFilter  as (v: string) => void },
+            { val: typeFilter,  opts: TYPE_OPTS,  set: setTypeFilter  as (v: string) => void },
+          ].map((f, i) => (
+            <motion.div key={i} className="relative flex-shrink-0" whileHover={{ scale: 1.02 }} transition={SPRING}>
+              <select
+                value={f.val}
+                onChange={(e) => f.set(e.target.value)}
+                className="appearance-none pl-3.5 pr-8 py-2 sm:py-2.5 rounded-xl bg-gray-100 text-sm text-gray-700 outline-none focus:ring-2 focus:ring-matcha-200 cursor-pointer transition-all"
+                style={f.val !== "All" ? { background: "#e6f4e0", color: "#2e6027" } : {}}
               >
-                <X size={14} />
+                {f.opts.map((o) => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
+              </select>
+              <ChevronDown size={13} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+            </motion.div>
+          ))}
+
+          <AnimatePresence>
+            {activeFilters > 0 && (
+              <motion.button
+                onClick={clearAll}
+                className="flex-shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-medium"
+                style={{ background: "#fee2e2", color: "#dc2626" }}
+                initial={{ opacity: 0, scale: 0.8, x: -8 }}
+                animate={{ opacity: 1, scale: 1, x: 0 }}
+                exit={{ opacity: 0, scale: 0.8, x: -8 }}
+                transition={SPRING}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <X size={13} />Clear ({activeFilters})
               </motion.button>
             )}
           </AnimatePresence>
-        </div>
 
-        {/* Filter selects */}
-        {[
-          { val: levelFilter, opts: LEVEL_OPTS, set: setLevelFilter as (v: string) => void },
-          { val: cityFilter,  opts: CITY_OPTS,  set: setCityFilter  as (v: string) => void },
-          { val: typeFilter,  opts: TYPE_OPTS,  set: setTypeFilter  as (v: string) => void },
-        ].map((f, i) => (
-          <motion.div key={i} className="relative" whileHover={{ scale: 1.02 }} transition={SPRING}>
-            <select
-              value={f.val}
-              onChange={(e) => f.set(e.target.value)}
-              className="appearance-none pl-3.5 pr-8 py-2.5 rounded-xl bg-gray-100 text-sm text-gray-700 outline-none focus:ring-2 focus:ring-matcha-200 cursor-pointer transition-all"
-              style={f.val !== "All" ? { background: "#e6f4e0", color: "#2e6027" } : {}}
-            >
-              {f.opts.map((o) => (
-                <option key={o.value} value={o.value}>{o.label}</option>
-              ))}
-            </select>
-            <ChevronDown size={13} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-          </motion.div>
-        ))}
+          {/* Count — desktop only */}
+          <motion.span
+            key={filtered.length}
+            className="hidden sm:block text-xs text-gray-400 ml-auto whitespace-nowrap"
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            {filtered.length} cafe{filtered.length !== 1 ? "s" : ""}
+          </motion.span>
 
-        {/* Clear filters */}
-        <AnimatePresence>
-          {activeFilters > 0 && (
-            <motion.button
-              onClick={clearAll}
-              className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-sm font-medium"
-              style={{ background: "#fee2e2", color: "#dc2626" }}
-              initial={{ opacity: 0, scale: 0.8, x: -8 }}
-              animate={{ opacity: 1, scale: 1, x: 0 }}
-              exit={{ opacity: 0, scale: 0.8, x: -8 }}
-              transition={SPRING}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <X size={13} />Clear ({activeFilters})
-            </motion.button>
-          )}
-        </AnimatePresence>
-
-        {/* Result count */}
-        <motion.span
-          key={filtered.length}
-          className="text-xs text-gray-400 ml-auto whitespace-nowrap"
-          initial={{ opacity: 0, y: -4 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.2 }}
-        >
-          {filtered.length} cafe{filtered.length !== 1 ? "s" : ""}
-        </motion.span>
-
-        {/* Discovery in-progress badge */}
-        <AnimatePresence>
-          {discovering && (
-            <motion.div
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium"
-              style={{ background: "#e6f4e0", color: "#2e6027" }}
-              initial={{ opacity: 0, scale: 0.85 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.85 }}
-              transition={{ duration: 0.2 }}
-            >
+          <AnimatePresence>
+            {discovering && (
               <motion.div
-                className="w-2 h-2 rounded-full bg-matcha-600"
-                animate={{ opacity: [1, 0.3, 1] }}
-                transition={{ duration: 1.2, repeat: Infinity }}
-              />
-              Discovering…
-            </motion.div>
-          )}
-        </AnimatePresence>
+                className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium"
+                style={{ background: "#e6f4e0", color: "#2e6027" }}
+                initial={{ opacity: 0, scale: 0.85 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.85 }}
+                transition={{ duration: 0.2 }}
+              >
+                <motion.div
+                  className="w-2 h-2 rounded-full bg-matcha-600"
+                  animate={{ opacity: [1, 0.3, 1] }}
+                  transition={{ duration: 1.2, repeat: Infinity }}
+                />
+                Discovering…
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </motion.div>
 
       {/* ── MAIN ─────────────────────────────────────────────────────── */}
       <div className="flex flex-1 overflow-hidden relative">
 
-        {/* Sidebar — spring width */}
+        {/* Mobile backdrop — tap to close sidebar */}
+        <AnimatePresence>
+          {isMobile && sidebarOpen && (
+            <motion.div
+              className="absolute inset-0 z-40 bg-black/25"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              onClick={() => setSidebarOpen(false)}
+            />
+          )}
+        </AnimatePresence>
+
+        {/* Sidebar */}
         <motion.div
-          className="flex-shrink-0 overflow-y-auto border-r border-gray-100 bg-white"
-          animate={{ width: sidebarOpen ? 300 : 0 }}
+          className="overflow-y-auto border-r border-gray-100 bg-white"
+          style={isMobile ? {
+            position: "absolute",
+            left: 0,
+            top: 0,
+            bottom: 0,
+            zIndex: 50,
+            width: 300,
+            boxShadow: "4px 0 24px rgba(0,0,0,0.12)",
+          } : { flexShrink: 0 }}
+          animate={isMobile
+            ? { x: sidebarOpen ? 0 : -300 }
+            : { width: sidebarOpen ? 300 : 0 }
+          }
           transition={SPRING}
         >
           <div className="w-[300px]">
@@ -326,7 +373,7 @@ export default function MapPage() {
               </div>
             </motion.div>
 
-            {/* Cafe list — re-staggers on filter change */}
+            {/* Cafe list */}
             <div className="p-3">
               <div className="text-[10px] uppercase tracking-widest text-gray-400 font-semibold mb-3 px-1">
                 Results ({filtered.length})
@@ -373,7 +420,10 @@ export default function MapPage() {
                       return (
                         <motion.button
                           key={cafe.id}
-                          onClick={() => setSelectedCafe(isSelected ? null : cafe)}
+                          onClick={() => {
+                            setSelectedCafe(isSelected ? null : cafe);
+                            if (isMobile) setSidebarOpen(false);
+                          }}
                           className="w-full flex items-start gap-3 p-3 rounded-xl text-left"
                           variants={itemVariants}
                           animate={{
@@ -409,11 +459,11 @@ export default function MapPage() {
           </div>
         </motion.div>
 
-        {/* Sidebar toggle — spring position */}
+        {/* Sidebar toggle */}
         <motion.button
           onClick={() => setSidebarOpen(!sidebarOpen)}
           className="absolute bottom-6 z-[60] flex items-center gap-1.5 px-3 py-2 rounded-r-xl text-xs font-medium bg-white border border-l-0 border-gray-200 text-gray-600 hover:bg-gray-50 shadow-sm"
-          animate={{ left: sidebarOpen ? 300 : 0 }}
+          animate={{ left: (!isMobile && sidebarOpen) ? 300 : 0 }}
           transition={SPRING}
           whileHover={{ paddingRight: "14px" }}
           whileTap={{ scale: 0.96 }}
@@ -433,7 +483,7 @@ export default function MapPage() {
 
           {/* Map legend overlay */}
           <motion.div
-            className="absolute bottom-5 left-5 z-[50] rounded-2xl p-4"
+            className="absolute bottom-5 left-5 z-[50] rounded-2xl p-3 sm:p-4"
             style={{
               background: "rgba(255,255,255,0.92)",
               backdropFilter: "blur(12px)",
@@ -445,7 +495,7 @@ export default function MapPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4, duration: 0.45, ease: EASE }}
           >
-            <div className="flex items-center gap-1.5 mb-3">
+            <div className="flex items-center gap-1.5 mb-2.5">
               <Leaf size={12} className="text-matcha-700" />
               <span className="text-[10px] uppercase tracking-widest text-gray-400 font-semibold">Legend</span>
             </div>
@@ -465,7 +515,7 @@ export default function MapPage() {
           </motion.div>
         </div>
 
-        {/* Cafe detail panel with AnimatePresence is handled inside component */}
+        {/* Cafe detail panel */}
         <CafeDetailPanel cafe={selectedCafe} onClose={() => setSelectedCafe(null)} />
       </div>
     </div>
