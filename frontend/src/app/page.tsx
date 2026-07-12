@@ -13,7 +13,7 @@ import {
 } from "framer-motion";
 import {
   Leaf, Map, Shield, Search, ArrowRight, CheckCircle2,
-  TrendingUp, Eye, FileText, MessageSquarePlus,
+  TrendingUp, Eye, FileText, MessageSquarePlus, ExternalLink, Play,
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import AuthModal from "@/components/AuthModal";
@@ -39,6 +39,50 @@ const LEVEL_CARDS = [
   { level: "B", title: "Japanese Matcha Mentioned",    desc: "References 'Japanese matcha' but no specific region, farm, or supplier named.",    accent: "#3a7a30", badgeBg: "#eef7e9", border: "#c2e1b5" },
   { level: "C", title: "No Origin Disclosure",         desc: "Serves matcha but provides no public sourcing information on any channel.",         accent: "#6b7280", badgeBg: "#f3f4f6", border: "#e5e7eb" },
   { level: "D", title: "Insufficient Information",     desc: "Could not verify enough information across website, menu, or social media.",        accent: "#9ca3af", badgeBg: "#f9fafb", border: "#e5e7eb" },
+];
+
+const PRESS_LOGOS = [
+  { name: "NBC News",          flag: null,  url: "https://www.nbcnews.com/business/consumer/matcha-shortage-higher-prices-tariffs-rcna223111" },
+  { name: "SBS News",          flag: "🇦🇺", url: "https://www.sbs.com.au/news/article/matcha-boom-australia-shake-up/29635oedo" },
+  { name: "ABC News",          flag: "🇦🇺", url: "https://www.youtube.com/watch?v=qYh1iXaF-jI" },
+  { name: "Perfect Daily Grind", flag: null, url: "https://perfectdailygrind.com/2025/09/matcha-shortage-japan-production/" },
+  { name: "Baking Business AU", flag: "🇦🇺", url: "https://bakingbusiness.com.au/matcha-popularity-results-in-surge-of-counterfeits/" },
+];
+
+const PRESS_CARDS = [
+  {
+    source: "NBC News",
+    flag: null,
+    type: "article" as const,
+    accent: "#0083C9",
+    headline: "Matcha faces shortage, higher prices, tariffs",
+    byline: "Kayla Steinberg · Aug 5, 2025",
+    domain: "nbcnews.com",
+    quote: "Supply crisis driving non-authentic substitutes into cafes as Japanese matcha prices surge beyond the reach of most cafes.",
+    url: "https://www.nbcnews.com/business/consumer/matcha-shortage-higher-prices-tariffs-rcna223111",
+  },
+  {
+    source: "SBS News Australia",
+    flag: "🇦🇺",
+    type: "article" as const,
+    accent: "#d4021d",
+    headline: "The $27 million reason Aussie matcha fanatics could face a shake-up",
+    byline: "Nicole Gong & Molina Liu · Oct 25, 2025",
+    domain: "sbs.com.au",
+    quote: "Australian cafes are switching to Chinese matcha at $80/kg vs Japanese at $500/kg — without telling their customers.",
+    url: "https://www.sbs.com.au/news/article/matcha-boom-australia-shake-up/29635oedo",
+  },
+  {
+    source: "ABC News Australia",
+    flag: "🇦🇺",
+    type: "video" as const,
+    accent: "#111111",
+    headline: "Matcha producers in Japan warn of fake products from China",
+    byline: "Filmed in Uji, Kyoto · ABC News",
+    domain: "youtube.com",
+    quote: "Japanese tea producers speak directly on camera about Chinese counterfeits flooding global markets including Australia.",
+    url: "https://www.youtube.com/watch?v=qYh1iXaF-jI",
+  },
 ];
 
 const HOW_IT_WORKS = [
@@ -541,6 +585,157 @@ export default function HomePage() {
           </div>
 
         </div>
+
+        {/* ── PRESS PROOF ────────────────────────────────────────────── */}
+        <div className="mt-20 pt-16" style={{ borderTop: "1px solid rgba(0,0,0,0.06)" }}>
+
+          {/* "As reported by" divider */}
+          <Reveal>
+            <div className="flex items-center gap-4 mb-8">
+              <div className="flex-1 h-px" style={{ background: "linear-gradient(90deg, transparent, rgba(0,0,0,0.08))" }} />
+              <span className="text-[10px] uppercase tracking-[0.28em] font-semibold whitespace-nowrap" style={{ color: "#9ca3af" }}>
+                As reported by
+              </span>
+              <div className="flex-1 h-px" style={{ background: "linear-gradient(90deg, rgba(0,0,0,0.08), transparent)" }} />
+            </div>
+          </Reveal>
+
+          {/* Publication logos */}
+          <Reveal delay={0.06}>
+            <div className="flex flex-wrap items-center justify-center gap-3 mb-14">
+              {PRESS_LOGOS.map((logo, i) => (
+                <motion.a
+                  key={logo.name}
+                  href={logo.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-semibold"
+                  style={{
+                    border: "1px solid rgba(0,0,0,0.1)",
+                    background: "rgba(255,255,255,0.7)",
+                    color: "#374151",
+                    backdropFilter: "blur(8px)",
+                  }}
+                  initial={{ opacity: 0, y: 12, scale: 0.9 }}
+                  whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.4, delay: i * 0.08, ease: EASE }}
+                  whileHover={{
+                    borderColor: "#b3dda6",
+                    backgroundColor: "#f2f8f0",
+                    color: "#2e6027",
+                    scale: 1.05,
+                  } as any}
+                  whileTap={{ scale: 0.97 }}
+                >
+                  {logo.flag && <span className="text-sm">{logo.flag}</span>}
+                  {logo.name}
+                  <ExternalLink size={10} className="opacity-40" />
+                </motion.a>
+              ))}
+            </div>
+          </Reveal>
+
+          {/* 3 article cards */}
+          <div className="grid md:grid-cols-3 gap-5">
+            {PRESS_CARDS.map((card, i) => (
+              <Reveal key={card.source} delay={i * 0.1}>
+                <motion.a
+                  href={card.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex flex-col h-full rounded-2xl overflow-hidden bg-white group"
+                  style={{
+                    border: "1.5px solid #e5e7eb",
+                    boxShadow: "0 2px 12px rgba(0,0,0,0.04)",
+                    textDecoration: "none",
+                  }}
+                  whileHover={{
+                    y: -8,
+                    borderColor: "#b3dda6",
+                    boxShadow: "0 20px 60px rgba(46,96,39,0.12), 0 4px 20px rgba(0,0,0,0.08)",
+                  } as any}
+                  whileTap={{ scale: 0.98 }}
+                  transition={SPRING}
+                >
+                  {/* Top accent bar */}
+                  <motion.div
+                    className="h-[3px] w-full flex-shrink-0"
+                    style={{ background: card.accent }}
+                    initial={{ scaleX: 0, originX: 0 }}
+                    whileInView={{ scaleX: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.7, delay: 0.3 + i * 0.12, ease: EASE }}
+                  />
+
+                  <div className="flex flex-col flex-1 p-6">
+                    {/* Source + type badge */}
+                    <div className="flex items-start justify-between gap-2 mb-5">
+                      <div className="flex items-center gap-2">
+                        {card.type === "video" ? (
+                          <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                            style={{ background: "#FF0000" }}>
+                            <Play size={11} fill="white" className="text-white ml-0.5" />
+                          </div>
+                        ) : (
+                          <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                            style={{ background: card.accent + "18" }}>
+                            <FileText size={12} style={{ color: card.accent }} />
+                          </div>
+                        )}
+                        <div>
+                          <div className="flex items-center gap-1.5">
+                            {card.flag && <span className="text-sm leading-none">{card.flag}</span>}
+                            <span className="text-xs font-bold text-gray-800">{card.source}</span>
+                          </div>
+                          <div className="text-[10px] text-gray-400 mt-0.5">{card.domain}</div>
+                        </div>
+                      </div>
+                      <motion.div
+                        className="text-gray-300 flex-shrink-0 mt-0.5"
+                        animate={{ x: 0, y: 0 }}
+                        whileHover={{ x: 2, y: -2 }}
+                        transition={{ duration: 0.15 }}
+                      >
+                        <ExternalLink size={14} />
+                      </motion.div>
+                    </div>
+
+                    {/* Headline */}
+                    <h3 className="font-semibold text-gray-900 leading-snug mb-2 text-[15px] group-hover:text-matcha-800 transition-colors duration-200">
+                      "{card.headline}"
+                    </h3>
+
+                    {/* Byline */}
+                    <p className="text-[11px] text-gray-400 mb-4">{card.byline}</p>
+
+                    {/* Divider */}
+                    <div className="h-px mb-4" style={{ background: "rgba(0,0,0,0.06)" }} />
+
+                    {/* Quote / description */}
+                    <p className="text-sm text-gray-500 leading-relaxed flex-1">
+                      {card.quote}
+                    </p>
+
+                    {/* Read link */}
+                    <motion.div
+                      className="flex items-center gap-1.5 mt-5 text-xs font-semibold"
+                      style={{ color: card.accent }}
+                      animate={{ x: 0 }}
+                      whileHover={{ x: 4 }}
+                      transition={{ duration: 0.18 }}
+                    >
+                      {card.type === "video" ? "Watch video" : "Read article"}
+                      <ArrowRight size={12} />
+                    </motion.div>
+                  </div>
+                </motion.a>
+              </Reveal>
+            ))}
+          </div>
+
+        </div>
+
       </section>
 
       {/* ── TRANSPARENCY LEVELS ──────────────────────────────────────── */}
