@@ -42,6 +42,13 @@ const LEVEL_CARDS = [
 ];
 
 
+const PROBLEM_FACTS = [
+  { icon: Shield,   num: "01", phrase: "No Australian law mandates matcha origin disclosure on menus" },
+  { icon: FileText, num: "02", phrase: '"Ceremonial grade" has no legal definition in Australia' },
+  { icon: Search,   num: "03", phrase: "Many cafes use Chinese-sourced matcha marketed as Japanese" },
+  { icon: Eye,      num: "04", phrase: "Consumers currently rely entirely on trust — not evidence" },
+];
+
 const PRESS_CARDS = [
   {
     source: "ABC News Australia",
@@ -203,38 +210,45 @@ function TiltCard({ children, className, style }: { children: React.ReactNode; c
   );
 }
 
-function FactList({ items }: { items: string[] }) {
+function FactList({ items }: { items: typeof PROBLEM_FACTS }) {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true, margin: "-80px" });
   return (
-    <div ref={ref}>
-      {items.map((item, i) => (
-        <div key={item}>
-          <motion.div
-            className="flex items-start gap-5 py-5"
-            initial={{ opacity: 0, x: -24 }}
-            animate={inView ? { opacity: 1, x: 0 } : {}}
-            transition={{ duration: 0.55, delay: i * 0.1, ease: EASE_EXPO }}
-          >
-            <span
-              className="font-display font-bold text-[11px] tracking-[0.2em] shrink-0 mt-0.5 tabular-nums"
-              style={{ color: "#7dd56f" }}
+    <div ref={ref} className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      {items.map(({ icon: Icon, num, phrase }, i) => (
+        <motion.div
+          key={num}
+          className="flex flex-col gap-4 p-5 rounded-2xl bg-white"
+          style={{
+            borderTop: "1.5px solid #e5e7eb",
+            borderRight: "1.5px solid #e5e7eb",
+            borderBottom: "1.5px solid #e5e7eb",
+            borderLeft: "3px solid #f59e0b",
+          }}
+          initial={{ opacity: 0, y: 18 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.5, delay: i * 0.08, ease: EASE_EXPO }}
+          whileHover={{
+            y: -4,
+            boxShadow: "0 14px 44px rgba(245,158,11,0.1), 0 2px 12px rgba(0,0,0,0.06)",
+          } as any}
+        >
+          <div className="flex items-center justify-between">
+            <div
+              className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
+              style={{ background: "#fff7ed" }}
             >
-              0{i + 1}
+              <Icon size={13} style={{ color: "#f59e0b" }} />
+            </div>
+            <span
+              className="font-display font-black text-[11px] tracking-[0.22em] tabular-nums"
+              style={{ color: "#d1d5db" }}
+            >
+              {num}
             </span>
-            <span className="text-[15px] text-gray-700 leading-relaxed">{item}</span>
-          </motion.div>
-          <motion.div
-            className="h-px"
-            style={{
-              background: "linear-gradient(90deg, rgba(77,151,64,0.22) 0%, rgba(77,151,64,0.06) 55%, transparent 100%)",
-              originX: 0,
-            }}
-            initial={{ scaleX: 0 }}
-            animate={inView ? { scaleX: 1 } : {}}
-            transition={{ duration: 0.85, delay: i * 0.1 + 0.08, ease: EASE }}
-          />
-        </div>
+          </div>
+          <p className="text-[14px] font-semibold text-gray-800 leading-snug">{phrase}</p>
+        </motion.div>
       ))}
     </div>
   );
@@ -553,23 +567,12 @@ export default function HomePage() {
               </h2>
             </Reveal>
             <Reveal delay={0.1}>
-              <p className="text-gray-500 leading-relaxed mb-5 text-[17px]">
-                Australian cafes are not legally required to display the country of origin for menu items.
-                Terms like "ceremonial grade" and "authentic Japanese matcha" are used freely — with no verification required.
+              <p className="text-gray-500 leading-relaxed mb-8 text-[17px]">
+                Australian cafes can label their matcha "ceremonial grade" or "authentic Japanese" with zero legal
+                obligation to back it up — and no structured way for consumers to verify the claim.
               </p>
             </Reveal>
-            <Reveal delay={0.15}>
-              <p className="text-gray-500 leading-relaxed mb-10 text-[17px]">
-                Consumers who genuinely care about sourcing have no structured way to find cafes that
-                publicly disclose where their matcha actually comes from.
-              </p>
-            </Reveal>
-            <FactList items={[
-              "No Australian law mandates matcha origin disclosure on menus",
-              '"Ceremonial grade" has no legal definition in Australia',
-              "Many cafes use Chinese-sourced matcha marketed as Japanese",
-              "Consumers currently rely entirely on trust — not evidence",
-            ]} />
+            <FactList items={PROBLEM_FACTS} />
           </div>
 
           {/* RIGHT: comparison card */}
