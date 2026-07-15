@@ -412,7 +412,7 @@ export default function HomePage() {
             <div className="overflow-hidden mb-5">
               <motion.span
                 className="block font-normal"
-                style={{ fontSize: "clamp(0.95rem, 3vw, 1.6rem)", color: "#adb8ad", letterSpacing: "0.1em" }}
+                style={{ fontSize: "clamp(1rem, 3vw, 1.85rem)", color: "#8a9e8a", letterSpacing: "0.08em", fontWeight: 500 }}
                 initial={{ y: "120%" }}
                 animate={{ y: "0%" }}
                 transition={{ duration: 0.8, delay: 0.35, ease: EASE_EXPO }}
