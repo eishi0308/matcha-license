@@ -401,45 +401,97 @@ export default function HomePage() {
       >
         <motion.div
           style={{ y: heroY, opacity: heroOpacity }}
-          className="relative z-10 w-full max-w-4xl mx-auto flex flex-col items-center"
+          className="relative z-10 w-full max-w-5xl mx-auto flex flex-col items-center"
         >
-          {/* Badge */}
+          {/* Badge — gentle tea-leaf float after entrance */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.88, y: -16 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            transition={{ duration: 0.65, ease: EASE }}
-            className="inline-flex items-center px-5 py-2 rounded-full mb-6"
-            style={{ background: "#e8ede8", border: "1px solid #d0ddd0" }}
+            animate={{ y: [0, -5, 0] }}
+            transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut", delay: 2.2 }}
+            className="mb-10"
           >
-            <span className="text-[11px] font-semibold tracking-[0.2em] uppercase" style={{ color: "#5a7a58" }}>
-              Sydney & Melbourne
-            </span>
+            <motion.div
+              initial={{ opacity: 0, y: -14, scale: 0.88 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 0.7, delay: 0.1, ease: EASE_EXPO }}
+              className="inline-flex items-center px-5 py-2 rounded-full"
+              style={{ background: "#e8ede8", border: "1px solid #d0ddd0" }}
+            >
+              <span className="text-[11px] font-semibold tracking-[0.2em] uppercase" style={{ color: "#5a7a58" }}>
+                Sydney & Melbourne
+              </span>
+            </motion.div>
           </motion.div>
 
           {/* Headline */}
-          <h1
-            className="font-display font-bold text-gray-900 leading-[0.92] tracking-tight mb-10"
-            style={{ fontSize: "clamp(2.8rem, 11vw, 6.5rem)", perspective: "800px" }}
-          >
-            <div className="mb-1 overflow-visible">
-              <SplitWords text="Find cafes that are" delay={0.25} />
-            </div>
-            <div className="overflow-visible">
-              <motion.span className="inline-block italic" style={{ color: "#4a8a40" }}
-                initial={{ opacity: 0, y: 80, rotateX: -20 }}
-                animate={{ opacity: 1, y: 0, rotateX: 0 }}
-                transition={{ duration: 0.85, delay: 0.75, ease: EASE_EXPO }}
+          <h1 className="font-display tracking-tight text-center mb-12 w-full">
+
+            {/* Lead-in: slides up through clip mask like ink rising */}
+            <div className="overflow-hidden mb-5">
+              <motion.span
+                className="block font-normal"
+                style={{ fontSize: "clamp(0.95rem, 3vw, 1.6rem)", color: "#adb8ad", letterSpacing: "0.1em" }}
+                initial={{ y: "120%" }}
+                animate={{ y: "0%" }}
+                transition={{ duration: 0.8, delay: 0.35, ease: EASE_EXPO }}
               >
-                honest&nbsp;
+                Find cafes that are
               </motion.span>
-              <SplitWords text="about matcha." delay={0.82} />
+            </div>
+
+            {/* "honest" — brush-stroke clip sweep left→right + drawn underline */}
+            <div className="flex justify-center mb-3">
+              <div className="relative inline-block">
+                <motion.span
+                  className="italic font-bold inline-block"
+                  style={{ fontSize: "clamp(4.5rem, 18vw, 10.5rem)", color: "#2e6027", lineHeight: 0.88, letterSpacing: "-0.03em" }}
+                  initial={{ clipPath: "inset(0% 100% 0% 0%)" }}
+                  animate={{ clipPath: "inset(0% 0% 0% 0%)" }}
+                  transition={{ duration: 1.05, delay: 0.82, ease: [0.76, 0, 0.24, 1] }}
+                >
+                  honest
+                </motion.span>
+
+                {/* SVG brush underline — draws itself after text is revealed */}
+                <svg
+                  className="absolute left-0 w-full"
+                  style={{ bottom: "-6px", height: "18px" }}
+                  viewBox="0 0 100 18"
+                  fill="none"
+                  preserveAspectRatio="none"
+                >
+                  <motion.path
+                    d="M 1 12 C 15 5, 38 16, 62 11 S 84 6, 99 11"
+                    stroke="#4a8a40"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    fill="none"
+                    initial={{ pathLength: 0, opacity: 0 }}
+                    animate={{ pathLength: 1, opacity: 1 }}
+                    transition={{ duration: 0.8, delay: 1.7, ease: EASE }}
+                  />
+                </svg>
+              </div>
+            </div>
+
+            {/* "about matcha." — same brush sweep, slightly delayed */}
+            <div className="flex justify-center">
+              <motion.span
+                className="font-bold inline-block"
+                style={{ fontSize: "clamp(3.2rem, 15vw, 9rem)", color: "#1c2b1a", lineHeight: 1, letterSpacing: "-0.03em" }}
+                initial={{ clipPath: "inset(0% 100% 0% 0%)" }}
+                animate={{ clipPath: "inset(0% 0% 0% 0%)" }}
+                transition={{ duration: 1.05, delay: 1.15, ease: [0.76, 0, 0.24, 1] }}
+              >
+                about matcha.
+              </motion.span>
             </div>
           </h1>
 
-          {/* CTA */}
+          {/* CTA — spring bounce entrance */}
           <motion.div
-            initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.72, delay: 1.3, ease: EASE }}
+            initial={{ opacity: 0, y: 30, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.65, delay: 2.0, ease: EASE_EXPO }}
           >
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.96 }}>
               <Link href="/map" className="inline-flex items-center gap-2.5 px-8 py-3.5 rounded-full font-semibold text-white text-sm"
