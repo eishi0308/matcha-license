@@ -397,157 +397,106 @@ export default function HomePage() {
 
       {/* ── HERO ──────────────────────────────────────────────────────── */}
       <section
-        className="relative min-h-[100dvh] flex flex-col items-center justify-center text-center px-5 pt-20 pb-10 overflow-hidden"
-        style={{ background: "linear-gradient(145deg, #060e07 0%, #0c1c0d 30%, #162e17 62%, #1e4a1a 100%)" }}
+        className="relative min-h-[100dvh] flex flex-col items-center justify-center text-center px-5 pt-20 pb-10 overflow-hidden bg-cream-50"
       >
-        {/* Animated glow orbs */}
-        {[
-          { w: 720, x: "-8%",  y: "8%",  color: "#1a3d17", dur: 9,  d: 0 },
-          { w: 540, x: "68%",  y: "52%", color: "#306628", dur: 13, d: 2 },
-          { w: 420, x: "42%",  y: "78%", color: "#0d2a0e", dur: 16, d: 5 },
-        ].map((b, i) => (
-          <motion.div key={i} className="absolute rounded-full pointer-events-none"
-            style={{ width: b.w, height: b.w, left: b.x, top: b.y, background: b.color, filter: "blur(96px)", opacity: 0.28, transform: "translate(-50%, -50%)" }}
-            animate={{ x: [0, 28, -18, 12, 0], y: [0, -22, 20, -10, 0], scale: [1, 1.05, 0.96, 1.03, 1] }}
-            transition={{ duration: b.dur, delay: b.d, repeat: Infinity, ease: "easeInOut" }}
-          />
-        ))}
-
-        {/* Subtle grid */}
-        <div className="absolute inset-0 pointer-events-none" style={{
-          backgroundImage: "linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px)",
-          backgroundSize: "64px 64px",
-        }} />
-
         <motion.div
           style={{ y: heroY, opacity: heroOpacity }}
-          className="relative z-10 w-full max-w-7xl mx-auto flex flex-col lg:grid lg:grid-cols-2 lg:gap-12 items-center justify-center px-2"
+          className="relative z-10 w-full max-w-4xl mx-auto flex flex-col items-center"
         >
-          {/* ── LEFT: copy ── */}
-          <div className="flex flex-col items-center lg:items-start text-center lg:text-left">
-            {/* Badge */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.88, y: -16 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              transition={{ duration: 0.65, ease: EASE }}
-              className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full border border-white/10 bg-white/5 backdrop-blur-sm mb-4 sm:mb-6"
-            >
-              <motion.span className="w-1.5 h-1.5 rounded-full bg-matcha-400"
-                animate={{ scale: [1, 1.7, 1], opacity: [1, 0.45, 1] }}
-                transition={{ duration: 2.2, repeat: Infinity }}
-              />
-              <span className="text-white/55 text-[11px] font-medium tracking-[0.18em] uppercase">
-                Sydney & Melbourne
-              </span>
-            </motion.div>
-
-            {/* Headline */}
-            <h1
-              className="font-display font-bold text-white leading-[0.9] tracking-tight mb-4 sm:mb-6"
-              style={{ fontSize: "clamp(2.5rem, 10vw, 5.5rem)", perspective: "800px" }}
-            >
-              <div className="mb-1 overflow-visible">
-                <SplitWords text="Find cafes that are" delay={0.25} />
-              </div>
-              <div className="overflow-visible">
-                <motion.span className="inline-block italic" style={{ color: "#7dd56f" }}
-                  initial={{ opacity: 0, y: 80, rotateX: -20 }}
-                  animate={{ opacity: 1, y: 0, rotateX: 0 }}
-                  transition={{ duration: 0.85, delay: 0.75, ease: EASE_EXPO }}
-                >
-                  honest&nbsp;
-                </motion.span>
-                <SplitWords text="about matcha." delay={0.82} />
-              </div>
-            </h1>
-
-            {/* Sub-headline */}
-            <motion.p
-              className="text-sm sm:text-lg max-w-lg leading-relaxed mb-5 sm:mb-8"
-              style={{ color: "rgba(255,255,255,0.52)" }}
-              initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.72, delay: 1.15, ease: EASE }}
-            >
-              We scan each cafe's official website and show you exactly what they publicly claim about their matcha sourcing — no opinions, no guesses, just their own words.
-            </motion.p>
-
-            {/* CTAs */}
-            <motion.div
-              className="flex flex-col sm:flex-row items-center lg:items-start gap-3"
-              initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.72, delay: 1.3, ease: EASE }}
-            >
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.96 }}>
-                <Link href="/map" className="inline-flex items-center gap-2.5 px-8 py-3.5 rounded-full font-semibold text-white text-sm"
-                  style={{ background: "linear-gradient(135deg, #2d6025, #5aab47)", boxShadow: "0 0 48px rgba(90,171,71,0.42), 0 4px 24px rgba(0,0,0,0.35)" }}
-                >
-                  <Map size={16} />Explore the Map<ArrowRight size={14} />
-                </Link>
-              </motion.div>
-              <motion.button onClick={() => setAuthOpen(true)}
-                className="inline-flex items-center gap-2.5 px-8 py-3.5 rounded-full font-semibold text-sm border"
-                style={{ color: "rgba(255,255,255,0.78)", borderColor: "rgba(255,255,255,0.18)", background: "rgba(255,255,255,0.05)" }}
-                whileHover={{ scale: 1.05, backgroundColor: "rgba(255,255,255,0.1)", borderColor: "rgba(255,255,255,0.28)" } as any}
-                whileTap={{ scale: 0.96 }}
-              >
-                <Leaf size={15} />Create free account
-              </motion.button>
-            </motion.div>
-          </div>
-
-          {/* ── RIGHT: stats 2×2 ── */}
+          {/* Badge */}
           <motion.div
-            className="grid grid-cols-2 gap-2 sm:gap-3 w-full mt-6 lg:mt-0"
-            initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, delay: 1.4, ease: EASE }}
+            initial={{ opacity: 0, scale: 0.88, y: -16 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ duration: 0.65, ease: EASE }}
+            className="inline-flex items-center px-5 py-2 rounded-full mb-6"
+            style={{ background: "#e8ede8", border: "1px solid #d0ddd0" }}
+          >
+            <span className="text-[11px] font-semibold tracking-[0.2em] uppercase" style={{ color: "#5a7a58" }}>
+              Sydney & Melbourne
+            </span>
+          </motion.div>
+
+          {/* Headline */}
+          <h1
+            className="font-display font-bold text-gray-900 leading-[0.92] tracking-tight mb-10"
+            style={{ fontSize: "clamp(2.8rem, 11vw, 6.5rem)", perspective: "800px" }}
+          >
+            <div className="mb-1 overflow-visible">
+              <SplitWords text="Find cafes that are" delay={0.25} />
+            </div>
+            <div className="overflow-visible">
+              <motion.span className="inline-block italic" style={{ color: "#4a8a40" }}
+                initial={{ opacity: 0, y: 80, rotateX: -20 }}
+                animate={{ opacity: 1, y: 0, rotateX: 0 }}
+                transition={{ duration: 0.85, delay: 0.75, ease: EASE_EXPO }}
+              >
+                honest&nbsp;
+              </motion.span>
+              <SplitWords text="about matcha." delay={0.82} />
+            </div>
+          </h1>
+
+          {/* CTA */}
+          <motion.div
+            initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.72, delay: 1.3, ease: EASE }}
+          >
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.96 }}>
+              <Link href="/map" className="inline-flex items-center gap-2.5 px-8 py-3.5 rounded-full font-semibold text-white text-sm"
+                style={{ background: "#3d6b35" }}
+              >
+                Explore the map <ArrowRight size={14} />
+              </Link>
+            </motion.div>
+          </motion.div>
+        </motion.div>
+      </section>
+
+      {/* ── STATS ──────────────────────────────────────────────────────── */}
+      <section className="py-20 px-5 bg-white" style={{ borderTop: "1px solid rgba(0,0,0,0.06)" }}>
+        <div className="max-w-2xl mx-auto">
+          {/* Subtitle */}
+          <motion.p
+            className="text-center text-gray-400 leading-relaxed mb-14"
+            style={{ fontSize: "clamp(1rem, 2.5vw, 1.15rem)" }}
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.72, ease: EASE }}
+          >
+            We scan each cafe's official website and show you exactly what they claim about their matcha sourcing — no opinions, no guesses, just their own words.
+          </motion.p>
+
+          {/* 2×2 Stats Grid */}
+          <motion.div
+            className="grid grid-cols-2 rounded-2xl overflow-hidden"
+            style={{ border: "1px solid #e5e7eb" }}
+            initial={{ opacity: 0, y: 32 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.72, delay: 0.1, ease: EASE }}
           >
             {stats.map((s, i) => (
-              <motion.div
+              <div
                 key={s.label}
-                className="flex flex-col items-start p-3 sm:p-6 rounded-2xl sm:rounded-3xl gap-2 sm:gap-4"
+                className="flex flex-col items-center justify-center p-8 sm:p-12 text-center"
                 style={{
-                  background: "rgba(255,255,255,0.06)",
-                  border: "1px solid rgba(255,255,255,0.1)",
-                  backdropFilter: "blur(16px)",
+                  borderRight: i % 2 === 0 ? "1px solid #e5e7eb" : "none",
+                  borderBottom: i < 2 ? "1px solid #e5e7eb" : "none",
                 }}
-                initial={{ opacity: 0, y: 24 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 1.5 + i * 0.1, ease: EASE }}
-                whileHover={{ background: "rgba(255,255,255,0.09)", borderColor: "rgba(255,255,255,0.18)" } as any}
               >
-                {/* icon */}
-                <div className="hidden sm:flex w-8 h-8 rounded-xl items-center justify-center shrink-0" style={{ background: "rgba(255,255,255,0.1)" }}>
-                  {s.icon === "map"    && <Map       size={15} className="text-white/70" />}
-                  {s.icon === "leaf"   && <Leaf      size={15} className="text-white/70" />}
-                  {s.icon === "cities" && <TrendingUp size={15} className="text-white/70" />}
-                  {s.icon === "file"   && <FileText  size={15} className="text-white/70" />}
-                </div>
-
-                {/* number */}
                 <span
-                  className="font-display font-black text-white leading-none"
-                  style={{ fontSize: "clamp(1.6rem, 6vw, 3.5rem)", letterSpacing: "-0.04em" }}
+                  className="font-display font-black leading-none mb-3"
+                  style={{ fontSize: "clamp(2.5rem, 7vw, 4.5rem)", color: "#2e6027", letterSpacing: "-0.04em" }}
                 >
                   <CountUp to={s.value} suffix={s.suffix} />
                 </span>
-
-                {/* labels */}
-                <div className="mt-auto">
-                  <div className="text-[10px] sm:text-[13px] font-semibold text-white/90 leading-snug">{s.label}</div>
-                  <div className="hidden sm:block text-[11px] mt-0.5 leading-snug" style={{ color: "rgba(255,255,255,0.45)" }}>{s.sublabel}</div>
-                </div>
-              </motion.div>
+                <div className="text-sm font-bold text-gray-900 leading-snug mb-1">{s.label}</div>
+                <div className="text-xs text-gray-400 leading-snug">{s.sublabel}</div>
+              </div>
             ))}
           </motion.div>
-        </motion.div>
-
-        {/* Scroll cue */}
-        <motion.div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2"
-          initial={{ opacity: 0 }} animate={{ opacity: 0.32 }} transition={{ delay: 2.2, duration: 1 }}
-        >
-          <span className="text-white text-[9px] tracking-[0.35em] uppercase">Scroll</span>
-          <motion.div className="w-px bg-white/40" initial={{ height: 0 }} animate={{ height: 40 }} transition={{ delay: 2.4, duration: 0.6 }} />
-        </motion.div>
+        </div>
       </section>
 
       {/* ── WHY TRANSPARENCY ──────────────────────────────────────────── */}
