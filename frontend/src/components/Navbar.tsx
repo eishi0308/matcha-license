@@ -34,7 +34,7 @@ export default function Navbar() {
   const openLogin  = () => { setAuthTab("login");  setAuthOpen(true); };
   const openSignup = () => { setAuthTab("signup"); setAuthOpen(true); };
 
-  const light = !scrolled && !isMap && !mobileMenuOpen;
+  const light = false;
 
   return (
     <>

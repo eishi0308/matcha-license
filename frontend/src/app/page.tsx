@@ -214,40 +214,23 @@ function FactList({ items }: { items: typeof PROBLEM_FACTS }) {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true, margin: "-80px" });
   return (
-    <div ref={ref} className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-      {items.map(({ icon: Icon, num, phrase }, i) => (
+    <div ref={ref} className="grid grid-cols-1 sm:grid-cols-2 gap-x-10">
+      {items.map(({ num, phrase }, i) => (
         <motion.div
           key={num}
-          className="flex flex-col gap-4 p-5 rounded-2xl bg-white"
-          style={{
-            borderTop: "1.5px solid #e5e7eb",
-            borderRight: "1.5px solid #e5e7eb",
-            borderBottom: "1.5px solid #e5e7eb",
-            borderLeft: "3px solid #f59e0b",
-          }}
-          initial={{ opacity: 0, y: 18 }}
+          className="py-7 flex flex-col gap-3"
+          style={{ borderTop: "1px solid #e5e7eb" }}
+          initial={{ opacity: 0, y: 20 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.5, delay: i * 0.08, ease: EASE_EXPO }}
-          whileHover={{
-            y: -4,
-            boxShadow: "0 14px 44px rgba(245,158,11,0.1), 0 2px 12px rgba(0,0,0,0.06)",
-          } as any}
+          transition={{ duration: 0.55, delay: i * 0.09, ease: EASE_EXPO }}
         >
-          <div className="flex items-center justify-between">
-            <div
-              className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
-              style={{ background: "#fff7ed" }}
-            >
-              <Icon size={13} style={{ color: "#f59e0b" }} />
-            </div>
-            <span
-              className="font-display font-black text-[11px] tracking-[0.22em] tabular-nums"
-              style={{ color: "#d1d5db" }}
-            >
-              {num}
-            </span>
-          </div>
-          <p className="text-[14px] font-semibold text-gray-800 leading-snug">{phrase}</p>
+          <span
+            className="text-[10px] font-semibold tracking-[0.25em] tabular-nums"
+            style={{ color: "#4d9740" }}
+          >
+            {num}
+          </span>
+          <p className="text-[15px] font-semibold text-gray-800 leading-snug">{phrase}</p>
         </motion.div>
       ))}
     </div>
