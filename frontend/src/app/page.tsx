@@ -392,12 +392,12 @@ export default function HomePage() {
   const heroOpacity = useTransform(scrollY, [0, 480], [1, 0]);
 
   return (
-    <div className="min-h-screen bg-cream-50 overflow-x-hidden">
+    <div className="min-h-screen bg-white overflow-x-hidden">
       <Navbar />
 
       {/* ── HERO ──────────────────────────────────────────────────────── */}
       <section
-        className="relative min-h-[100dvh] flex flex-col items-center justify-center text-center px-5 pt-20 pb-10 overflow-hidden bg-cream-50"
+        className="relative min-h-[100dvh] flex flex-col items-center justify-center text-center px-5 pt-20 pb-10 overflow-hidden bg-white"
       >
         <motion.div
           style={{ y: heroY, opacity: heroOpacity }}
@@ -737,7 +737,7 @@ export default function HomePage() {
       </section>
 
       {/* ── EVIDENCE PREVIEW ─────────────────────────────────────────── */}
-      <section className="py-28 px-5 overflow-hidden"
+      <section className="relative py-28 px-5 overflow-hidden"
         style={{ background: "linear-gradient(145deg, #060e07 0%, #0c1c0d 35%, #162e17 70%, #1e4a1a 100%)" }}
       >
         {/* Ambient glow orbs */}
