@@ -567,16 +567,16 @@ export default function HomePage() {
       </section>
 
       {/* ── WHY TRANSPARENCY ──────────────────────────────────────────── */}
-      <section className="relative overflow-hidden" style={{ background: "#0a0f09" }}>
+      <section className="relative overflow-hidden" style={{ background: "#1a2318" }}>
         {/* Layered ambient glows */}
         <div className="absolute inset-0 pointer-events-none" style={{
-          backgroundImage: "radial-gradient(ellipse 70% 50% at 50% 0%, rgba(46,96,39,0.18), transparent 70%)",
+          backgroundImage: "radial-gradient(ellipse 70% 50% at 50% 0%, rgba(77,151,64,0.12), transparent 70%)",
         }} />
         <div className="absolute inset-0 pointer-events-none" style={{
-          backgroundImage: "radial-gradient(ellipse 40% 40% at 85% 90%, rgba(46,96,39,0.1), transparent)",
+          backgroundImage: "radial-gradient(ellipse 40% 40% at 85% 90%, rgba(77,151,64,0.08), transparent)",
         }} />
         <div className="absolute inset-0 pointer-events-none" style={{
-          backgroundImage: "radial-gradient(ellipse 35% 35% at 10% 60%, rgba(46,96,39,0.06), transparent)",
+          backgroundImage: "radial-gradient(ellipse 35% 35% at 10% 60%, rgba(77,151,64,0.05), transparent)",
         }} />
         {/* Subtle noise texture via repeating gradient */}
         <div className="absolute inset-0 pointer-events-none opacity-[0.03]" style={{
@@ -653,7 +653,7 @@ export default function HomePage() {
                 <motion.div
                   key={num}
                   className="flex items-start gap-6 sm:gap-8 py-10 sm:py-12"
-                  style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}
+                  style={{ borderBottom: "1px solid rgba(255,255,255,0.1)" }}
                   initial={{ opacity: 0, y: 28 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
@@ -662,7 +662,7 @@ export default function HomePage() {
                   {/* Large number */}
                   <span
                     className="font-bold tabular-nums leading-none flex-shrink-0"
-                    style={{ fontSize: "clamp(2.5rem, 5vw, 4rem)", color: "rgba(77,151,64,0.2)", letterSpacing: "-0.04em", marginTop: "-0.15em" }}
+                    style={{ fontSize: "clamp(2.5rem, 5vw, 4rem)", color: "rgba(77,151,64,0.35)", letterSpacing: "-0.04em", marginTop: "-0.15em" }}
                   >
                     {num}
                   </span>
@@ -671,7 +671,7 @@ export default function HomePage() {
                     <div className="flex items-center justify-center rounded-lg flex-shrink-0" style={{ width: 40, height: 40, background: "rgba(77,151,64,0.1)", alignSelf: "flex-start" }}>
                       <Icon size={18} style={{ color: "#4d9740" }} />
                     </div>
-                    <p className="font-medium leading-relaxed" style={{ fontSize: "clamp(1rem, 2vw, 1.2rem)", color: "rgba(255,255,255,0.8)" }}>
+                    <p className="font-medium leading-relaxed" style={{ fontSize: "clamp(1rem, 2vw, 1.2rem)", color: "rgba(255,255,255,0.88)" }}>
                       {phrase}
                     </p>
                   </div>
