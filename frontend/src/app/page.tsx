@@ -344,6 +344,81 @@ function ComparisonCard() {
   );
 }
 
+function PressRow({ card }: { card: typeof PRESS_CARDS[number] }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <motion.div
+      className="group cursor-pointer"
+      style={{ borderBottom: "1px solid #e5e7eb" }}
+      onClick={() => setOpen((v) => !v)}
+      whileHover={{ backgroundColor: "rgba(0,0,0,0.015)" }}
+      transition={{ duration: 0.15 }}
+    >
+      <div className="flex items-center gap-5 sm:gap-8 py-7 sm:py-9">
+        {/* Source icon */}
+        <div className="flex-shrink-0">
+          {card.type === "video" ? (
+            <div className="w-11 h-11 rounded-xl flex items-center justify-center" style={{ background: "#FF0000" }}>
+              <Play size={16} fill="white" className="text-white ml-0.5" />
+            </div>
+          ) : (
+            <div className="w-11 h-11 rounded-xl flex items-center justify-center" style={{ background: card.accent + "14" }}>
+              <FileText size={16} style={{ color: card.accent }} />
+            </div>
+          )}
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1.5">
+            {card.flag && <span className="text-sm leading-none">{card.flag}</span>}
+            <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">{card.source}</span>
+          </div>
+          <h3 className="font-semibold text-gray-900 leading-snug" style={{ fontSize: "clamp(1rem, 2.5vw, 1.2rem)" }}>
+            &ldquo;{card.headline}&rdquo;
+          </h3>
+        </div>
+
+        {/* Arrow / expand toggle */}
+        <motion.div
+          className="flex-shrink-0 text-gray-300"
+          animate={{ rotate: open ? 180 : 0 }}
+          transition={{ duration: 0.25 }}
+        >
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M5 7.5L10 12.5L15 7.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+        </motion.div>
+      </div>
+
+      {/* Expandable detail */}
+      <motion.div
+        initial={false}
+        animate={{ height: open ? "auto" : 0, opacity: open ? 1 : 0 }}
+        transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
+        className="overflow-hidden"
+      >
+        <div className="pb-8 pl-16 sm:pl-[4.75rem] pr-4">
+          <p className="text-[15px] text-gray-500 leading-relaxed mb-5 max-w-2xl">
+            {card.quote}
+          </p>
+          <motion.a
+            href={card.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 text-sm font-semibold"
+            style={{ color: card.accent, textDecoration: "none" }}
+            whileHover={{ x: 4 }}
+            transition={{ duration: 0.18 }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {card.type === "video" ? "Watch video" : "Read article"}
+            <ArrowRight size={14} />
+          </motion.a>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
 function SectionLabel({ icon: Icon, text }: { icon: React.ElementType; text: string }) {
   return (
     <Reveal>
@@ -689,117 +764,39 @@ export default function HomePage() {
       </section>
 
       {/* ── PRESS PROOF ────────────────────────────────────────────── */}
-      <section className="py-24 px-5 max-w-7xl mx-auto">
+      <section className="py-28 sm:py-36 px-5" style={{ background: "#fafaf8" }}>
+        <div className="max-w-5xl mx-auto">
 
-          {/* Section label */}
+          {/* Eyebrow */}
           <Reveal>
-            <div className="flex items-center gap-4 mb-10">
-              <div className="flex-1 h-px" style={{ background: "linear-gradient(90deg, transparent, rgba(0,0,0,0.08))" }} />
-              <span className="text-[10px] uppercase tracking-[0.28em] font-semibold whitespace-nowrap" style={{ color: "#9ca3af" }}>
+            <div className="flex items-center justify-center gap-3 mb-6">
+              <div style={{ width: 40, height: 1, background: "#d1d5db" }} />
+              <span className="uppercase tracking-[0.22em] font-semibold" style={{ fontSize: "0.65rem", color: "#9ca3af" }}>
                 As reported by
               </span>
-              <div className="flex-1 h-px" style={{ background: "linear-gradient(90deg, rgba(0,0,0,0.08), transparent)" }} />
+              <div style={{ width: 40, height: 1, background: "#d1d5db" }} />
             </div>
           </Reveal>
 
-          {/* 3 article cards */}
-          <div className="grid md:grid-cols-3 gap-5">
+          <Reveal delay={0.05}>
+            <h2
+              className="text-center font-bold leading-[1.1] tracking-tight mb-16 sm:mb-20"
+              style={{ fontSize: "clamp(1.5rem, 4vw, 2.5rem)", color: "#1c2b1a" }}
+            >
+              This isn&apos;t speculation —<br className="hidden sm:block" /> it&apos;s already making headlines.
+            </h2>
+          </Reveal>
+
+          {/* Press list — clean stacked rows */}
+          <div className="flex flex-col">
             {PRESS_CARDS.map((card, i) => (
-              <Reveal key={card.source} delay={i * 0.1}>
-                <motion.a
-                  href={card.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex flex-col h-full rounded-2xl overflow-hidden bg-white group"
-                  style={{
-                    border: "1.5px solid #e5e7eb",
-                    boxShadow: "0 2px 12px rgba(0,0,0,0.04)",
-                    textDecoration: "none",
-                  }}
-                  whileHover={{
-                    y: -8,
-                    borderColor: "#b3dda6",
-                    boxShadow: "0 20px 60px rgba(46,96,39,0.12), 0 4px 20px rgba(0,0,0,0.08)",
-                  } as any}
-                  whileTap={{ scale: 0.98 }}
-                  transition={SPRING}
-                >
-                  {/* Top accent bar */}
-                  <motion.div
-                    className="h-[3px] w-full flex-shrink-0"
-                    style={{ background: card.accent }}
-                    initial={{ scaleX: 0, originX: 0 }}
-                    whileInView={{ scaleX: 1 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.7, delay: 0.3 + i * 0.12, ease: EASE }}
-                  />
-
-                  <div className="flex flex-col flex-1 p-6">
-                    {/* Source + type badge */}
-                    <div className="flex items-start justify-between gap-2 mb-5">
-                      <div className="flex items-center gap-2">
-                        {card.type === "video" ? (
-                          <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
-                            style={{ background: "#FF0000" }}>
-                            <Play size={11} fill="white" className="text-white ml-0.5" />
-                          </div>
-                        ) : (
-                          <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
-                            style={{ background: card.accent + "18" }}>
-                            <FileText size={12} style={{ color: card.accent }} />
-                          </div>
-                        )}
-                        <div>
-                          <div className="flex items-center gap-1.5">
-                            {card.flag && <span className="text-sm leading-none">{card.flag}</span>}
-                            <span className="text-xs font-bold text-gray-800">{card.source}</span>
-                          </div>
-                          <div className="text-[10px] text-gray-400 mt-0.5">{card.domain}</div>
-                        </div>
-                      </div>
-                      <motion.div
-                        className="text-gray-300 flex-shrink-0 mt-0.5"
-                        animate={{ x: 0, y: 0 }}
-                        whileHover={{ x: 2, y: -2 }}
-                        transition={{ duration: 0.15 }}
-                      >
-                        <ExternalLink size={14} />
-                      </motion.div>
-                    </div>
-
-                    {/* Headline */}
-                    <h3 className="font-semibold text-gray-900 leading-snug mb-2 text-[15px] group-hover:text-matcha-800 transition-colors duration-200">
-                      "{card.headline}"
-                    </h3>
-
-                    {/* Byline */}
-                    <p className="text-[11px] text-gray-400 mb-4">{card.byline}</p>
-
-                    {/* Divider */}
-                    <div className="h-px mb-4" style={{ background: "rgba(0,0,0,0.06)" }} />
-
-                    {/* Quote / description */}
-                    <p className="text-sm text-gray-500 leading-relaxed flex-1">
-                      {card.quote}
-                    </p>
-
-                    {/* Read link */}
-                    <motion.div
-                      className="flex items-center gap-1.5 mt-5 text-xs font-semibold"
-                      style={{ color: card.accent }}
-                      animate={{ x: 0 }}
-                      whileHover={{ x: 4 }}
-                      transition={{ duration: 0.18 }}
-                    >
-                      {card.type === "video" ? "Watch video" : "Read article"}
-                      <ArrowRight size={12} />
-                    </motion.div>
-                  </div>
-                </motion.a>
+              <Reveal key={card.source} delay={i * 0.08}>
+                <PressRow card={card} />
               </Reveal>
             ))}
           </div>
 
+        </div>
       </section>
 
       {/* ── TRANSPARENCY LEVELS ──────────────────────────────────────── */}
