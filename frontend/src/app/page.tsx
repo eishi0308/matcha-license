@@ -488,19 +488,51 @@ export default function HomePage() {
       </section>
 
       {/* ── STATS ──────────────────────────────────────────────────────── */}
-      <section className="py-20 px-5 bg-white" style={{ borderTop: "1px solid rgba(0,0,0,0.06)" }}>
-        <div className="max-w-2xl mx-auto">
-          {/* Subtitle */}
-          <motion.p
-            className="text-center text-gray-400 leading-relaxed mb-14"
-            style={{ fontSize: "clamp(1rem, 2.5vw, 1.15rem)" }}
-            initial={{ opacity: 0, y: 24 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.72, ease: EASE }}
-          >
-            We scan each cafe's official website and show you exactly what they claim about their matcha sourcing — no opinions, no guesses, just their own words.
-          </motion.p>
+      <section className="py-28 sm:py-36 px-5 bg-white" style={{ borderTop: "1px solid rgba(0,0,0,0.06)" }}>
+        <div className="max-w-4xl mx-auto">
+          {/* Editorial lead-in */}
+          <div className="mb-20">
+            <motion.div
+              className="flex items-center justify-center gap-3 mb-8"
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, ease: EASE }}
+            >
+              <div style={{ width: 40, height: 1, background: "#2e6027" }} />
+              <span className="uppercase tracking-[0.2em] font-semibold" style={{ fontSize: "0.7rem", color: "#2e6027" }}>
+                How it works
+              </span>
+              <div style={{ width: 40, height: 1, background: "#2e6027" }} />
+            </motion.div>
+
+            <motion.h2
+              className="text-center font-bold leading-[1.1] tracking-tight"
+              style={{ fontSize: "clamp(1.75rem, 5vw, 3.25rem)", color: "#1c2b1a" }}
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.72, delay: 0.08, ease: EASE }}
+            >
+              We scan each cafe&apos;s official website
+              <br className="hidden sm:block" />
+              {" "}and show you{" "}
+              <span style={{ color: "#2e6027" }}>exactly what they claim</span>
+              <br className="hidden sm:block" />
+              {" "}about their matcha sourcing.
+            </motion.h2>
+
+            <motion.p
+              className="text-center mx-auto mt-6"
+              style={{ fontSize: "clamp(1rem, 2.5vw, 1.2rem)", color: "#9ca3af", maxWidth: "36rem", lineHeight: 1.7 }}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.72, delay: 0.16, ease: EASE }}
+            >
+              No opinions, no guesses — just their own words.
+            </motion.p>
+          </div>
 
           {/* 2×2 Stats Grid */}
           <motion.div
