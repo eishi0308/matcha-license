@@ -567,39 +567,129 @@ export default function HomePage() {
       </section>
 
       {/* ── WHY TRANSPARENCY ──────────────────────────────────────────── */}
-      <section className="py-32 px-5 max-w-7xl mx-auto">
-        <div className="grid lg:grid-cols-2 gap-16 xl:gap-24 items-center">
+      <section className="relative overflow-hidden" style={{ background: "#0a0f09" }}>
+        {/* Layered ambient glows */}
+        <div className="absolute inset-0 pointer-events-none" style={{
+          backgroundImage: "radial-gradient(ellipse 70% 50% at 50% 0%, rgba(46,96,39,0.18), transparent 70%)",
+        }} />
+        <div className="absolute inset-0 pointer-events-none" style={{
+          backgroundImage: "radial-gradient(ellipse 40% 40% at 85% 90%, rgba(46,96,39,0.1), transparent)",
+        }} />
+        <div className="absolute inset-0 pointer-events-none" style={{
+          backgroundImage: "radial-gradient(ellipse 35% 35% at 10% 60%, rgba(46,96,39,0.06), transparent)",
+        }} />
+        {/* Subtle noise texture via repeating gradient */}
+        <div className="absolute inset-0 pointer-events-none opacity-[0.03]" style={{
+          backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")",
+        }} />
 
-          {/* LEFT: copy */}
-          <div>
-            <SectionLabel icon={Leaf} text="The Problem" />
-            <Reveal delay={0.05}>
-              <h2
-                className="font-display text-4xl sm:text-5xl font-bold text-gray-900 leading-tight mb-7"
-                style={{ letterSpacing: "-0.02em" }}
+        <div className="relative px-5">
+
+          {/* Top section — headline & subline */}
+          <div className="max-w-5xl mx-auto pt-36 sm:pt-44 pb-24 sm:pb-32">
+
+            {/* Eyebrow pill */}
+            <motion.div
+              className="flex justify-center mb-12"
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, ease: EASE }}
+            >
+              <span
+                className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full uppercase tracking-[0.22em] font-semibold"
+                style={{ fontSize: "0.65rem", color: "#6abf5e", background: "rgba(77,151,64,0.1)", border: "1px solid rgba(77,151,64,0.2)" }}
               >
-                "Premium", "ceremonial",<br />"authentic" — but from{" "}
-                <span className="italic text-matcha-700">where</span>?
-              </h2>
-            </Reveal>
-            <Reveal delay={0.1}>
-              <p className="text-gray-500 leading-relaxed mb-8 text-[17px]">
-                Australian cafes can label their matcha "ceremonial grade" or "authentic Japanese" with zero legal
-                obligation to back it up — and no structured way for consumers to verify the claim.
-              </p>
-            </Reveal>
-            <FactList items={PROBLEM_FACTS} />
+                <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#6abf5e" }} />
+                The Problem
+              </span>
+            </motion.div>
+
+            {/* Massive headline */}
+            <motion.h2
+              className="text-center font-bold leading-[1.0]"
+              style={{ fontSize: "clamp(2.5rem, 7vw, 5.5rem)", color: "#f5f5f0", letterSpacing: "-0.035em" }}
+              initial={{ opacity: 0, y: 36 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.9, delay: 0.08, ease: EASE }}
+            >
+              &ldquo;Premium&rdquo;, &ldquo;ceremonial&rdquo;,
+              <br />
+              &ldquo;authentic&rdquo; — but from{" "}
+              <span className="italic" style={{ color: "#6abf5e" }}>where</span>
+              <span style={{ color: "#6abf5e" }}>?</span>
+            </motion.h2>
+
+            {/* Subline */}
+            <motion.p
+              className="text-center mx-auto mt-10"
+              style={{ fontSize: "clamp(1.05rem, 2.5vw, 1.35rem)", color: "rgba(255,255,255,0.45)", maxWidth: "44rem", lineHeight: 1.75 }}
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.72, delay: 0.18, ease: EASE }}
+            >
+              Australian cafes can label their matcha &ldquo;ceremonial grade&rdquo; or &ldquo;authentic Japanese&rdquo;
+              with zero legal obligation to back it up — and no structured way for consumers to verify the claim.
+            </motion.p>
           </div>
 
-          {/* RIGHT: comparison card */}
-          <div className="hidden lg:flex items-center justify-center py-8">
+          {/* Divider line */}
+          <div className="max-w-6xl mx-auto">
+            <motion.div
+              style={{ height: 1, background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.1) 20%, rgba(255,255,255,0.1) 80%, transparent)" }}
+              initial={{ scaleX: 0 }}
+              whileInView={{ scaleX: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 1.2, ease: EASE }}
+            />
+          </div>
+
+          {/* Facts — 2×2 grid with large numbers */}
+          <div className="max-w-6xl mx-auto py-24 sm:py-32">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-16 lg:gap-x-24 gap-y-0">
+              {PROBLEM_FACTS.map(({ num, phrase, icon: Icon }, i) => (
+                <motion.div
+                  key={num}
+                  className="flex items-start gap-6 sm:gap-8 py-10 sm:py-12"
+                  style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}
+                  initial={{ opacity: 0, y: 28 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.6, delay: i * 0.1, ease: EASE_EXPO }}
+                >
+                  {/* Large number */}
+                  <span
+                    className="font-bold tabular-nums leading-none flex-shrink-0"
+                    style={{ fontSize: "clamp(2.5rem, 5vw, 4rem)", color: "rgba(77,151,64,0.2)", letterSpacing: "-0.04em", marginTop: "-0.15em" }}
+                  >
+                    {num}
+                  </span>
+                  {/* Text */}
+                  <div className="flex flex-col gap-3 pt-1">
+                    <div className="flex items-center justify-center rounded-lg flex-shrink-0" style={{ width: 40, height: 40, background: "rgba(77,151,64,0.1)", alignSelf: "flex-start" }}>
+                      <Icon size={18} style={{ color: "#4d9740" }} />
+                    </div>
+                    <p className="font-medium leading-relaxed" style={{ fontSize: "clamp(1rem, 2vw, 1.2rem)", color: "rgba(255,255,255,0.8)" }}>
+                      {phrase}
+                    </p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+
+          {/* Comparison card */}
+          <div className="hidden lg:flex items-center justify-center pb-36 sm:pb-44">
             <ComparisonCard />
           </div>
 
         </div>
+      </section>
 
-        {/* ── PRESS PROOF ────────────────────────────────────────────── */}
-        <div className="mt-20 pt-16" style={{ borderTop: "1px solid rgba(0,0,0,0.06)" }}>
+      {/* ── PRESS PROOF ────────────────────────────────────────────── */}
+      <section className="py-24 px-5 max-w-7xl mx-auto">
 
           {/* Section label */}
           <Reveal>
@@ -709,8 +799,6 @@ export default function HomePage() {
               </Reveal>
             ))}
           </div>
-
-        </div>
 
       </section>
 
