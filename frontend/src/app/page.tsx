@@ -800,56 +800,103 @@ export default function HomePage() {
       </section>
 
       {/* ── TRANSPARENCY LEVELS ──────────────────────────────────────── */}
-      <section className="py-28 px-5" style={{ background: "#f8f6f1" }}>
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <SectionLabel icon={TrendingUp} text="Classification System" />
+      <section className="py-32 sm:py-40 px-5" style={{ background: "#ffffff" }}>
+        <div className="max-w-6xl mx-auto">
+
+          {/* Header */}
+          <div className="text-center mb-20 sm:mb-28">
+            <Reveal>
+              <div className="flex items-center justify-center gap-3 mb-8">
+                <div style={{ width: 40, height: 1, background: "#2e6027" }} />
+                <span className="uppercase tracking-[0.22em] font-semibold" style={{ fontSize: "0.65rem", color: "#2e6027" }}>
+                  Classification System
+                </span>
+                <div style={{ width: 40, height: 1, background: "#2e6027" }} />
+              </div>
+            </Reveal>
             <Reveal delay={0.05}>
-              <h2 className="font-display text-4xl sm:text-5xl font-bold text-gray-900 mb-5" style={{ letterSpacing: "-0.02em" }}>
-                <span style={{ color: "#4a9a3a", fontFeatureSettings: '"lnum" 1' }}>4</span> levels of transparency
+              <h2
+                className="font-bold leading-[1.05] tracking-tight mb-7"
+                style={{ fontSize: "clamp(2rem, 5vw, 3.75rem)", color: "#1c2b1a", letterSpacing: "-0.03em" }}
+              >
+                <span style={{ color: "#2e6027" }}>4</span> levels of transparency
               </h2>
             </Reveal>
             <Reveal delay={0.1}>
-              <p className="text-gray-500 max-w-xl mx-auto text-[17px] leading-relaxed">
-                Based entirely on publicly verifiable evidence. We never guess, assume, or rate based on taste.
+              <p className="text-gray-400 max-w-2xl mx-auto leading-relaxed" style={{ fontSize: "clamp(1rem, 2.5vw, 1.2rem)" }}>
+                Based entirely on publicly verifiable evidence.<br className="hidden sm:block" /> We never guess, assume, or rate based on taste.
               </p>
             </Reveal>
           </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Level cards — stacked horizontal rows */}
+          <div className="flex flex-col gap-4">
             {LEVEL_CARDS.map((card, i) => (
-              <Reveal key={card.level} delay={i * 0.09} className="h-full">
-                <TiltCard className="h-full rounded-2xl p-6 cursor-default bg-white"
-                  style={{ border: `1.5px solid ${card.border}`, boxShadow: "0 2px 16px rgba(0,0,0,0.04)" }}
+              <Reveal key={card.level} delay={i * 0.08}>
+                <motion.div
+                  className="relative rounded-2xl overflow-hidden"
+                  style={{
+                    background: "#fafaf8",
+                    border: `1px solid ${card.border}`,
+                  }}
+                  whileHover={{
+                    borderColor: card.accent,
+                    boxShadow: `0 12px 40px ${card.accent}12, 0 2px 12px rgba(0,0,0,0.04)`,
+                  } as any}
+                  transition={{ duration: 0.25 }}
                 >
-                  <div className="flex items-center gap-3 mb-5">
-                    <div className="w-11 h-11 rounded-xl flex items-center justify-center font-display font-bold text-white text-lg" style={{ background: card.accent }}>
-                      {card.level}
+                  {/* Left accent bar */}
+                  <div className="absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl" style={{ background: card.accent }} />
+
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-5 sm:gap-8 py-7 sm:py-8 pl-8 sm:pl-10 pr-7 sm:pr-10">
+                    {/* Level badge */}
+                    <div className="flex items-center gap-4 sm:min-w-[220px]">
+                      <div
+                        className="w-14 h-14 rounded-2xl flex items-center justify-center font-bold text-white text-xl flex-shrink-0"
+                        style={{ background: card.accent, fontSize: "1.4rem" }}
+                      >
+                        {card.level}
+                      </div>
+                      <div>
+                        <div className="text-[10px] font-bold tracking-[0.2em] uppercase mb-1" style={{ color: card.accent }}>
+                          Level {card.level}
+                        </div>
+                        <h3 className="font-semibold text-gray-900" style={{ fontSize: "1.05rem" }}>
+                          {card.title}
+                        </h3>
+                      </div>
                     </div>
-                    <span className="text-[10px] font-bold tracking-[0.15em] uppercase px-2.5 py-1 rounded-full" style={{ background: card.badgeBg, color: card.accent }}>
-                      Level {card.level}
-                    </span>
+
+                    {/* Divider */}
+                    <div className="hidden sm:block w-px self-stretch" style={{ background: "#e5e7eb" }} />
+
+                    {/* Description */}
+                    <p className="text-gray-500 leading-relaxed flex-1" style={{ fontSize: "0.95rem" }}>
+                      {card.desc}
+                    </p>
                   </div>
-                  <h3 className="font-semibold text-[15px] mb-3" style={{ color: card.accent }}>{card.title}</h3>
-                  <p className="text-sm leading-relaxed text-gray-500">{card.desc}</p>
-                </TiltCard>
+                </motion.div>
               </Reveal>
             ))}
           </div>
 
-          <Reveal delay={0.28} className="mt-8">
-            <div className="rounded-2xl p-6 border border-matcha-200 bg-white flex flex-col sm:flex-row items-start sm:items-center gap-5">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "#e6f4e0" }}>
-                <Shield size={18} className="text-matcha-700" />
+          {/* Legal footer */}
+          <Reveal delay={0.3}>
+            <div className="mt-12 sm:mt-16 rounded-2xl py-8 px-8 sm:px-10 flex flex-col sm:flex-row items-start sm:items-center gap-5" style={{ background: "#f4f8f2", border: "1px solid #d4edcc" }}>
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "#e6f4e0" }}>
+                <Shield size={20} className="text-matcha-700" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-gray-800 mb-1">Legal commitment: We never say "fake" or "bad".</p>
-                <p className="text-sm text-gray-500 leading-relaxed">
-                  We only report what cafes publicly disclose — or don't. "No disclosure found" is a factual observation, not an accusation. Every classification can be independently verified.
+                <p className="font-semibold text-gray-900 mb-1.5" style={{ fontSize: "1rem" }}>
+                  Legal commitment: We never say &ldquo;fake&rdquo; or &ldquo;bad&rdquo;.
+                </p>
+                <p className="text-gray-500 leading-relaxed" style={{ fontSize: "0.95rem" }}>
+                  We only report what cafes publicly disclose — or don&apos;t. &ldquo;No disclosure found&rdquo; is a factual observation, not an accusation. Every classification can be independently verified.
                 </p>
               </div>
             </div>
           </Reveal>
+
         </div>
       </section>
 
