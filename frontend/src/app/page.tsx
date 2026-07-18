@@ -487,12 +487,12 @@ export default function HomePage() {
             <div className="overflow-hidden mb-5">
               <motion.span
                 className="block font-normal"
-                style={{ fontSize: "clamp(1rem, 3vw, 1.85rem)", color: "#8a9e8a", letterSpacing: "0.08em", fontWeight: 500 }}
+                style={{ fontSize: "clamp(1rem, 3vw, 1.85rem)", color: "#5a8f3c", letterSpacing: "0.08em", fontWeight: 500 }}
                 initial={{ y: "120%" }}
                 animate={{ y: "0%" }}
                 transition={{ duration: 0.8, delay: 0.35, ease: EASE_EXPO }}
               >
-                Find cafes that are
+                Find cafes
               </motion.span>
             </div>
 
@@ -800,13 +800,19 @@ export default function HomePage() {
       </section>
 
       {/* ── TRANSPARENCY LEVELS ──────────────────────────────────────── */}
-      <section className="py-32 sm:py-40 px-5" style={{ background: "#ffffff" }}>
-        <div className="max-w-6xl mx-auto">
+      <section className="relative py-36 sm:py-48 px-5 overflow-hidden" style={{ background: "#f7f7f5" }}>
+        {/* Subtle background grid */}
+        <div className="absolute inset-0 pointer-events-none opacity-[0.4]" style={{
+          backgroundImage: "linear-gradient(rgba(0,0,0,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.03) 1px, transparent 1px)",
+          backgroundSize: "80px 80px",
+        }} />
+
+        <div className="relative max-w-6xl mx-auto">
 
           {/* Header */}
-          <div className="text-center mb-20 sm:mb-28">
+          <div className="text-center mb-24 sm:mb-32">
             <Reveal>
-              <div className="flex items-center justify-center gap-3 mb-8">
+              <div className="flex items-center justify-center gap-3 mb-10">
                 <div style={{ width: 40, height: 1, background: "#2e6027" }} />
                 <span className="uppercase tracking-[0.22em] font-semibold" style={{ fontSize: "0.65rem", color: "#2e6027" }}>
                   Classification System
@@ -816,62 +822,67 @@ export default function HomePage() {
             </Reveal>
             <Reveal delay={0.05}>
               <h2
-                className="font-bold leading-[1.05] tracking-tight mb-7"
-                style={{ fontSize: "clamp(2rem, 5vw, 3.75rem)", color: "#1c2b1a", letterSpacing: "-0.03em" }}
+                className="font-bold leading-[1.0] tracking-tight mb-8"
+                style={{ fontSize: "clamp(2.5rem, 6vw, 4.5rem)", color: "#1c2b1a", letterSpacing: "-0.035em" }}
               >
-                <span style={{ color: "#2e6027" }}>4</span> levels of transparency
+                <span style={{ color: "#2e6027" }}>4</span> levels of<br /> transparency
               </h2>
             </Reveal>
             <Reveal delay={0.1}>
-              <p className="text-gray-400 max-w-2xl mx-auto leading-relaxed" style={{ fontSize: "clamp(1rem, 2.5vw, 1.2rem)" }}>
+              <p className="text-gray-400 max-w-2xl mx-auto leading-relaxed" style={{ fontSize: "clamp(1.05rem, 2.5vw, 1.3rem)" }}>
                 Based entirely on publicly verifiable evidence.<br className="hidden sm:block" /> We never guess, assume, or rate based on taste.
               </p>
             </Reveal>
           </div>
 
-          {/* Level cards — stacked horizontal rows */}
-          <div className="flex flex-col gap-4">
+          {/* 2×2 Level grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6">
             {LEVEL_CARDS.map((card, i) => (
               <Reveal key={card.level} delay={i * 0.08}>
                 <motion.div
-                  className="relative rounded-2xl overflow-hidden"
+                  className="relative rounded-3xl overflow-hidden bg-white h-full"
                   style={{
-                    background: "#fafaf8",
                     border: `1px solid ${card.border}`,
+                    boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
                   }}
                   whileHover={{
+                    y: -6,
                     borderColor: card.accent,
-                    boxShadow: `0 12px 40px ${card.accent}12, 0 2px 12px rgba(0,0,0,0.04)`,
+                    boxShadow: `0 24px 60px ${card.accent}15, 0 4px 16px rgba(0,0,0,0.06)`,
                   } as any}
-                  transition={{ duration: 0.25 }}
+                  transition={SPRING}
                 >
-                  {/* Left accent bar */}
-                  <div className="absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl" style={{ background: card.accent }} />
-
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-5 sm:gap-8 py-7 sm:py-8 pl-8 sm:pl-10 pr-7 sm:pr-10">
-                    {/* Level badge */}
-                    <div className="flex items-center gap-4 sm:min-w-[220px]">
-                      <div
-                        className="w-14 h-14 rounded-2xl flex items-center justify-center font-bold text-white text-xl flex-shrink-0"
-                        style={{ background: card.accent, fontSize: "1.4rem" }}
-                      >
-                        {card.level}
-                      </div>
-                      <div>
-                        <div className="text-[10px] font-bold tracking-[0.2em] uppercase mb-1" style={{ color: card.accent }}>
-                          Level {card.level}
+                  <div className="p-8 sm:p-10">
+                    {/* Giant letter + label */}
+                    <div className="flex items-start justify-between mb-8">
+                      <div className="flex items-center gap-5">
+                        <span
+                          className="font-bold leading-none"
+                          style={{ fontSize: "clamp(3.5rem, 6vw, 5rem)", color: card.accent, letterSpacing: "-0.04em", lineHeight: 0.85 }}
+                        >
+                          {card.level}
+                        </span>
+                        <div>
+                          <div className="text-[10px] font-bold tracking-[0.2em] uppercase mb-1.5" style={{ color: card.accent, opacity: 0.7 }}>
+                            Level {card.level}
+                          </div>
+                          <h3 className="font-bold text-gray-900" style={{ fontSize: "clamp(1.1rem, 2vw, 1.3rem)" }}>
+                            {card.title}
+                          </h3>
                         </div>
-                        <h3 className="font-semibold text-gray-900" style={{ fontSize: "1.05rem" }}>
-                          {card.title}
-                        </h3>
                       </div>
+                      {/* Status dot */}
+                      <div
+                        className="w-3 h-3 rounded-full flex-shrink-0 mt-2"
+                        style={{ background: card.accent, opacity: 0.5 }}
+                      />
                     </div>
 
                     {/* Divider */}
-                    <div className="hidden sm:block w-px self-stretch" style={{ background: "#e5e7eb" }} />
+                    <div className="h-px mb-6" style={{ background: `${card.border}` }} />
 
                     {/* Description */}
-                    <p className="text-gray-500 leading-relaxed flex-1" style={{ fontSize: "0.95rem" }}>
+                    <p className="text-gray-500 leading-relaxed" style={{ fontSize: "clamp(0.95rem, 1.8vw, 1.1rem)" }}>
                       {card.desc}
                     </p>
                   </div>
@@ -880,58 +891,112 @@ export default function HomePage() {
             ))}
           </div>
 
-          {/* Legal footer */}
+          {/* Legal commitment */}
           <Reveal delay={0.3}>
-            <div className="mt-12 sm:mt-16 rounded-2xl py-8 px-8 sm:px-10 flex flex-col sm:flex-row items-start sm:items-center gap-5" style={{ background: "#f4f8f2", border: "1px solid #d4edcc" }}>
-              <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "#e6f4e0" }}>
-                <Shield size={20} className="text-matcha-700" />
+            <motion.div
+              className="mt-16 sm:mt-20 rounded-3xl py-10 px-8 sm:px-12 flex flex-col sm:flex-row items-start gap-6 bg-white"
+              style={{ border: "1px solid #d4edcc", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}
+            >
+              <div className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: "linear-gradient(135deg, #e6f4e0, #d4edcc)" }}>
+                <Shield size={22} className="text-matcha-700" />
               </div>
               <div>
-                <p className="font-semibold text-gray-900 mb-1.5" style={{ fontSize: "1rem" }}>
+                <p className="font-bold text-gray-900 mb-2" style={{ fontSize: "clamp(1.05rem, 2vw, 1.25rem)" }}>
                   Legal commitment: We never say &ldquo;fake&rdquo; or &ldquo;bad&rdquo;.
                 </p>
-                <p className="text-gray-500 leading-relaxed" style={{ fontSize: "0.95rem" }}>
+                <p className="text-gray-500 leading-relaxed" style={{ fontSize: "clamp(0.95rem, 1.8vw, 1.1rem)" }}>
                   We only report what cafes publicly disclose — or don&apos;t. &ldquo;No disclosure found&rdquo; is a factual observation, not an accusation. Every classification can be independently verified.
                 </p>
               </div>
-            </div>
+            </motion.div>
           </Reveal>
 
         </div>
       </section>
 
       {/* ── HOW IT WORKS ─────────────────────────────────────────────── */}
-      <section id="how-it-works" className="py-28 px-5 max-w-7xl mx-auto">
-        <div className="text-center mb-16">
-          <SectionLabel icon={Eye} text="Process" />
-          <Reveal delay={0.05}>
-            <h2 className="font-display text-4xl sm:text-5xl font-bold text-gray-900 mb-5" style={{ letterSpacing: "-0.02em" }}>
-              How we verify every cafe
-            </h2>
-          </Reveal>
-          <Reveal delay={0.1}>
-            <p className="text-gray-500 max-w-xl mx-auto text-[17px]">A strict, repeatable process with zero guesswork.</p>
-          </Reveal>
-        </div>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
-          {HOW_IT_WORKS.map((item, i) => {
-            const Icon = item.icon;
-            return (
-              <Reveal key={item.step} delay={i * 0.09}>
-                <motion.div whileHover={{ y: -7, transition: SPRING }}>
-                  <div className="text-[10px] text-matcha-500 font-bold tracking-[0.28em] mb-5">{item.step}</div>
-                  <motion.div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-5"
-                    style={{ background: "linear-gradient(135deg, #e6f4e0, #d4edcc)" }}
-                    whileHover={{ rotate: 8, scale: 1.12, transition: SPRING }}
-                  >
-                    <Icon size={20} className="text-matcha-700" />
-                  </motion.div>
-                  <h3 className="font-semibold text-gray-900 mb-2.5 text-[15px]">{item.title}</h3>
-                  <p className="text-sm text-gray-500 leading-relaxed">{item.desc}</p>
-                </motion.div>
-              </Reveal>
-            );
-          })}
+      <section id="how-it-works" className="py-36 sm:py-48 px-5" style={{ background: "#ffffff" }}>
+        <div className="max-w-6xl mx-auto">
+
+          {/* Header */}
+          <div className="text-center mb-24 sm:mb-32">
+            <Reveal>
+              <div className="flex items-center justify-center gap-3 mb-10">
+                <div style={{ width: 40, height: 1, background: "#2e6027" }} />
+                <span className="uppercase tracking-[0.22em] font-semibold" style={{ fontSize: "0.65rem", color: "#2e6027" }}>
+                  Process
+                </span>
+                <div style={{ width: 40, height: 1, background: "#2e6027" }} />
+              </div>
+            </Reveal>
+            <Reveal delay={0.05}>
+              <h2
+                className="font-bold leading-[1.0] tracking-tight mb-8"
+                style={{ fontSize: "clamp(2.5rem, 6vw, 4.5rem)", color: "#1c2b1a", letterSpacing: "-0.035em" }}
+              >
+                How we verify<br /> every cafe
+              </h2>
+            </Reveal>
+            <Reveal delay={0.1}>
+              <p className="text-gray-400 max-w-2xl mx-auto leading-relaxed" style={{ fontSize: "clamp(1.05rem, 2.5vw, 1.3rem)" }}>
+                A strict, repeatable process with zero guesswork.
+              </p>
+            </Reveal>
+          </div>
+
+          {/* Steps — alternating layout */}
+          <div className="flex flex-col gap-0">
+            {HOW_IT_WORKS.map((item, i) => {
+              const Icon = item.icon;
+              const isLast = i === HOW_IT_WORKS.length - 1;
+              return (
+                <Reveal key={item.step} delay={i * 0.08}>
+                  <div className="relative flex items-stretch gap-8 sm:gap-14">
+                    {/* Timeline rail */}
+                    <div className="flex flex-col items-center flex-shrink-0">
+                      <motion.div
+                        className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center flex-shrink-0"
+                        style={{ background: "#f2f8f0", border: "1px solid #d4edcc" }}
+                        whileHover={{ scale: 1.1, background: "#e6f4e0", transition: SPRING }}
+                      >
+                        <Icon size={24} style={{ color: "#2e6027" }} />
+                      </motion.div>
+                      {!isLast && (
+                        <motion.div
+                          className="w-px flex-1 my-1"
+                          style={{ background: "linear-gradient(to bottom, #d4edcc, #e5e7eb)" }}
+                          initial={{ scaleY: 0, originY: 0 }}
+                          whileInView={{ scaleY: 1 }}
+                          viewport={{ once: true }}
+                          transition={{ duration: 0.8, delay: 0.3, ease: EASE }}
+                        />
+                      )}
+                    </div>
+
+                    {/* Content */}
+                    <div className={`pb-16 sm:pb-20 ${isLast ? "pb-0 sm:pb-0" : ""}`}>
+                      <span
+                        className="font-bold tabular-nums block mb-3"
+                        style={{ fontSize: "clamp(0.7rem, 1.2vw, 0.8rem)", color: "#2e6027", letterSpacing: "0.15em" }}
+                      >
+                        STEP {item.step}
+                      </span>
+                      <h3
+                        className="font-bold text-gray-900 mb-4"
+                        style={{ fontSize: "clamp(1.3rem, 2.5vw, 1.75rem)", letterSpacing: "-0.02em" }}
+                      >
+                        {item.title}
+                      </h3>
+                      <p className="text-gray-500 leading-relaxed max-w-lg" style={{ fontSize: "clamp(1rem, 1.8vw, 1.15rem)" }}>
+                        {item.desc}
+                      </p>
+                    </div>
+                  </div>
+                </Reveal>
+              );
+            })}
+          </div>
+
         </div>
       </section>
 
