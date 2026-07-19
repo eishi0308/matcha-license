@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { MapContainer, TileLayer, Marker, useMap } from "react-leaflet";
 import L from "leaflet";
-import { Cafe, levelConfig } from "@/data/cafes";
+import { Cafe } from "@/data/cafes";
 
 // Fix leaflet default icon in Next.js
 function fixLeafletIcon() {
@@ -14,6 +14,21 @@ function fixLeafletIcon() {
     iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png",
     shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
   });
+}
+
+const MAP_POS_KEY = "matcha_map_position";
+
+function saveMapPosition(center: L.LatLng, zoom: number) {
+  sessionStorage.setItem(MAP_POS_KEY, JSON.stringify({ lat: center.lat, lng: center.lng, zoom }));
+}
+
+function loadMapPosition(): { lat: number; lng: number; zoom: number } | null {
+  try {
+    const raw = sessionStorage.getItem(MAP_POS_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
 }
 
 function createCustomIcon(level: string, isSelected: boolean) {
@@ -70,6 +85,30 @@ function FlyTo({ cafe }: { cafe: Cafe | null }) {
   return null;
 }
 
+// Saves position on every pan/zoom, and flies to city center when city filter changes
+function MapStateTracker({ city }: { city: string }) {
+  const map = useMap();
+  const prevCity = useRef(city);
+
+  useEffect(() => {
+    const handler = () => saveMapPosition(map.getCenter(), map.getZoom());
+    map.on("moveend", handler);
+    return () => { map.off("moveend", handler); };
+  }, [map]);
+
+  useEffect(() => {
+    if (city !== prevCity.current) {
+      if (city !== "All") {
+        const center = CITY_CENTERS[city];
+        if (center) map.flyTo(center, 13, { duration: 0.8 });
+      }
+      prevCity.current = city;
+    }
+  }, [city, map]);
+
+  return null;
+}
+
 interface Props {
   cafes: Cafe[];
   selectedCafe: Cafe | null;
@@ -86,12 +125,17 @@ const CITY_CENTERS: Record<string, [number, number]> = {
 export default function MapClient({ cafes, selectedCafe, onSelectCafe, city }: Props) {
   useEffect(() => { fixLeafletIcon(); }, []);
 
-  const center = CITY_CENTERS[city] || CITY_CENTERS.All;
+  // Read saved position once on mount — persists across page navigations within the same tab
+  const savedPos = useRef(loadMapPosition());
+  const center: [number, number] = savedPos.current
+    ? [savedPos.current.lat, savedPos.current.lng]
+    : (CITY_CENTERS[city] || CITY_CENTERS.All);
+  const zoom = savedPos.current?.zoom ?? 13;
 
   return (
     <MapContainer
       center={center}
-      zoom={13}
+      zoom={zoom}
       style={{ width: "100%", height: "100%" }}
       zoomControl={false}
     >
@@ -99,6 +143,7 @@ export default function MapClient({ cafes, selectedCafe, onSelectCafe, city }: P
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
       />
+      <MapStateTracker city={city} />
       <FlyTo cafe={selectedCafe} />
       {cafes.map((cafe) => (
         <Marker
