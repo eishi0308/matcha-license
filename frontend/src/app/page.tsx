@@ -43,7 +43,7 @@ const LEVEL_CARDS = [
 
 
 const PROBLEM_FACTS = [
-  { icon: Shield,   num: "01", phrase: "No Australian law mandates matcha origin disclosure on menus" },
+  { icon: Shield,   num: "01", phrase: "No law requires cafes to disclose where their matcha comes from" },
   { icon: FileText, num: "02", phrase: '"Ceremonial grade" has no legal definition in Australia' },
   { icon: Search,   num: "03", phrase: "Many cafes use Chinese-sourced matcha marketed as Japanese" },
   { icon: Eye,      num: "04", phrase: "Consumers currently rely entirely on trust — not evidence" },
@@ -487,7 +487,7 @@ export default function HomePage() {
             <div className="overflow-hidden mb-5">
               <motion.span
                 className="block font-normal"
-                style={{ fontSize: "clamp(1rem, 3vw, 1.85rem)", color: "#5a8f3c", letterSpacing: "0.08em", fontWeight: 500 }}
+                style={{ fontSize: "clamp(1.2rem, 3.5vw, 2.1rem)", color: "#5a8f3c", letterSpacing: "0.08em", fontWeight: 500 }}
                 initial={{ y: "120%" }}
                 animate={{ y: "0%" }}
                 transition={{ duration: 0.8, delay: 0.35, ease: EASE_EXPO }}
@@ -705,8 +705,8 @@ export default function HomePage() {
               viewport={{ once: true }}
               transition={{ duration: 0.72, delay: 0.18, ease: EASE }}
             >
-              Australian cafes can label their matcha &ldquo;ceremonial grade&rdquo; or &ldquo;authentic Japanese&rdquo;
-              with zero legal obligation to back it up — and no structured way for consumers to verify the claim.
+              Any Australian cafe can call their matcha &ldquo;ceremonial grade&rdquo; or &ldquo;authentic Japanese&rdquo;
+              — with nothing to back it up, and no way for you to check.
             </motion.p>
           </div>
 
@@ -756,7 +756,13 @@ export default function HomePage() {
           </div>
 
           {/* Comparison card */}
-          <div className="hidden lg:flex items-center justify-center pb-36 sm:pb-44">
+          <div className="flex flex-col items-center justify-center px-1 pb-24 sm:pb-36 lg:pb-44">
+            <span
+              className="uppercase tracking-[0.22em] font-semibold mb-6"
+              style={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.4)" }}
+            >
+              What we check for
+            </span>
             <ComparisonCard />
           </div>
 
@@ -783,7 +789,7 @@ export default function HomePage() {
               className="text-center font-bold leading-[1.1] tracking-tight mb-16 sm:mb-20"
               style={{ fontSize: "clamp(1.5rem, 4vw, 2.5rem)", color: "#1c2b1a" }}
             >
-              This isn&apos;t speculation —<br className="hidden sm:block" /> it&apos;s already making headlines.
+              This isn&apos;t speculation.<br className="hidden sm:block" /> Global newsrooms are already reporting it.
             </h2>
           </Reveal>
 
