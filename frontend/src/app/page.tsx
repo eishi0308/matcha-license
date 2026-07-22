@@ -36,7 +36,7 @@ const DEFAULT_STATS = [
 
 const LEVEL_CARDS = [
   { level: "A", title: "Verified Japanese Disclosure", desc: "Publicly states Japanese origin, prefecture, or direct sourcing with evidence URL.", accent: "#2e6027", bg: "#2e6027", border: "#2e6027", onDark: true },
-  { level: "B", title: "Japanese Matcha Mentioned",    desc: "References 'Japanese matcha' but no specific region, farm, or supplier named.",    accent: "#3a7a30", bg: "#3a7a30", border: "#3a7a30", onDark: true },
+  { level: "B", title: "Japanese Matcha Mentioned",    desc: "References 'Japanese matcha' but no specific region, farm, or supplier named.",    accent: "#4d9740", bg: "#4d9740", border: "#4d9740", onDark: true },
   { level: "C", title: "No Origin Disclosure",         desc: "Serves matcha but provides no public sourcing information on any channel.",         accent: "#6b7280", bg: "#6b7280", border: "#6b7280", onDark: true },
   { level: "D", title: "Insufficient Information",     desc: "Could not verify enough information across website, menu, or social media.",        accent: "#9ca3af", bg: "#eceef0", border: "#e5e7eb", onDark: false },
 ];
