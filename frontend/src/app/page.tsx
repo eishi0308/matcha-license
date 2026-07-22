@@ -45,7 +45,7 @@ const LEVEL_CARDS = [
 const PROBLEM_FACTS = [
   { icon: Shield,   num: "01", tag: "The Law",    phrase: "No law requires cafes to say where their matcha comes from" },
   { icon: FileText, num: "02", tag: "The Menu",   phrase: 'So most menus just say "matcha" — not where it\'s from' },
-  { icon: Search,   num: "03", tag: "The Supply", phrase: "Cheaper green tea powder from outside Japan often gets sold as \"matcha\" anyway" },
+  { icon: Search,   num: "03", tag: "The Supply", phrase: "Cheaper powder from outside Japan still sold as \"matcha\"" },
   { icon: Eye,      num: "04", tag: "The Result", phrase: "You have no way to know if it's actually from Japan" },
 ];
 
@@ -377,11 +377,11 @@ function MenuEvidenceCard() {
   const inView = useInView(ref, { once: true, margin: "-100px" });
 
   return (
-    <div ref={ref} className="relative w-full max-w-[380px] mx-auto" style={{ perspective: 1000 }}>
+    <div ref={ref} className="relative w-full max-w-[560px] mx-auto" style={{ perspective: 1000 }}>
       {/* Coffee ring stain — a little grounded realism */}
       <div
         className="absolute pointer-events-none rounded-full"
-        style={{ top: -22, right: -26, width: 84, height: 84, border: "7px solid rgba(120,84,40,0.10)" }}
+        style={{ top: -32, right: -38, width: 122, height: 122, border: "10px solid rgba(120,84,40,0.10)" }}
       />
 
       <motion.div
@@ -391,31 +391,31 @@ function MenuEvidenceCard() {
         animate={inView ? { opacity: 1, y: 0, rotate: -1.4 } : {}}
         transition={{ duration: 0.85, ease: EASE_EXPO }}
       >
-        <div className="px-7 pt-6 pb-7 rounded-2xl overflow-hidden relative" style={{ border: "1px solid rgba(0,0,0,0.07)" }}>
-          <div className="flex items-center justify-between mb-5">
-            <span className="text-[9px] uppercase tracking-[0.22em] font-semibold" style={{ color: "#b3ada0" }}>
+        <div className="px-10 pt-9 pb-10 rounded-2xl overflow-hidden relative" style={{ border: "1px solid rgba(0,0,0,0.07)" }}>
+          <div className="flex items-center justify-between mb-7">
+            <span className="text-[12px] uppercase tracking-[0.22em] font-semibold" style={{ color: "#b3ada0" }}>
               Menu — Beverages
             </span>
-            <span className="text-[9px] font-semibold" style={{ color: "#d4cfc3" }}>
+            <span className="text-[12px] font-semibold" style={{ color: "#d4cfc3" }}>
               Sydney, AU
             </span>
           </div>
 
-          <div className="space-y-0.5">
+          <div className="space-y-1">
             {MENU_ITEMS.map((item, i) => (
               <div
                 key={item.name}
-                className="relative flex items-center justify-between rounded-lg px-3 -mx-3"
-                style={{ paddingTop: 9, paddingBottom: 9 }}
+                className="relative flex items-center justify-between rounded-lg px-4 -mx-4"
+                style={{ paddingTop: 13, paddingBottom: 13 }}
               >
                 <span
-                  className="text-[14px] font-medium"
+                  className="text-[20px] font-medium"
                   style={{ color: item.flagged ? "#3a2f22" : "#9c9488", fontWeight: item.flagged ? 700 : 500 }}
                 >
                   {item.name}
                 </span>
                 <span
-                  className="text-[13px] tabular-nums"
+                  className="text-[18px] tabular-nums"
                   style={{ color: item.flagged ? "#3a2f22" : "#b3ada0", fontWeight: item.flagged ? 700 : 500 }}
                 >
                   {item.price}
@@ -434,7 +434,7 @@ function MenuEvidenceCard() {
             ))}
           </div>
 
-          <p className="text-[11px] leading-relaxed mt-5 italic" style={{ color: "#c7c1b5" }}>
+          <p className="text-[14px] leading-relaxed mt-7 italic" style={{ color: "#c7c1b5" }}>
             Iced or hot · oat milk available
           </p>
         </div>
@@ -444,10 +444,10 @@ function MenuEvidenceCard() {
           className="absolute select-none"
           style={{
             top: "48%",
-            right: "-8%",
-            padding: "10px 14px",
-            borderRadius: 8,
-            border: "3px solid #dc2626",
+            right: "-9%",
+            padding: "14px 20px",
+            borderRadius: 10,
+            border: "4px solid #dc2626",
             color: "#dc2626",
             background: "rgba(253,252,249,0.88)",
             transform: "rotate(-11deg)",
@@ -457,15 +457,15 @@ function MenuEvidenceCard() {
           transition={{ duration: 0.45, delay: 1.55, ease: [0.34, 1.56, 0.64, 1] }}
         >
           <div className="text-center leading-none">
-            <div className="font-black tracking-[0.08em]" style={{ fontSize: "13px" }}>ORIGIN</div>
-            <div className="font-black tracking-[0.04em]" style={{ fontSize: "13px" }}>NOT LISTED</div>
+            <div className="font-black tracking-[0.08em]" style={{ fontSize: "18px" }}>ORIGIN</div>
+            <div className="font-black tracking-[0.04em]" style={{ fontSize: "18px" }}>NOT LISTED</div>
           </div>
         </motion.div>
       </motion.div>
 
       <motion.p
-        className="text-center mt-8"
-        style={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.3)" }}
+        className="text-center mt-10"
+        style={{ fontSize: "0.9rem", color: "rgba(255,255,255,0.3)" }}
         initial={{ opacity: 0 }}
         animate={inView ? { opacity: 1 } : {}}
         transition={{ duration: 0.6, delay: 2.0 }}
