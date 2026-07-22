@@ -13,7 +13,7 @@ import {
 } from "framer-motion";
 import {
   Leaf, Map, Shield, Search, ArrowRight, CheckCircle2,
-  TrendingUp, Eye, FileText, MessageSquarePlus, ExternalLink, Play,
+  TrendingUp, Eye, FileText, MessageSquarePlus, ExternalLink, Play, User,
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import AuthModal from "@/components/AuthModal";
@@ -43,10 +43,29 @@ const LEVEL_CARDS = [
 
 
 const PROBLEM_FACTS = [
-  { icon: Shield,   num: "01", phrase: "No law requires cafes to disclose where their matcha comes from" },
-  { icon: FileText, num: "02", phrase: '"Ceremonial grade" has no legal definition in Australia' },
-  { icon: Search,   num: "03", phrase: "Many cafes use Chinese-sourced matcha marketed as Japanese" },
-  { icon: Eye,      num: "04", phrase: "Consumers currently rely entirely on trust — not evidence" },
+  { icon: Shield,   num: "01", tag: "The Law",    phrase: "No law requires a cafe to disclose where its matcha is grown" },
+  { icon: FileText, num: "02", tag: "The Menu",   phrase: 'So most menus just print "matcha" — nothing more' },
+  { icon: Search,   num: "03", tag: "The Supply", phrase: "Cheaper, untraceable leaf quietly fills that unlabeled gap" },
+  { icon: Eye,      num: "04", tag: "The Result", phrase: "You're left to assume — with no way to check if you're right" },
+];
+
+const HARM_CARDS = [
+  {
+    icon: Leaf,
+    label: "The Grower",
+    text: "Honest farms in Uji and Nishio lose the premium a real harvest earns — undercut by leaf nobody can trace back to them.",
+    fromX: -28,
+    sourceLabel: "Watch the proof",
+    sourceUrl: "https://www.youtube.com/watch?v=qYh1iXaF-jI",
+  },
+  {
+    icon: User,
+    label: "You",
+    text: "You pay ceremonial-grade prices for matcha that was never verified — and have no way to check if it's real.",
+    fromX: 28,
+    sourceLabel: null,
+    sourceUrl: null,
+  },
 ];
 
 const PRESS_CARDS = [
@@ -341,6 +360,228 @@ function ComparisonCard() {
         You can verify this yourself
       </motion.div>
     </div>
+  );
+}
+
+// ── Menu evidence card — a plausible cafe menu, scanned and stamped ────────
+
+const MENU_ITEMS = [
+  { name: "Flat White", price: "$4.80" },
+  { name: "Long Black", price: "$4.50" },
+  { name: "Matcha Latte", price: "$7.50", flagged: true },
+  { name: "Chai Latte", price: "$5.50" },
+];
+
+function MenuEvidenceCard() {
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: true, margin: "-100px" });
+
+  return (
+    <div ref={ref} className="relative w-full max-w-[380px] mx-auto" style={{ perspective: 1000 }}>
+      {/* Coffee ring stain — a little grounded realism */}
+      <div
+        className="absolute pointer-events-none rounded-full"
+        style={{ top: -22, right: -26, width: 84, height: 84, border: "7px solid rgba(120,84,40,0.10)" }}
+      />
+
+      <motion.div
+        className="relative rounded-2xl overflow-visible"
+        style={{ background: "#fdfcf9", boxShadow: "0 40px 90px rgba(0,0,0,0.45), 0 4px 18px rgba(0,0,0,0.2)" }}
+        initial={{ opacity: 0, y: 46, rotate: -3 }}
+        animate={inView ? { opacity: 1, y: 0, rotate: -1.4 } : {}}
+        transition={{ duration: 0.85, ease: EASE_EXPO }}
+      >
+        <div className="px-7 pt-6 pb-7 rounded-2xl overflow-hidden relative" style={{ border: "1px solid rgba(0,0,0,0.07)" }}>
+          <div className="flex items-center justify-between mb-5">
+            <span className="text-[9px] uppercase tracking-[0.22em] font-semibold" style={{ color: "#b3ada0" }}>
+              Menu — Beverages
+            </span>
+            <span className="text-[9px] font-semibold" style={{ color: "#d4cfc3" }}>
+              Sydney, AU
+            </span>
+          </div>
+
+          <div className="space-y-0.5">
+            {MENU_ITEMS.map((item, i) => (
+              <div
+                key={item.name}
+                className="relative flex items-center justify-between rounded-lg px-3 -mx-3"
+                style={{ paddingTop: 9, paddingBottom: 9 }}
+              >
+                <span
+                  className="text-[14px] font-medium"
+                  style={{ color: item.flagged ? "#3a2f22" : "#9c9488", fontWeight: item.flagged ? 700 : 500 }}
+                >
+                  {item.name}
+                </span>
+                <span
+                  className="text-[13px] tabular-nums"
+                  style={{ color: item.flagged ? "#3a2f22" : "#b3ada0", fontWeight: item.flagged ? 700 : 500 }}
+                >
+                  {item.price}
+                </span>
+
+                {item.flagged && (
+                  <motion.div
+                    className="absolute inset-0 rounded-lg pointer-events-none"
+                    style={{ background: "linear-gradient(90deg, transparent, rgba(220,38,38,0.16) 45%, rgba(220,38,38,0.16) 55%, transparent)" }}
+                    initial={{ x: "-120%" }}
+                    animate={inView ? { x: "120%" } : {}}
+                    transition={{ duration: 1.1, delay: 0.9, ease: EASE }}
+                  />
+                )}
+              </div>
+            ))}
+          </div>
+
+          <p className="text-[11px] leading-relaxed mt-5 italic" style={{ color: "#c7c1b5" }}>
+            Iced or hot · oat milk available
+          </p>
+        </div>
+
+        {/* Ink stamp — snaps in like a rubber stamp hitting paper */}
+        <motion.div
+          className="absolute select-none"
+          style={{
+            top: "48%",
+            right: "-8%",
+            padding: "10px 14px",
+            borderRadius: 8,
+            border: "3px solid #dc2626",
+            color: "#dc2626",
+            background: "rgba(253,252,249,0.88)",
+            transform: "rotate(-11deg)",
+          }}
+          initial={{ opacity: 0, scale: 2.4, rotate: 4 }}
+          animate={inView ? { opacity: 0.92, scale: 1, rotate: -11 } : {}}
+          transition={{ duration: 0.45, delay: 1.55, ease: [0.34, 1.56, 0.64, 1] }}
+        >
+          <div className="text-center leading-none">
+            <div className="font-black tracking-[0.08em]" style={{ fontSize: "13px" }}>ORIGIN</div>
+            <div className="font-black tracking-[0.04em]" style={{ fontSize: "13px" }}>NOT LISTED</div>
+          </div>
+        </motion.div>
+      </motion.div>
+
+      <motion.p
+        className="text-center mt-8"
+        style={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.3)" }}
+        initial={{ opacity: 0 }}
+        animate={inView ? { opacity: 1 } : {}}
+        transition={{ duration: 0.6, delay: 2.0 }}
+      >
+        Illustrative example — a typical Australian cafe menu
+      </motion.p>
+    </div>
+  );
+}
+
+// ── Problem chain — causal sequence with a drawing connector ───────────────
+
+function ChainStep({ item, isLast }: { item: typeof PROBLEM_FACTS[number]; isLast: boolean }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: true, margin: "-60px" });
+  const Icon = item.icon;
+
+  return (
+    <div ref={ref} className="flex gap-6 sm:gap-8">
+      {/* Rail — badge + drawing connector to the next step */}
+      <div className="flex flex-col items-center flex-shrink-0">
+        <motion.div
+          className="w-14 h-14 rounded-full flex items-center justify-center relative flex-shrink-0"
+          initial={{ scale: 0.7, opacity: 0, borderColor: "rgba(255,255,255,0.12)", backgroundColor: "rgba(255,255,255,0.03)" }}
+          animate={inView ? {
+            scale: 1, opacity: 1,
+            borderColor: "rgba(109,191,94,0.55)",
+            backgroundColor: "rgba(77,151,64,0.14)",
+          } : {}}
+          style={{ borderWidth: 1.5, borderStyle: "solid" }}
+          transition={{ duration: 0.55, ease: EASE_EXPO }}
+        >
+          <Icon size={18} style={{ color: "#7dd56f" }} />
+          <motion.span
+            className="absolute inset-0 rounded-full pointer-events-none"
+            initial={{ boxShadow: "0 0 0 0 rgba(125,213,111,0)" }}
+            animate={inView ? { boxShadow: ["0 0 0 0 rgba(125,213,111,0.45)", "0 0 0 14px rgba(125,213,111,0)"] } : {}}
+            transition={{ duration: 1.1, delay: 0.15 }}
+          />
+        </motion.div>
+
+        {!isLast && (
+          <div className="w-px flex-1 my-1 relative" style={{ minHeight: 52, background: "rgba(255,255,255,0.1)" }}>
+            <motion.div
+              className="absolute inset-x-0 top-0 origin-top"
+              style={{ background: "linear-gradient(180deg, #4d9740, #7dd56f)", height: "100%" }}
+              initial={{ scaleY: 0 }}
+              animate={inView ? { scaleY: 1 } : {}}
+              transition={{ duration: 0.65, delay: 0.4, ease: EASE }}
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Content */}
+      <motion.div
+        className={isLast ? "pb-2 pt-2" : "pb-12 sm:pb-14 pt-2"}
+        initial={{ opacity: 0, x: -18 }}
+        animate={inView ? { opacity: 1, x: 0 } : {}}
+        transition={{ duration: 0.55, delay: 0.12, ease: EASE_EXPO }}
+      >
+        <span className="block text-[10px] font-bold uppercase tracking-[0.25em] mb-2" style={{ color: "#6abf5e" }}>
+          {item.tag}
+        </span>
+        <p className="font-semibold leading-snug" style={{ fontSize: "clamp(1.05rem, 2.3vw, 1.4rem)", color: "rgba(255,255,255,0.92)" }}>
+          {item.phrase}
+        </p>
+      </motion.div>
+    </div>
+  );
+}
+
+// ── Harm split — who actually pays for the silence ─────────────────────────
+
+function HarmCard({ card }: { card: typeof HARM_CARDS[number] }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: true, margin: "-80px" });
+  const Icon = card.icon;
+
+  return (
+    <motion.div
+      ref={ref}
+      className="rounded-2xl px-7 py-8 sm:px-8 sm:py-9"
+      style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}
+      initial={{ opacity: 0, x: card.fromX }}
+      animate={inView ? { opacity: 1, x: 0 } : {}}
+      whileHover={{ borderColor: "rgba(109,191,94,0.4)", backgroundColor: "rgba(77,151,64,0.05)" }}
+      transition={{ duration: 0.7, ease: EASE_EXPO }}
+    >
+      <div
+        className="w-11 h-11 rounded-xl flex items-center justify-center mb-6"
+        style={{ background: "rgba(77,151,64,0.14)" }}
+      >
+        <Icon size={18} style={{ color: "#7dd56f" }} />
+      </div>
+      <span className="block text-[11px] font-bold uppercase tracking-[0.22em] mb-3" style={{ color: "rgba(255,255,255,0.4)" }}>
+        {card.label}
+      </span>
+      <p className="leading-relaxed" style={{ fontSize: "1.02rem", color: "rgba(255,255,255,0.82)" }}>
+        {card.text}
+      </p>
+      {card.sourceUrl && (
+        <motion.a
+          href={card.sourceUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 mt-5 text-[13px] font-semibold"
+          style={{ color: "#7dd56f", textDecoration: "none" }}
+          whileHover={{ x: 4 }}
+          transition={{ duration: 0.18 }}
+        >
+          {card.sourceLabel}
+          <ExternalLink size={13} />
+        </motion.a>
+      )}
+    </motion.div>
   );
 }
 
@@ -689,11 +930,10 @@ export default function HomePage() {
               viewport={{ once: true }}
               transition={{ duration: 0.9, delay: 0.08, ease: EASE }}
             >
-              &ldquo;Premium&rdquo;, &ldquo;ceremonial&rdquo;,
+              &ldquo;Matcha.&rdquo; That&rsquo;s the whole label.
               <br />
-              &ldquo;authentic&rdquo; — but from{" "}
-              <span className="italic" style={{ color: "#6abf5e" }}>where</span>
-              <span style={{ color: "#6abf5e" }}>?</span>
+              You read{" "}
+              <span className="italic" style={{ color: "#6abf5e" }}>&ldquo;Japan&rdquo;</span> anyway.
             </motion.h2>
 
             {/* Subline */}
@@ -705,9 +945,15 @@ export default function HomePage() {
               viewport={{ once: true }}
               transition={{ duration: 0.72, delay: 0.18, ease: EASE }}
             >
-              Any Australian cafe can call their matcha &ldquo;ceremonial grade&rdquo; or &ldquo;authentic Japanese&rdquo;
-              — with nothing to back it up, and no way for you to check.
+              No law requires a country, a farm, or a grade on the label — so most cafes just leave it
+              blank, and you fill the gap yourself. Sometimes that assumption is right. Often, no one
+              — not even the cafe — actually knows.
             </motion.p>
+          </div>
+
+          {/* Menu evidence card — the omission, made visible */}
+          <div className="max-w-5xl mx-auto pb-24 sm:pb-32">
+            <MenuEvidenceCard />
           </div>
 
           {/* Divider line */}
@@ -721,36 +967,26 @@ export default function HomePage() {
             />
           </div>
 
-          {/* Facts — 2×2 grid with large numbers */}
-          <div className="max-w-6xl mx-auto py-24 sm:py-32">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-16 lg:gap-x-24 gap-y-0">
-              {PROBLEM_FACTS.map(({ num, phrase, icon: Icon }, i) => (
-                <motion.div
-                  key={num}
-                  className="flex items-start gap-6 sm:gap-8 py-10 sm:py-12"
-                  style={{ borderBottom: "1px solid rgba(255,255,255,0.1)" }}
-                  initial={{ opacity: 0, y: 28 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.6, delay: i * 0.1, ease: EASE_EXPO }}
-                >
-                  {/* Large number */}
-                  <span
-                    className="font-bold tabular-nums leading-none flex-shrink-0"
-                    style={{ fontSize: "clamp(2.5rem, 5vw, 4rem)", color: "rgba(77,151,64,0.35)", letterSpacing: "-0.04em", marginTop: "-0.15em" }}
-                  >
-                    {num}
-                  </span>
-                  {/* Text */}
-                  <div className="flex flex-col gap-3 pt-1">
-                    <div className="flex items-center justify-center rounded-lg flex-shrink-0" style={{ width: 40, height: 40, background: "rgba(77,151,64,0.1)", alignSelf: "flex-start" }}>
-                      <Icon size={18} style={{ color: "#4d9740" }} />
-                    </div>
-                    <p className="font-medium leading-relaxed" style={{ fontSize: "clamp(1rem, 2vw, 1.2rem)", color: "rgba(255,255,255,0.88)" }}>
-                      {phrase}
-                    </p>
-                  </div>
-                </motion.div>
+          {/* Facts — a causal chain, not a list */}
+          <div className="max-w-2xl mx-auto py-24 sm:py-32">
+            {PROBLEM_FACTS.map((item, i) => (
+              <ChainStep key={item.num} item={item} isLast={i === PROBLEM_FACTS.length - 1} />
+            ))}
+          </div>
+
+          {/* Harm split — who actually pays for the silence */}
+          <div className="max-w-4xl mx-auto pb-24 sm:pb-32">
+            <div className="flex justify-center mb-12">
+              <span
+                className="uppercase tracking-[0.22em] font-semibold"
+                style={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.4)" }}
+              >
+                Who pays for the silence
+              </span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6">
+              {HARM_CARDS.map((card) => (
+                <HarmCard key={card.label} card={card} />
               ))}
             </div>
           </div>
