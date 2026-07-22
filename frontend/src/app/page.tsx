@@ -43,10 +43,10 @@ const LEVEL_CARDS = [
 
 
 const PROBLEM_FACTS = [
-  { icon: Shield,   num: "01", tag: "The Law",    phrase: "No law requires a cafe to disclose where its matcha is grown" },
-  { icon: FileText, num: "02", tag: "The Menu",   phrase: 'So most menus just print "matcha" — nothing more' },
-  { icon: Search,   num: "03", tag: "The Supply", phrase: "Cheaper, untraceable leaf quietly fills that unlabeled gap" },
-  { icon: Eye,      num: "04", tag: "The Result", phrase: "You're left to assume — with no way to check if you're right" },
+  { icon: Shield,   num: "01", tag: "The Law",    phrase: "No law requires cafes to say where their matcha comes from" },
+  { icon: FileText, num: "02", tag: "The Menu",   phrase: 'So most menus just say "matcha" — not where it\'s from' },
+  { icon: Search,   num: "03", tag: "The Supply", phrase: "Cheaper green tea powder from outside Japan often gets sold as \"matcha\" anyway" },
+  { icon: Eye,      num: "04", tag: "The Result", phrase: "You have no way to know if it's actually from Japan" },
 ];
 
 const HARM_CARDS = [
@@ -530,7 +530,10 @@ function ChainStep({ item, isLast }: { item: typeof PROBLEM_FACTS[number]; isLas
         <span className="block text-[10px] font-bold uppercase tracking-[0.25em] mb-2" style={{ color: "#6abf5e" }}>
           {item.tag}
         </span>
-        <p className="font-semibold leading-snug" style={{ fontSize: "clamp(1.05rem, 2.3vw, 1.4rem)", color: "rgba(255,255,255,0.92)" }}>
+        <p
+          className="font-semibold leading-snug whitespace-normal sm:whitespace-nowrap"
+          style={{ fontSize: "clamp(1.15rem, 2.6vw, 1.75rem)", color: "rgba(255,255,255,0.92)", letterSpacing: "-0.01em" }}
+        >
           {item.phrase}
         </p>
       </motion.div>
@@ -968,7 +971,7 @@ export default function HomePage() {
           </div>
 
           {/* Facts — a causal chain, not a list */}
-          <div className="max-w-2xl mx-auto py-24 sm:py-32">
+          <div className="max-w-5xl mx-auto py-24 sm:py-32">
             {PROBLEM_FACTS.map((item, i) => (
               <ChainStep key={item.num} item={item} isLast={i === PROBLEM_FACTS.length - 1} />
             ))}
