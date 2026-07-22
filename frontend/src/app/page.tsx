@@ -35,10 +35,10 @@ const DEFAULT_STATS = [
 ];
 
 const LEVEL_CARDS = [
-  { level: "A", title: "Verified Japanese Disclosure", desc: "Publicly states Japanese origin, prefecture, or direct sourcing with evidence URL.", accent: "#2e6027", badgeBg: "#e6f4e0", border: "#b3dda6" },
-  { level: "B", title: "Japanese Matcha Mentioned",    desc: "References 'Japanese matcha' but no specific region, farm, or supplier named.",    accent: "#3a7a30", badgeBg: "#eef7e9", border: "#c2e1b5" },
-  { level: "C", title: "No Origin Disclosure",         desc: "Serves matcha but provides no public sourcing information on any channel.",         accent: "#6b7280", badgeBg: "#f3f4f6", border: "#e5e7eb" },
-  { level: "D", title: "Insufficient Information",     desc: "Could not verify enough information across website, menu, or social media.",        accent: "#9ca3af", badgeBg: "#f9fafb", border: "#e5e7eb" },
+  { level: "A", title: "Verified Japanese Disclosure", desc: "Publicly states Japanese origin, prefecture, or direct sourcing with evidence URL.", accent: "#2e6027", bg: "#2e6027", border: "#2e6027", onDark: true },
+  { level: "B", title: "Japanese Matcha Mentioned",    desc: "References 'Japanese matcha' but no specific region, farm, or supplier named.",    accent: "#3a7a30", bg: "#3a7a30", border: "#3a7a30", onDark: true },
+  { level: "C", title: "No Origin Disclosure",         desc: "Serves matcha but provides no public sourcing information on any channel.",         accent: "#6b7280", bg: "#6b7280", border: "#6b7280", onDark: true },
+  { level: "D", title: "Insufficient Information",     desc: "Could not verify enough information across website, menu, or social media.",        accent: "#9ca3af", bg: "#eceef0", border: "#e5e7eb", onDark: false },
 ];
 
 
@@ -1082,15 +1082,18 @@ export default function HomePage() {
             {LEVEL_CARDS.map((card, i) => (
               <Reveal key={card.level} delay={i * 0.08}>
                 <motion.div
-                  className="relative rounded-3xl overflow-hidden bg-white h-full"
+                  className="relative rounded-3xl overflow-hidden h-full"
                   style={{
-                    border: `1px solid ${card.border}`,
-                    boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+                    background: card.bg,
+                    border: `1px solid ${card.onDark ? "rgba(255,255,255,0.14)" : card.border}`,
+                    boxShadow: card.onDark ? "0 1px 3px rgba(0,0,0,0.12)" : "0 1px 3px rgba(0,0,0,0.04)",
                   }}
                   whileHover={{
                     y: -6,
-                    borderColor: card.accent,
-                    boxShadow: `0 24px 60px ${card.accent}15, 0 4px 16px rgba(0,0,0,0.06)`,
+                    borderColor: card.onDark ? "rgba(255,255,255,0.32)" : card.accent,
+                    boxShadow: card.onDark
+                      ? `0 24px 60px ${card.accent}55, 0 4px 16px rgba(0,0,0,0.22)`
+                      : `0 24px 60px ${card.accent}15, 0 4px 16px rgba(0,0,0,0.06)`,
                   } as any}
                   transition={SPRING}
                 >
@@ -1100,15 +1103,18 @@ export default function HomePage() {
                       <div className="flex items-center gap-5">
                         <span
                           className="font-bold leading-none"
-                          style={{ fontSize: "clamp(3.5rem, 6vw, 5rem)", color: card.accent, letterSpacing: "-0.04em", lineHeight: 0.85 }}
+                          style={{ fontSize: "clamp(3.5rem, 6vw, 5rem)", color: card.onDark ? "#ffffff" : card.accent, letterSpacing: "-0.04em", lineHeight: 0.85 }}
                         >
                           {card.level}
                         </span>
                         <div>
-                          <div className="text-[10px] font-bold tracking-[0.2em] uppercase mb-1.5" style={{ color: card.accent, opacity: 0.7 }}>
+                          <div
+                            className="text-[10px] font-bold tracking-[0.2em] uppercase mb-1.5"
+                            style={{ color: card.onDark ? "rgba(255,255,255,0.78)" : card.accent, opacity: card.onDark ? 1 : 0.7 }}
+                          >
                             Level {card.level}
                           </div>
-                          <h3 className="font-bold text-gray-900" style={{ fontSize: "clamp(1.1rem, 2vw, 1.3rem)" }}>
+                          <h3 className="font-bold" style={{ fontSize: "clamp(1.1rem, 2vw, 1.3rem)", color: card.onDark ? "#ffffff" : "#111827" }}>
                             {card.title}
                           </h3>
                         </div>
@@ -1116,15 +1122,18 @@ export default function HomePage() {
                       {/* Status dot */}
                       <div
                         className="w-3 h-3 rounded-full flex-shrink-0 mt-2"
-                        style={{ background: card.accent, opacity: 0.5 }}
+                        style={{ background: card.onDark ? "#ffffff" : card.accent, opacity: card.onDark ? 0.55 : 0.5 }}
                       />
                     </div>
 
                     {/* Divider */}
-                    <div className="h-px mb-6" style={{ background: `${card.border}` }} />
+                    <div className="h-px mb-6" style={{ background: card.onDark ? "rgba(255,255,255,0.18)" : card.border }} />
 
                     {/* Description */}
-                    <p className="text-gray-500 leading-relaxed" style={{ fontSize: "clamp(0.95rem, 1.8vw, 1.1rem)" }}>
+                    <p
+                      className="leading-relaxed"
+                      style={{ fontSize: "clamp(0.95rem, 1.8vw, 1.1rem)", color: card.onDark ? "rgba(255,255,255,0.82)" : "#6b7280" }}
+                    >
                       {card.desc}
                     </p>
                   </div>
