@@ -543,7 +543,7 @@ function ChainStep({ item, isLast }: { item: typeof PROBLEM_FACTS[number]; isLas
 
 // ── Harm split — who actually pays for the silence ─────────────────────────
 
-function HarmCard({ card }: { card: typeof HARM_CARDS[number] }) {
+function HarmCard({ card, index }: { card: typeof HARM_CARDS[number]; index: number }) {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true, margin: "-80px" });
   const Icon = card.icon;
@@ -551,23 +551,31 @@ function HarmCard({ card }: { card: typeof HARM_CARDS[number] }) {
   return (
     <motion.div
       ref={ref}
-      className="rounded-2xl px-7 py-8 sm:px-8 sm:py-9"
-      style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}
       initial={{ opacity: 0, x: card.fromX }}
       animate={inView ? { opacity: 1, x: 0 } : {}}
-      whileHover={{ borderColor: "rgba(109,191,94,0.4)", backgroundColor: "rgba(77,151,64,0.05)" }}
       transition={{ duration: 0.7, ease: EASE_EXPO }}
     >
-      <div
-        className="w-11 h-11 rounded-xl flex items-center justify-center mb-6"
-        style={{ background: "rgba(77,151,64,0.14)" }}
-      >
-        <Icon size={18} style={{ color: "#7dd56f" }} />
+      <div className="flex items-center gap-4 mb-6">
+        <motion.div
+          className="w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0 relative"
+          style={{ borderWidth: 1.5, borderStyle: "solid", borderColor: "rgba(109,191,94,0.55)", background: "rgba(77,151,64,0.14)" }}
+        >
+          <Icon size={22} style={{ color: "#7dd56f" }} />
+          <motion.span
+            className="absolute inset-0 rounded-full pointer-events-none"
+            initial={{ boxShadow: "0 0 0 0 rgba(125,213,111,0)" }}
+            animate={inView ? { boxShadow: ["0 0 0 0 rgba(125,213,111,0.45)", "0 0 0 14px rgba(125,213,111,0)"] } : {}}
+            transition={{ duration: 1.1, delay: 0.15 }}
+          />
+        </motion.div>
+        <span className="text-[11px] font-bold uppercase tracking-[0.25em]" style={{ color: "#6abf5e" }}>
+          {String(index).padStart(2, "0")} — {card.label}
+        </span>
       </div>
-      <span className="block text-[11px] font-bold uppercase tracking-[0.22em] mb-3" style={{ color: "rgba(255,255,255,0.4)" }}>
-        {card.label}
-      </span>
-      <p className="leading-relaxed" style={{ fontSize: "1.02rem", color: "rgba(255,255,255,0.82)" }}>
+      <p
+        className="font-semibold leading-snug"
+        style={{ fontSize: "clamp(1.2rem, 2.3vw, 1.45rem)", color: "rgba(255,255,255,0.92)", letterSpacing: "-0.01em", maxWidth: "26rem" }}
+      >
         {card.text}
       </p>
       {card.sourceUrl && (
@@ -575,13 +583,13 @@ function HarmCard({ card }: { card: typeof HARM_CARDS[number] }) {
           href={card.sourceUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-1.5 mt-5 text-[13px] font-semibold"
+          className="inline-flex items-center gap-1.5 mt-5 text-sm font-semibold"
           style={{ color: "#7dd56f", textDecoration: "none" }}
           whileHover={{ x: 4 }}
           transition={{ duration: 0.18 }}
         >
           {card.sourceLabel}
-          <ExternalLink size={13} />
+          <ExternalLink size={14} />
         </motion.a>
       )}
     </motion.div>
@@ -979,17 +987,27 @@ export default function HomePage() {
 
           {/* Harm split — who actually pays for the silence */}
           <div className="max-w-4xl mx-auto pb-24 sm:pb-32">
-            <div className="flex justify-center mb-12">
+            <div className="text-center mb-16 sm:mb-20">
               <span
-                className="uppercase tracking-[0.22em] font-semibold"
-                style={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.4)" }}
+                className="block uppercase tracking-[0.22em] font-semibold mb-5"
+                style={{ fontSize: "0.65rem", color: "#7dd56f" }}
               >
-                Who pays for the silence
+                Who Pays For The Silence
               </span>
+              <h3
+                className="font-bold leading-[1.08] mx-auto"
+                style={{ fontSize: "clamp(1.9rem, 4.2vw, 3rem)", color: "#f5f5f0", letterSpacing: "-0.025em", maxWidth: "28rem" }}
+              >
+                Two people pay for every blank label.
+              </h3>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6">
-              {HARM_CARDS.map((card) => (
-                <HarmCard key={card.label} card={card} />
+            <div className="relative grid grid-cols-1 sm:grid-cols-2 gap-y-16 sm:gap-y-0 sm:gap-x-16">
+              <div
+                className="hidden sm:block absolute left-1/2 top-1 bottom-1 w-px -translate-x-1/2"
+                style={{ background: "linear-gradient(180deg, transparent, rgba(255,255,255,0.14) 12%, rgba(255,255,255,0.14) 88%, transparent)" }}
+              />
+              {HARM_CARDS.map((card, i) => (
+                <HarmCard key={card.label} card={card} index={i + 1} />
               ))}
             </div>
           </div>
