@@ -998,7 +998,7 @@ export default function HomePage() {
                 className="font-bold leading-[1.08] mx-auto"
                 style={{ fontSize: "clamp(1.9rem, 4.2vw, 3rem)", color: "#f5f5f0", letterSpacing: "-0.025em", maxWidth: "28rem" }}
               >
-                Two people pay for every blank label.
+                Farmers earn less. You pay more.
               </h3>
             </div>
             <div className="relative grid grid-cols-1 sm:grid-cols-2 gap-y-16 sm:gap-y-0 sm:gap-x-16">
@@ -1092,9 +1092,15 @@ export default function HomePage() {
               </h2>
             </Reveal>
             <Reveal delay={0.1}>
-              <p className="text-gray-400 max-w-2xl mx-auto leading-relaxed" style={{ fontSize: "clamp(1.05rem, 2.5vw, 1.3rem)" }}>
-                Based entirely on publicly verifiable evidence.<br className="hidden sm:block" /> We never guess, assume, or rate based on taste.
-              </p>
+              <div className="flex justify-center">
+                <span
+                  className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full font-semibold"
+                  style={{ fontSize: "0.78rem", color: "#2e6027", background: "rgba(46,96,39,0.08)", border: "1px solid rgba(46,96,39,0.18)" }}
+                >
+                  <CheckCircle2 size={13} strokeWidth={2.5} />
+                  Publicly verifiable evidence only — never taste, never guesswork
+                </span>
+              </div>
             </Reveal>
           </div>
 
