@@ -27,11 +27,13 @@ const SPRING = { type: "spring" as const, stiffness: 300, damping: 28 };
 
 // ── Data ──────────────────────────────────────────────────────────────────
 
+// Fallback only — replaced by live Supabase counts on mount. Keep in step with the
+// database so a failed fetch never shows numbers that contradict the map.
 const DEFAULT_STATS = [
   { value: 1147, suffix: "+", label: "Cafes Indexed", sublabel: "& still growing", icon: "map" },
-  { value: 50,  suffix: "",  label: "Mention Japanese Origin", sublabel: "on their menu or site", icon: "leaf" },
+  { value: 49,  suffix: "",  label: "Mention Japanese Origin", sublabel: "on their menu or site", icon: "leaf" },
   { value: 2,   suffix: "",  label: "Cities Covered", sublabel: "Sydney & Melbourne", icon: "cities" },
-  { value: 37,  suffix: "",  label: "Name a Specific Source", sublabel: "farm, region or supplier", icon: "file" },
+  { value: 35,  suffix: "",  label: "Name a Specific Source", sublabel: "farm or region in Japan", icon: "file" },
 ];
 
 const LEVEL_CARDS = [

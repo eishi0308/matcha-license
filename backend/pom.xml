@@ -60,6 +60,16 @@
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
       </plugin>
+      <!--
+        Spring Boot 3.2.5 pins maven-clean-plugin 3.3.2, which resolves
+        org.codehaus.plexus.util.Os from the Maven core realm. Newer Maven no longer
+        exports it, so `mvn clean` dies with NoClassDefFoundError. 3.4.1 bundles its own.
+      -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-clean-plugin</artifactId>
+        <version>3.4.1</version>
+      </plugin>
     </plugins>
   </build>
 </project>

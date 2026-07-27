@@ -34,6 +34,10 @@ function PanelContent({
 }) {
   const level = levelConfig[cafe.level];
 
+  // Levels A and B assert a public disclosure. Without evidence to point at, that
+  // assertion is unsupported — surface it as such rather than badging it "Verified".
+  const unsupported = (cafe.level === "A" || cafe.level === "B") && !cafe.evidence;
+
   return (
     <>
       {/* Coloured header */}
@@ -65,7 +69,7 @@ function PanelContent({
             transition={{ delay: 0.1, ...SPRING }}
           >
             <span className="w-1.5 h-1.5 rounded-full bg-white" />
-            Level {cafe.level} — {level.shortLabel}
+            {unsupported ? "Under review" : `Level ${cafe.level} — ${level.shortLabel}`}
           </motion.span>
         </div>
 
@@ -172,6 +176,17 @@ function PanelContent({
                 </motion.a>
               </div>
             </motion.div>
+          ) : unsupported ? (
+            <div className="rounded-2xl p-4" style={{ background: "#fffbeb", border: "1px solid #fcd34d" }}>
+              <p className="text-sm font-semibold" style={{ color: "#92400e" }}>
+                Grade withheld — evidence missing
+              </p>
+              <p className="text-xs mt-1.5 leading-relaxed" style={{ color: "#b45309" }}>
+                This listing carries a Level {cafe.level} grade but no supporting quote, so we
+                cannot show you proof. Treat it as unverified until we re-check it. We never
+                display a transparency grade we cannot back with a source.
+              </p>
+            </div>
           ) : (
             <div className="rounded-2xl border border-gray-200 p-4 bg-gray-50">
               <p className="text-sm text-gray-400 italic">

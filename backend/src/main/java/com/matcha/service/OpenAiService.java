@@ -103,8 +103,11 @@ public class OpenAiService {
                 }
 
                 Level guide (assign based ONLY on evidence in the content):
-                A = Names specific Japanese prefecture (Uji, Nishio, Kagoshima, Yame, etc.) or a specific farm/supplier
-                B = Mentions "Japanese matcha" generally but no region or farm
+                A = Names a specific JAPANESE growing region/prefecture (Uji, Nishio, Kagoshima,
+                    Yame, Shizuoka, Wazuka, etc.), OR names a specific Japanese farm, tea garden
+                    or estate that grew the leaf
+                B = Establishes the matcha is Japanese but names no region, farm or garden
+                    (e.g. "Japanese matcha", "imported from Japan", "harvested in Japan")
                 C = Serves matcha but zero sourcing information disclosed
                 D = Not enough information to classify (but does serve matcha)
                 null = Does not serve matcha at all
@@ -113,6 +116,16 @@ public class OpenAiService {
                 - It MUST be copied word-for-word from the Content above. Do NOT paraphrase, rewrite, or invent.
                 - If you cannot find an exact verbatim passage in the Content supporting level A or B, set evidenceQuote to null and use level C instead.
                 - Never fabricate or summarize text for evidenceQuote.
+                - Choose the STRONGEST passage available: prefer one naming a Japanese region or
+                  farm over one that merely says "Japanese".
+
+                A RESELLER OR BRAND NAME IS NOT ORIGIN EVIDENCE:
+                - Naming the wholesaler, brand or distributor the cafe buys from (e.g. "Matcha
+                  Maiden", "Somage", "The Tea Collective", "Zen Wonders", "Matcha Society") says
+                  nothing about where the leaf was grown. That is level C unless the same content
+                  ALSO states a Japanese region, farm, or that the matcha is Japanese.
+                - Grade words alone ("ceremonial grade", "premium", "first harvest", "single
+                  origin" with no origin named) are marketing, not sourcing disclosure. Level C.
 
                 Type options: "specialty", "cafe", "dessert", "chain"
                 """.formatted(cafeName, website, content);

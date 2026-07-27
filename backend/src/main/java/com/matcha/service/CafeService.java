@@ -163,7 +163,6 @@ public class CafeService {
                 if (!content.isBlank()) {
                     System.out.printf("[Discovery] → Sending to OpenAI for analysis...%n");
                     analysis = openAiService.analyze(place.name(), place.website(), content);
-                    analysis = verifyQuote(analysis, content);
                 }
 
                 // Find which specific page the quote was found on
@@ -177,7 +176,7 @@ public class CafeService {
 
                 System.out.printf("[Discovery] → Matcha confirmed! Saving...%n");
 
-                Cafe cafe = buildDiscoveredCafe(place, city.name(), analysis, verifiedDate, exactSourceUrl);
+                Cafe cafe = buildDiscoveredCafe(place, city.name(), analysis, verifiedDate, exactSourceUrl, content);
                 cafeRepository.save(cafe);
                 discovered++;
                 System.out.printf("[Discovery] → Saved '%s' as Level %s%n", place.name(), cafe.getLevel());
@@ -192,7 +191,7 @@ public class CafeService {
         return discovered;
     }
 
-    private Cafe buildDiscoveredCafe(GooglePlacesService.PlaceInfo place, String city, OpenAiService.CafeAnalysis analysis, String verifiedDate, String exactSourceUrl) {
+    private Cafe buildDiscoveredCafe(GooglePlacesService.PlaceInfo place, String city, OpenAiService.CafeAnalysis analysis, String verifiedDate, String exactSourceUrl, String scrapedContent) {
         long count = cafeRepository.count();
         String prefix = city.substring(0, 3).toLowerCase();
         String id = prefix + "-disc-" + String.format("%03d", count + 1);
@@ -209,20 +208,30 @@ public class CafeService {
         cafe.setPriceRange("$$");
 
         if (analysis != null) {
-            cafe.setLevel(analysis.level() != null ? TransparencyLevel.valueOf(analysis.level()) : TransparencyLevel.C);
-            cafe.setType(analysis.type() != null ? analysis.type() : "cafe");
-            cafe.setTagline(analysis.tagline() != null ? analysis.tagline() : "");
-            cafe.setDescription(analysis.description() != null ? analysis.description() : "");
-            cafe.setSpecialties(analysis.specialties() != null ? String.join(",", analysis.specialties()) : "");
-            cafe.setCoverColor(coverColorForLevel(analysis.level()));
+            // The AI's own level is discarded. The grade is derived from evidence that
+            // survives every gate, so a level can never outrun the proof behind it.
+            TransparencyLevel level = TransparencyGrader.grade(analysis.evidenceQuote(), scrapedContent);
 
-            if (analysis.evidenceQuote() != null) {
+            cafe.setLevel(level);
+            cafe.setType(analysis.type() != null ? analysis.type() : "cafe");
+            cafe.setSpecialties(analysis.specialties() != null ? String.join(",", analysis.specialties()) : "");
+            cafe.setCoverColor(coverColorForLevel(level.name()));
+
+            if (TransparencyGrader.levelRequiresEvidence(level)) {
+                // Level and evidence are written together — never one without the other.
                 cafe.setEvidenceQuote(analysis.evidenceQuote());
                 String src = exactSourceUrl != null ? exactSourceUrl : place.website();
                 if (src != null && src.length() > 250) src = src.substring(0, 250);
                 cafe.setEvidenceSource(src);
                 cafe.setEvidenceSourceLabel("Official Website");
                 cafe.setEvidenceVerifiedDate(verifiedDate);
+                cafe.setTagline(analysis.tagline() != null ? analysis.tagline() : "");
+                cafe.setDescription(analysis.description() != null ? analysis.description() : "");
+            } else {
+                // No qualifying evidence: keep no quote, and no AI prose that might imply
+                // a sourcing claim the cafe never actually made.
+                cafe.setTagline("");
+                cafe.setDescription("");
             }
         } else {
             cafe.setLevel(TransparencyLevel.C);
@@ -247,13 +256,27 @@ public class CafeService {
      * Returns a summary map with counts of fixed, verified, and skipped cafes.
      */
     public Map<String, Object> cleanupEvidenceQuotes() {
+        // Audit every record that CLAIMS a disclosure (A or B) plus every record that holds a
+        // quote at any level. The old filter looked only at rows that already had a quote,
+        // which made an unsupported Level A invisible to the very pass meant to catch it.
         List<Cafe> cafes = cafeRepository.findAll().stream()
-                .filter(c -> c.getEvidenceQuote() != null && !c.getEvidenceQuote().isBlank())
+                .filter(c -> TransparencyGrader.levelRequiresEvidence(c.getLevel())
+                        || (c.getEvidenceQuote() != null && !c.getEvidenceQuote().isBlank()))
                 .toList();
 
         int verified = 0, fixed = 0, skipped = 0;
 
         for (Cafe cafe : cafes) {
+            // No quote but claiming A or B — unsupported by construction. Downgrade without
+            // needing a network call at all.
+            if (cafe.getEvidenceQuote() == null || cafe.getEvidenceQuote().isBlank()) {
+                System.out.printf("[Cleanup] Level %s with no evidence — downgrading '%s' to C%n",
+                        cafe.getLevel(), cafe.getName());
+                demoteToC(cafe);
+                fixed++;
+                continue;
+            }
+
             String url = cafe.getEvidenceSource() != null ? cafe.getEvidenceSource() : cafe.getWebsite();
             if (url == null || url.isBlank()) { skipped++; continue; }
             if (!url.startsWith("http")) url = "https://" + url;
@@ -262,36 +285,49 @@ public class CafeService {
                 ScraperService.ScrapeResult scrapeResult = scraperService.scrapeWithTracking(url);
                 if (scrapeResult == null || scrapeResult.combinedText().isBlank()) { skipped++; continue; }
 
-                String normContent = scrapeResult.combinedText().replaceAll("\\s+", " ").toLowerCase();
                 String quote = cafe.getEvidenceQuote();
-                String fingerprint = quote.replaceAll("\\s+", " ").toLowerCase().strip();
-                fingerprint = fingerprint.length() > 60 ? fingerprint.substring(0, 60) : fingerprint;
 
-                if (normContent.contains(fingerprint)) {
-                    // Update source URL to the exact page where the quote was found
-                    String exactPage = findQuoteSourcePage(
-                        new OpenAiService.CafeAnalysis(true, cafe.getLevel().name(), quote, null, null, List.of(), null),
-                        scrapeResult
-                    );
-                    if (exactPage != null && !exactPage.equals(cafe.getEvidenceSource())) {
-                        cafe.setEvidenceSource(exactPage.length() > 250 ? exactPage.substring(0, 250) : exactPage);
-                        cafeRepository.save(cafe);
-                        System.out.printf("[Cleanup] Updated source URL for '%s': %s%n", cafe.getName(), exactPage);
-                    }
-                    verified++;
-                } else {
-                    System.out.printf("[Cleanup] Hallucinated quote removed from '%s': \"%s\"%n", cafe.getName(), quote.substring(0, Math.min(80, quote.length())));
-                    cafe.setEvidenceQuote(null);
-                    cafe.setEvidenceSource(null);
-                    cafe.setEvidenceSourceLabel(null);
-                    cafe.setEvidenceVerifiedDate(null);
-                    cafe.setLevel(TransparencyLevel.C);
-                    cafe.setCoverColor("#9ca3af");
-                    cafe.setDescription(null); // remove AI description that may reference unverified sourcing
-                    cafe.setTagline(null);
-                    cafeRepository.save(cafe);
+                // Gate 2 — the quote must still exist on the live page.
+                if (!TransparencyGrader.appearsVerbatim(quote, scrapeResult.combinedText())) {
+                    System.out.printf("[Cleanup] Hallucinated quote removed from '%s': \"%s\"%n",
+                            cafe.getName(), quote.substring(0, Math.min(80, quote.length())));
+                    demoteToC(cafe);
                     fixed++;
+                    sleep(500);
+                    continue;
                 }
+
+                // Gates 3-6 — re-derive the grade from what the quote actually proves.
+                TransparencyLevel regraded = TransparencyGrader.gradeVerifiedQuote(quote);
+
+                if (regraded != cafe.getLevel()) {
+                    System.out.printf("[Cleanup] Re-graded '%s': %s → %s (\"%s\")%n",
+                            cafe.getName(), cafe.getLevel(), regraded,
+                            quote.substring(0, Math.min(70, quote.length())));
+
+                    if (regraded == TransparencyLevel.C || regraded == TransparencyLevel.D) {
+                        demoteToC(cafe);
+                    } else {
+                        cafe.setLevel(regraded);
+                        cafe.setCoverColor(coverColorForLevel(regraded.name()));
+                        cafeRepository.save(cafe);
+                    }
+                    fixed++;
+                    sleep(500);
+                    continue;
+                }
+
+                // Grade holds — refresh the source URL to the exact page carrying the quote.
+                String exactPage = findQuoteSourcePage(
+                    new OpenAiService.CafeAnalysis(true, cafe.getLevel().name(), quote, null, null, List.of(), null),
+                    scrapeResult
+                );
+                if (exactPage != null && !exactPage.equals(cafe.getEvidenceSource())) {
+                    cafe.setEvidenceSource(exactPage.length() > 250 ? exactPage.substring(0, 250) : exactPage);
+                    cafeRepository.save(cafe);
+                    System.out.printf("[Cleanup] Updated source URL for '%s': %s%n", cafe.getName(), exactPage);
+                }
+                verified++;
                 sleep(500);
             } catch (Exception e) {
                 System.out.printf("[Cleanup] Could not scrape '%s': %s%n", cafe.getName(), e.getMessage());
@@ -343,35 +379,19 @@ public class CafeService {
     }
 
     /**
-     * Verify the AI-returned evidence quote actually exists in the scraped content.
-     * If not found, null out the quote and downgrade level to C to prevent hallucinated evidence.
+     * Strip a cafe back to Level C: no quote, no source, no AI prose that might imply a
+     * sourcing claim the cafe never made. Used whenever evidence fails any gate.
      */
-    private OpenAiService.CafeAnalysis verifyQuote(OpenAiService.CafeAnalysis analysis, String scrapedContent) {
-        if (analysis == null || analysis.evidenceQuote() == null) return analysis;
-
-        // Normalise both strings for comparison (collapse whitespace, lowercase)
-        String normContent = scrapedContent.replaceAll("\\s+", " ").toLowerCase();
-        String normQuote   = analysis.evidenceQuote().replaceAll("\\s+", " ").toLowerCase().strip();
-
-        // Check if a significant portion of the quote appears verbatim
-        // Use first 60 chars of the quote as a fingerprint (long enough to avoid false positives)
-        String fingerprint = normQuote.length() > 60 ? normQuote.substring(0, 60) : normQuote;
-
-        if (!normContent.contains(fingerprint)) {
-            System.out.printf("[Verify] Evidence quote NOT found in scraped content — removing quote and downgrading level to C.%n");
-            System.out.printf("[Verify] Hallucinated quote was: \"%s\"%n", analysis.evidenceQuote());
-            return new OpenAiService.CafeAnalysis(
-                    analysis.servesMatcha(),
-                    "C",
-                    null,
-                    analysis.tagline(),
-                    analysis.description(),
-                    analysis.specialties(),
-                    analysis.type()
-            );
-        }
-
-        return analysis;
+    private void demoteToC(Cafe cafe) {
+        cafe.setLevel(TransparencyLevel.C);
+        cafe.setCoverColor(coverColorForLevel("C"));
+        cafe.setEvidenceQuote(null);
+        cafe.setEvidenceSource(null);
+        cafe.setEvidenceSourceLabel(null);
+        cafe.setEvidenceVerifiedDate(null);
+        cafe.setDescription(null);
+        cafe.setTagline(null);
+        cafeRepository.save(cafe);
     }
 
     private String coverColorForLevel(String level) {
