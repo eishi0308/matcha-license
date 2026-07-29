@@ -59,6 +59,22 @@ public class CafeController {
     }
 
     /**
+     * POST /api/cafes/regrade?level=B&dryRun=true&limit=20
+     *
+     * Re-scrapes stored cafes and re-derives level and evidence from the live site.
+     * Unlike cleanup-evidence this can promote as well as demote. Defaults to a dry
+     * run so the proposed changes can be reviewed before anything is written.
+     */
+    @PostMapping("/regrade")
+    public ResponseEntity<Map<String, Object>> regrade(
+            @RequestParam(required = false) String level,
+            @RequestParam(defaultValue = "true") boolean dryRun,
+            @RequestParam(defaultValue = "0") int limit
+    ) {
+        return ResponseEntity.ok(cafeService.regrade(level, dryRun, limit));
+    }
+
+    /**
      * POST /api/cafes/discover
      * Triggers the full Overpass → scrape → Claude pipeline.
      * This is a long-running operation — expect 5–15 minutes.

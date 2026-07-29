@@ -176,7 +176,7 @@ public class CafeService {
 
                 System.out.printf("[Discovery] → Matcha confirmed! Saving...%n");
 
-                Cafe cafe = buildDiscoveredCafe(place, city.name(), analysis, verifiedDate, exactSourceUrl, content);
+                Cafe cafe = buildDiscoveredCafe(place, city.name(), analysis, verifiedDate, exactSourceUrl, content, scrapeResult);
                 cafeRepository.save(cafe);
                 discovered++;
                 System.out.printf("[Discovery] → Saved '%s' as Level %s%n", place.name(), cafe.getLevel());
@@ -191,7 +191,7 @@ public class CafeService {
         return discovered;
     }
 
-    private Cafe buildDiscoveredCafe(GooglePlacesService.PlaceInfo place, String city, OpenAiService.CafeAnalysis analysis, String verifiedDate, String exactSourceUrl, String scrapedContent) {
+    private Cafe buildDiscoveredCafe(GooglePlacesService.PlaceInfo place, String city, OpenAiService.CafeAnalysis analysis, String verifiedDate, String exactSourceUrl, String scrapedContent, ScraperService.ScrapeResult scrapeResult) {
         long count = cafeRepository.count();
         String prefix = city.substring(0, 3).toLowerCase();
         String id = prefix + "-disc-" + String.format("%03d", count + 1);
@@ -210,7 +210,10 @@ public class CafeService {
         if (analysis != null) {
             // The AI's own level is discarded. The grade is derived from evidence that
             // survives every gate, so a level can never outrun the proof behind it.
-            TransparencyLevel level = TransparencyGrader.grade(analysis.evidenceQuote(), scrapedContent);
+            // The page text is searched too, so a weak quote cannot cap the grade.
+            TransparencyGrader.Evidence evidence =
+                    TransparencyGrader.decide(analysis.evidenceQuote(), scrapedContent);
+            TransparencyLevel level = evidence == null ? TransparencyLevel.C : evidence.level();
 
             cafe.setLevel(level);
             cafe.setType(analysis.type() != null ? analysis.type() : "cafe");
@@ -219,8 +222,9 @@ public class CafeService {
 
             if (TransparencyGrader.levelRequiresEvidence(level)) {
                 // Level and evidence are written together — never one without the other.
-                cafe.setEvidenceQuote(analysis.evidenceQuote());
-                String src = exactSourceUrl != null ? exactSourceUrl : place.website();
+                cafe.setEvidenceQuote(evidence.quote());
+                String src = locateQuotePage(evidence.quote(), scrapeResult);
+                if (src == null) src = exactSourceUrl != null ? exactSourceUrl : place.website();
                 if (src != null && src.length() > 250) src = src.substring(0, 250);
                 cafe.setEvidenceSource(src);
                 cafe.setEvidenceSourceLabel("Official Website");
@@ -364,12 +368,140 @@ public class CafeService {
     }
 
     /**
+     * Re-scrape stored cafes and re-derive both level and evidence from what is on the
+     * site today.
+     *
+     * <p>Distinct from {@link #cleanupEvidenceQuotes()}, which can only ever demote: it
+     * re-checks the quote already stored and never asks whether the page proves more.
+     * This pass searches the page text directly, so a cafe whose disclosure was missed
+     * at discovery time can be promoted on the evidence it actually publishes.
+     *
+     * <p>Level D is preserved unless the site now supports A or B — "not enough
+     * information" is a distinct state, not a weaker C.
+     *
+     * @param levelFilter only regrade cafes at this level, or null for all
+     * @param dryRun      when true, nothing is written; the proposed changes are returned
+     * @param limit       maximum cafes to process, 0 for no limit
+     */
+    public Map<String, Object> regrade(String levelFilter, boolean dryRun, int limit) {
+        List<Cafe> targets = cafeRepository.findAll().stream()
+                .filter(c -> levelFilter == null || levelFilter.isBlank()
+                        || c.getLevel() == TransparencyLevel.valueOf(levelFilter.toUpperCase()))
+                .sorted(Comparator.comparing(Cafe::getId))
+                .limit(limit > 0 ? limit : Long.MAX_VALUE)
+                .toList();
+
+        List<Map<String, Object>> changes = new ArrayList<>();
+        int unchanged = 0, skipped = 0;
+
+        for (Cafe cafe : targets) {
+            String url = startUrl(cafe);
+            if (url == null) { skipped++; continue; }
+
+            ScraperService.ScrapeResult scraped;
+            try {
+                scraped = scraperService.scrapeWithTracking(url);
+            } catch (Exception e) {
+                System.out.printf("[Regrade] Could not scrape '%s': %s%n", cafe.getName(), e.getMessage());
+                skipped++;
+                continue;
+            }
+            if (scraped == null || scraped.combinedText().isBlank()) { skipped++; continue; }
+
+            TransparencyGrader.Evidence evidence =
+                    TransparencyGrader.decide(cafe.getEvidenceQuote(), scraped.combinedText());
+            TransparencyLevel proposed = evidence == null ? TransparencyLevel.C : evidence.level();
+
+            // "Insufficient information" is not the same claim as "no disclosure".
+            if (cafe.getLevel() == TransparencyLevel.D && !TransparencyGrader.levelRequiresEvidence(proposed)) {
+                unchanged++;
+                sleep(300);
+                continue;
+            }
+
+            String newQuote = evidence == null ? null : evidence.quote();
+            boolean levelSame = proposed == cafe.getLevel();
+            boolean quoteSame = Objects.equals(newQuote, cafe.getEvidenceQuote());
+            if (levelSame && quoteSame) { unchanged++; sleep(300); continue; }
+
+            String sourcePage = locateQuotePage(newQuote, scraped);
+            Map<String, Object> change = new LinkedHashMap<>();
+            change.put("id", cafe.getId());
+            change.put("name", cafe.getName());
+            change.put("from", cafe.getLevel().name());
+            change.put("to", proposed.name());
+            change.put("direction", proposed.compareTo(cafe.getLevel()) < 0 ? "PROMOTE"
+                    : proposed.compareTo(cafe.getLevel()) > 0 ? "DEMOTE" : "QUOTE-ONLY");
+            change.put("oldQuote", cafe.getEvidenceQuote());
+            change.put("newQuote", newQuote);
+            change.put("sourcePage", sourcePage != null ? sourcePage : url);
+            change.put("pagesScraped", scraped.pageTexts().size());
+            changes.add(change);
+
+            if (!dryRun) applyRegrade(cafe, proposed, newQuote, sourcePage != null ? sourcePage : url);
+            sleep(300);
+        }
+
+        System.out.printf("[Regrade] %s — %d changes, %d unchanged, %d skipped%n",
+                dryRun ? "DRY RUN" : "APPLIED", changes.size(), unchanged, skipped);
+
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("dryRun", dryRun);
+        result.put("examined", targets.size());
+        result.put("changed", changes.size());
+        result.put("unchanged", unchanged);
+        result.put("skipped", skipped);
+        result.put("changes", changes);
+        return result;
+    }
+
+    private void applyRegrade(Cafe cafe, TransparencyLevel level, String quote, String sourcePage) {
+        if (!TransparencyGrader.levelRequiresEvidence(level)) {
+            demoteToC(cafe);
+            return;
+        }
+        cafe.setLevel(level);
+        cafe.setCoverColor(coverColorForLevel(level.name()));
+        cafe.setEvidenceQuote(quote);
+        cafe.setEvidenceSource(sourcePage.length() > 250 ? sourcePage.substring(0, 250) : sourcePage);
+        cafe.setEvidenceSourceLabel("Official Website");
+        cafe.setEvidenceVerifiedDate(LocalDate.now().format(DateTimeFormatter.ofPattern("MMMM yyyy")));
+        cafeRepository.save(cafe);
+    }
+
+    /**
+     * Always start from the site root so the crawler sees the full navigation and can
+     * rank pages itself. Stored websites are sometimes a deep link — starting from
+     * "jsytea.com.au/pages/contact" reached two pages, because a contact page links
+     * almost nowhere.
+     */
+    private String startUrl(Cafe cafe) {
+        String w = cafe.getWebsite();
+        if (w == null || w.isBlank()) return null;
+        String full = w.startsWith("http") ? w : "https://" + w;
+        try {
+            java.net.URI u = java.net.URI.create(full);
+            if (u.getHost() != null) {
+                return (u.getScheme() != null ? u.getScheme() : "https") + "://" + u.getHost();
+            }
+        } catch (Exception ignored) {
+            // fall through to the stored value
+        }
+        return full;
+    }
+
+    /**
      * Find which specific page the evidence quote was found on.
      * Returns the exact subpage URL, or the homepage URL if found there, or null.
      */
     private String findQuoteSourcePage(OpenAiService.CafeAnalysis analysis, ScraperService.ScrapeResult scrapeResult) {
-        if (analysis == null || analysis.evidenceQuote() == null || scrapeResult == null) return null;
-        String fingerprint = analysis.evidenceQuote().replaceAll("\\s+", " ").toLowerCase().strip();
+        return analysis == null ? null : locateQuotePage(analysis.evidenceQuote(), scrapeResult);
+    }
+
+    /** Which scraped page carries this quote, by leading fingerprint. Null if none does. */
+    private String locateQuotePage(String quote, ScraperService.ScrapeResult scrapeResult) {
+        if (quote == null || quote.isBlank() || scrapeResult == null) return null;
+        String fingerprint = quote.replaceAll("\\s+", " ").toLowerCase().strip();
         fingerprint = fingerprint.length() > 60 ? fingerprint.substring(0, 60) : fingerprint;
         for (Map.Entry<String, String> entry : scrapeResult.pageTexts().entrySet()) {
             String normPage = entry.getValue().replaceAll("\\s+", " ").toLowerCase();

@@ -3,14 +3,16 @@ package com.matcha.service;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 import org.springframework.stereotype.Service;
 
 import java.net.URI;
-import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.regex.Pattern;
 
 /**
  * Scrapes cafe websites and Instagram profiles for matcha sourcing content.
@@ -29,15 +31,51 @@ import java.util.Map;
 @Service
 public class ScraperService {
 
-    private static final int    MAX_TEXT_LENGTH = 8000;
+    private static final int    MAX_TEXT_LENGTH = 30_000;
     private static final int    TIMEOUT_MS      = 12_000;
-    private static final int    MAX_SUBPAGES    = 3;
+    private static final int    MAX_SUBPAGES    = 10;
+    private static final int    MAX_CANDIDATES  = 40;
 
-    // URL path segments that suggest a page has relevant sourcing content
-    private static final List<String> CONTENT_PATH_KEYWORDS = List.of(
-            "about", "our-story", "story", "menu", "matcha", "tea",
-            "sourcing", "origin", "ingredient", "philosophy", "values"
+    /**
+     * Path keywords ranked by how likely the page is to carry a sourcing disclosure.
+     * Sourcing/about pages beat product listings, which beat generic menu pages.
+     * Matched against the URL <em>path only</em> — matching the whole URL made every
+     * link on a domain like "takateagarden.com.au" or "ohmatcha.com.au" score alike,
+     * which silently reduced page selection to "first three links in the nav bar".
+     */
+    private static final Map<String, Integer> PATH_KEYWORD_SCORES = new LinkedHashMap<>();
+    static {
+        PATH_KEYWORD_SCORES.put("sourcing",   10);
+        PATH_KEYWORD_SCORES.put("origin",     10);
+        PATH_KEYWORD_SCORES.put("our-story",   8);
+        PATH_KEYWORD_SCORES.put("about",       8);
+        PATH_KEYWORD_SCORES.put("story",       7);
+        PATH_KEYWORD_SCORES.put("philosophy",  7);
+        PATH_KEYWORD_SCORES.put("values",      6);
+        PATH_KEYWORD_SCORES.put("ingredient",  6);
+        PATH_KEYWORD_SCORES.put("matcha",      9);
+        PATH_KEYWORD_SCORES.put("tea",         5);
+        PATH_KEYWORD_SCORES.put("product",     3);
+        PATH_KEYWORD_SCORES.put("collection",  3);
+        PATH_KEYWORD_SCORES.put("shop",        2);
+        PATH_KEYWORD_SCORES.put("menu",        2);
+    }
+
+    /**
+     * Paths that never carry sourcing information. Excluded outright so they can
+     * never consume one of the MAX_SUBPAGES slots.
+     */
+    private static final List<String> PATH_BLOCKLIST = List.of(
+            "my-account", "account", "login", "signin", "sign-in", "register",
+            "cart", "checkout", "wishlist", "privacy", "terms", "shipping",
+            "returns", "refund", "contact", "faq", "gift-card", "search",
+            "recycle", "blog/page", "/tag/", "/author/", "wp-admin", "customer"
     );
+
+    /** Words that make a text window worth keeping when the page must be trimmed. */
+    private static final Pattern RELEVANT =
+            Pattern.compile("matcha|source|sourc|origin|japan|grown|harvest|farm|garden|tea",
+                    Pattern.CASE_INSENSITIVE);
 
     // ── Public API ─────────────────────────────────────────────────────────────
 
@@ -53,13 +91,17 @@ public class ScraperService {
         Document homepage = fetchDocument(url);
         if (homepage == null) return null;
 
+        // Collect links BEFORE stripping chrome: nav, header and footer are exactly where
+        // "About", "Our Story" and "Sourcing" live. Stripping first made those pages
+        // unreachable, so the crawler could only ever follow links embedded in body copy.
+        List<String> subpageUrls = findContentSubpages(homepage, url);
+
         homepage.select("script, style, nav, footer, header, noscript, iframe, svg").remove();
         String homeText = homepage.body().text();
 
         Map<String, String> pageTexts = new LinkedHashMap<>();
         pageTexts.put(url, homeText);
 
-        List<String> subpageUrls = findContentSubpages(homepage, url);
         int scraped = 0;
         for (String subUrl : subpageUrls) {
             if (scraped >= MAX_SUBPAGES) break;
@@ -74,9 +116,8 @@ public class ScraperService {
         StringBuilder combined = new StringBuilder();
         pageTexts.values().forEach(t -> combined.append(t).append(" "));
         String text = combined.toString().replaceAll("\\s+", " ").strip();
-        String truncated = text.length() > MAX_TEXT_LENGTH ? text.substring(0, MAX_TEXT_LENGTH) : text;
 
-        return new ScrapeResult(truncated, pageTexts);
+        return new ScrapeResult(trimToBudget(text), pageTexts);
     }
 
     /**
@@ -87,13 +128,15 @@ public class ScraperService {
         Document homepage = fetchDocument(url);
         if (homepage == null) return null;
 
+        // Find sub-pages first — nav, header and footer carry most of a site's
+        // internal links, and are removed in the next step.
+        List<String> subpageUrls = findContentSubpages(homepage, url);
+
         // Remove navigation, footer, header — keep content
         homepage.select("script, style, nav, footer, header, noscript, iframe, svg").remove();
 
         StringBuilder combined = new StringBuilder(homepage.body().text());
 
-        // Find content sub-pages and scrape them too
-        List<String> subpageUrls = findContentSubpages(homepage, url);
         int scraped = 0;
         for (String subUrl : subpageUrls) {
             if (scraped >= MAX_SUBPAGES) break;
@@ -106,7 +149,7 @@ public class ScraperService {
         }
 
         String text = combined.toString().replaceAll("\\s+", " ").strip();
-        return text.length() > MAX_TEXT_LENGTH ? text.substring(0, MAX_TEXT_LENGTH) : text;
+        return trimToBudget(text);
     }
 
     /**
@@ -169,38 +212,113 @@ public class ScraperService {
     }
 
     /**
-     * Find internal links to content pages (About, Menu, Our Story, etc.)
+     * Find internal links to content pages, ordered strongest-first.
+     *
+     * <p>Two things this deliberately does <em>not</em> do, both of which previously
+     * hid genuine sourcing disclosures:
+     * <ul>
+     *   <li>Keywords are matched against the URL <b>path</b>, never the whole URL. On a
+     *       domain containing a keyword ("ohmatcha.com.au", "jsytea.com.au") every link
+     *       matched, so selection collapsed to document order — nav bar first.</li>
+     *   <li>Candidates are <b>ranked</b>, not taken in document order. A "/sourcing" page
+     *       linked from the footer now outranks "/my-account" linked from the header.</li>
+     * </ul>
      */
     private List<String> findContentSubpages(Document doc, String baseUrl) {
-        String      baseDomain = extractDomain(baseUrl);
-        List<String> result    = new ArrayList<>();
+        String baseHost = extractDomain(baseUrl);
+        if (baseHost.isBlank()) return List.of();
 
-        Elements links = doc.select("a[href]");
-        for (Element link : links) {
-            String href = link.absUrl("href");
+        // Highest score wins; ties keep document order via LinkedHashMap insertion.
+        Map<String, Integer> scored = new LinkedHashMap<>();
+        Set<String> seen = new LinkedHashSet<>();
+
+        for (Element link : doc.select("a[href]")) {
+            if (scored.size() >= MAX_CANDIDATES) break;
+
+            String href = link.absUrl("href").split("#")[0];
             if (href.isBlank() || !href.startsWith("http")) continue;
-            if (!href.contains(baseDomain))                  continue;
-            if (href.equals(baseUrl))                        continue;
+            if (!sameSite(href, baseHost))                  continue;
+            if (href.equals(baseUrl))                       continue;
+            if (!seen.add(href))                            continue;
 
-            // Only include links whose path contains a content keyword
-            String path  = href.toLowerCase();
-            boolean isContent = CONTENT_PATH_KEYWORDS.stream().anyMatch(path::contains);
-            if (isContent && !result.contains(href)) {
-                result.add(href);
+            String path = pathOf(href);
+            if (path.isBlank())                             continue;
+            if (PATH_BLOCKLIST.stream().anyMatch(path::contains)) continue;
+
+            int score = 0;
+            for (Map.Entry<String, Integer> e : PATH_KEYWORD_SCORES.entrySet()) {
+                if (path.contains(e.getKey())) score = Math.max(score, e.getValue());
             }
-            if (result.size() >= 10) break; // cap candidates
+            if (score > 0) scored.put(href, score);
         }
 
-        return result;
+        return scored.entrySet().stream()
+                .sorted(Map.Entry.<String, Integer>comparingByValue(Comparator.reverseOrder()))
+                .map(Map.Entry::getKey)
+                .toList();
+    }
+
+    /**
+     * True when the link belongs to the same registrable site.
+     * A substring test ({@code href.contains(domain)}) accepted third-party URLs that
+     * merely embed the domain — {@code web.archive.org/web/2019/http://example.com}
+     * being the case that matters here, since it injects years-old content as if live.
+     */
+    private boolean sameSite(String href, String baseHost) {
+        String host = extractDomain(href);
+        return !host.isBlank() && (host.equals(baseHost)
+                || host.endsWith("." + baseHost)
+                || baseHost.endsWith("." + host));
+    }
+
+    private String pathOf(String url) {
+        try {
+            String p = URI.create(url).getPath();
+            return p == null ? "" : p.toLowerCase();
+        } catch (Exception e) {
+            return "";
+        }
     }
 
     private String extractDomain(String url) {
         try {
             String host = URI.create(url).getHost();
-            return host != null ? host.replaceFirst("^www\\.", "") : "";
+            return host != null ? host.toLowerCase().replaceFirst("^www\\.", "") : "";
         } catch (Exception e) {
             return "";
         }
+    }
+
+    /**
+     * Trim to MAX_TEXT_LENGTH while preserving passages that could carry a sourcing
+     * claim. Head-first truncation discarded the evidence outright on large sites —
+     * on the sites audited it removed up to 82% of the text, taking named origins
+     * (Yame, Shizuoka, Kyoto) with it while leaving only a generic "from Japan" line
+     * behind for the analyser to quote.
+     */
+    private String trimToBudget(String text) {
+        if (text.length() <= MAX_TEXT_LENGTH) return text;
+
+        // Keep a window around every relevant mention, in order, until the budget is spent.
+        final int window = 600;
+        StringBuilder kept = new StringBuilder();
+        var matcher = RELEVANT.matcher(text);
+        int cursor = 0;
+
+        while (matcher.find() && kept.length() < MAX_TEXT_LENGTH) {
+            int start = Math.max(cursor, matcher.start() - window / 2);
+            int end   = Math.min(text.length(), matcher.end() + window);
+            if (end <= cursor) continue;
+            start = Math.max(start, cursor);
+            int room = MAX_TEXT_LENGTH - kept.length();
+            if (end - start > room) end = start + room;
+            kept.append(text, start, end).append(' ');
+            cursor = end;
+        }
+
+        // Nothing relevant found — fall back to a plain head slice.
+        if (kept.length() == 0) return text.substring(0, MAX_TEXT_LENGTH);
+        return kept.toString().strip();
     }
 
     private String normaliseInstagramHandle(String handle) {
