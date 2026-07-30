@@ -700,7 +700,10 @@ function DisclosureBlock({ data }: { data: typeof DEFAULT_DISCLOSURE }) {
   }));
 
   // Derived, never written down, so the headline cannot drift from the rows.
-  const nothingPct = Math.round((data.nothing / total) * 100);
+  // Leads on how few disclose rather than how many don't: the scarcity is the
+  // point, and a small number carries it better than a large one.
+  const disclosing = data.japanOnly + data.named;
+  const disclosePct = Math.round((disclosing / total) * 100);
 
   const num = (n: number) => n.toLocaleString("en-AU");
   const muted = "#6b7280";
@@ -719,7 +722,7 @@ function DisclosureBlock({ data }: { data: typeof DEFAULT_DISCLOSURE }) {
       viewport={{ once: true }}
       transition={{ duration: 0.72, delay: 0.1, ease: EASE }}
     >
-      {/* Hero — the share that discloses nothing, which is the finding.
+      {/* Hero — how few disclose anything at all, which is the finding.
           Stacks above its caption below 640px. */}
       <div className="flex flex-col sm:flex-row sm:items-baseline sm:gap-4">
         <span
@@ -731,15 +734,15 @@ function DisclosureBlock({ data }: { data: typeof DEFAULT_DISCLOSURE }) {
             color: "#1c2b1a",
           }}
         >
-          {nothingPct}%
+          {disclosePct}%
         </span>
         <span className="mt-2 sm:mt-0" style={{ fontSize: "1rem", fontWeight: 400, color: muted }}>
-          of cafés don’t say where their matcha comes from
+          of cafés say where their matcha comes from
         </span>
       </div>
 
       <p className="mt-3" style={{ fontSize: "0.875rem", fontWeight: 400, color: "#9ca3af" }}>
-        Based on {num(data.total)} cafés checked · Sydney and Melbourne
+        Only {num(disclosing)} of {num(data.total)} checked · Sydney and Melbourne
       </p>
 
       <p className="mt-8" style={{ fontSize: "0.875rem", fontWeight: 400, color: muted }}>
@@ -748,9 +751,10 @@ function DisclosureBlock({ data }: { data: typeof DEFAULT_DISCLOSURE }) {
 
       {/* One sentence for screen readers, so the bar is not the only carrier */}
       <p className="sr-only">
-        Of {num(data.total)} cafés checked, {num(data.nothing)} — {nothingPct} per cent — have
-        nothing about origin on their website or menu, {num(data.japanOnly)} say only that the
-        matcha is Japanese, and {num(data.named)} name a source and link to it.
+        Of {num(data.total)} cafés checked, only {num(disclosing)} — {disclosePct} per cent —
+        say anything about where their matcha comes from: {num(data.named)} name a source and
+        link to it, and {num(data.japanOnly)} say only that the matcha is Japanese. The
+        remaining {num(data.nothing)} have nothing about origin on their website or menu.
       </p>
 
       {/* Stacked bar — no gaps, so it reads as a single whole */}
