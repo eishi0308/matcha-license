@@ -783,15 +783,37 @@ function DisclosureBlock({ data }: { data: typeof DEFAULT_DISCLOSURE }) {
             >
               {r.label}
             </span>
+            {/* Count over the total, so each row stands on its own without
+                the reader holding the denominator in their head. */}
+            <span className="shrink-0 whitespace-nowrap text-right" style={{ fontSize: "1rem" }}>
+              <span
+                style={{
+                  fontWeight: 500,
+                  color: r.key === "named" ? "#2e6027" : "#1c2b1a",
+                }}
+              >
+                {num(r.count)}
+              </span>
+              {/* Below 640px the denominator is dropped rather than allowed to
+                  squeeze the label into four lines — the total is stated in the
+                  caption directly above. */}
+              <span className="hidden sm:inline" style={{ fontWeight: 400, color: "#9ca3af" }}>
+                {" "}/ {num(data.total)}
+              </span>
+            </span>
+
+            {/* The rate, one decimal — an integer would round 0.5% to 1% and
+                overstate the smallest share. */}
             <span
               className="shrink-0 whitespace-nowrap text-right"
               style={{
-                fontSize: "1rem",
-                fontWeight: 500,
-                color: r.key === "named" ? "#2e6027" : "#1c2b1a",
+                fontSize: "0.875rem",
+                fontWeight: 400,
+                color: r.key === "named" ? "#2e6027" : muted,
+                width: "3.75rem",
               }}
             >
-              {num(r.count)}
+              {r.pct.toFixed(1)}%
             </span>
           </div>
         ))}
