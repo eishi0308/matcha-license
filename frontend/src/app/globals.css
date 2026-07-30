@@ -10,6 +10,12 @@
   /* Two weights only (400, 500) — used by the origin-disclosure block. */
   --font-inter-tight: 'Inter Tight', 'Inter', system-ui, sans-serif;
   --font-playfair: 'Playfair Display', Georgia, serif;
+
+  /* Text hierarchy. Depth is carried by weight and tone, never by shrinking
+     type — nothing in the disclosure block goes below 16px. */
+  --text-primary: #1c2b1a;
+  --text-secondary: #6b7280;
+  --text-tertiary: #9ca3af;
 }
 
 * {

@@ -41,9 +41,18 @@ const DEFAULT_DISCLOSURE = {
 
 // Bar segments and the rows beneath share one source, in one order, so the two
 // can never disagree.
+// Emphasis palette — one hue plus gray. The two classes that disclose something
+// carry the hue; the 96% that disclose nothing recede into gray, because the
+// finding is how few disclose, not how many do not.
+//
+// Validated with the dataviz palette checker against a light surface: the two
+// meaning-bearing steps clear every gate (CVD ΔE 19.7, normal-vision ΔE 20.2,
+// both well past the 8 / 15 floors). The gray is deliberately below the chroma
+// floor — it is de-emphasis, not a category — and its sub-3:1 contrast is
+// relieved by the labelled rows below, which carry every value in text.
 const DISCLOSURE_ROWS = [
-  { key: "nothing" as const,   label: "Nothing found on their website or menu", color: "#c7ccd4" },
-  { key: "japanOnly" as const, label: "“Japanese matcha” only",       color: "#7ebfb2" },
+  { key: "nothing" as const,   label: "Nothing found on their website or menu", color: "#d9dce1" },
+  { key: "japanOnly" as const, label: "“Japanese matcha” only",                 color: "#2f9e88" },
   { key: "named" as const,     label: "Named source, with a link",              color: "#2e6027" },
 ];
 
@@ -706,8 +715,41 @@ function DisclosureBlock({ data }: { data: typeof DEFAULT_DISCLOSURE }) {
   const disclosePct = Math.round((disclosing / total) * 100);
 
   const num = (n: number) => n.toLocaleString("en-AU");
-  const muted = "#6b7280";
   const hairline = "rgba(0,0,0,0.10)";
+
+  const [hovered, setHovered] = useState<string | null>(null);
+  const active = rows.find((r) => r.key === hovered) ?? null;
+
+  // Ring geometry. Segments are laid end to end from a rotation that lands the
+  // two disclosing slices just before twelve o'clock, so the small share the
+  // headline is about sits at the top of the ring rather than buried mid-arc.
+  const RADIUS = 52;
+  const CIRC = 2 * Math.PI * RADIUS;
+  const GAP = 2; // surface gap between touching segments
+
+  let cursor = 0;
+  const arcs = rows.map((r) => {
+    const len = (r.pct / 100) * CIRC;
+    const start = cursor;
+    cursor += len;
+    // A slice thinner than two gaps cannot give one back without misstating its
+    // size, so it renders at true length and simply has no gap. At 0.5% that is
+    // a hairline — correct, and the reason the rows carry every number in text.
+    return { ...r, start, draw: len > GAP * 2 ? len - GAP : len };
+  });
+
+  // One scale for the whole block. Nothing here drops below 16px and nothing
+  // goes past weight 500 — where something needs to recede it is muted rather
+  // than shrunk, so every line stays comfortably readable.
+  const TYPE = {
+    headline:     { fontSize: "2rem",      fontWeight: 500, letterSpacing: "-0.025em", color: "var(--text-primary)" },
+    subline:      { fontSize: "1.0625rem", fontWeight: 400, color: "var(--text-secondary)" },
+    sectionLabel: { fontSize: "1rem",      fontWeight: 400, color: "var(--text-secondary)" },
+    rowLabel:     { fontSize: "1.0625rem", fontWeight: 400, color: "var(--text-primary)" },
+    rowPercent:   { fontSize: "1rem",      fontWeight: 400, color: "var(--text-secondary)" },
+    rowCount:     { fontSize: "1.125rem",  fontWeight: 500, color: "var(--text-primary)" },
+    rowTotal:     { fontSize: "1rem",      fontWeight: 400, color: "var(--text-secondary)" },
+  } as const;
 
   return (
     <motion.div
@@ -722,34 +764,59 @@ function DisclosureBlock({ data }: { data: typeof DEFAULT_DISCLOSURE }) {
       viewport={{ once: true }}
       transition={{ duration: 0.72, delay: 0.1, ease: EASE }}
     >
-      {/* Hero — how few disclose anything at all, which is the finding.
-          Stacks above its caption below 640px. */}
-      <div className="flex flex-col sm:flex-row sm:items-baseline sm:gap-4">
-        <span
-          className="leading-none"
-          style={{
-            fontSize: "clamp(2.75rem, 9vw, 4rem)",
-            fontWeight: 500,
-            letterSpacing: "-0.045em",
-            color: "#1c2b1a",
-          }}
-        >
-          {disclosePct}%
-        </span>
-        <span className="mt-2 sm:mt-0" style={{ fontSize: "1rem", fontWeight: 400, color: muted }}>
-          of cafés say where their matcha comes from
-        </span>
+      {/* Donut plus headline. The ring is the only decorative element; every
+          value it encodes is also written out in the rows beneath, so nothing
+          is reachable through colour alone. */}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-7 sm:gap-10">
+        <div className="relative shrink-0 self-center" style={{ width: 168, height: 168 }}>
+          <svg viewBox="0 0 128 128" width={168} height={168} aria-hidden="true">
+            <g transform={`rotate(${-90 - (disclosing / total) * 360} 64 64)`}>
+              {arcs.map((a) => (
+                <circle
+                  key={a.key}
+                  cx="64"
+                  cy="64"
+                  r={RADIUS}
+                  fill="none"
+                  stroke={a.color}
+                  strokeWidth="13"
+                  strokeLinecap="butt"
+                  strokeDasharray={`${a.draw} ${CIRC - a.draw}`}
+                  strokeDashoffset={-a.start}
+                  onMouseEnter={() => setHovered(a.key)}
+                  onMouseLeave={() => setHovered(null)}
+                  style={{
+                    opacity: hovered && hovered !== a.key ? 0.3 : 1,
+                    transition: "opacity 180ms ease",
+                  }}
+                />
+              ))}
+            </g>
+          </svg>
+
+          {/* Centre reads the hovered slice, or the headline when nothing is hovered */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span style={TYPE.headline} className="leading-none">
+              {active ? `${active.pct.toFixed(1)}%` : `${disclosePct}%`}
+            </span>
+          </div>
+        </div>
+
+        <div className="min-w-0">
+          <p style={TYPE.subline}>
+            {active ? active.label : "of cafés say where their matcha comes from"}
+          </p>
+          <p className="mt-2" style={{ ...TYPE.sectionLabel, color: "var(--text-tertiary)" }}>
+            Only {num(disclosing)} of {num(data.total)} checked · Sydney and Melbourne
+          </p>
+        </div>
       </div>
 
-      <p className="mt-3" style={{ fontSize: "0.875rem", fontWeight: 400, color: "#9ca3af" }}>
-        Only {num(disclosing)} of {num(data.total)} checked · Sydney and Melbourne
-      </p>
-
-      <p className="mt-8" style={{ fontSize: "0.875rem", fontWeight: 400, color: muted }}>
+      <p className="mt-9" style={TYPE.sectionLabel}>
         What they disclose about origin
       </p>
 
-      {/* One sentence for screen readers, so the bar is not the only carrier */}
+      {/* One sentence for screen readers, so the ring is not the only carrier */}
       <p className="sr-only">
         Of {num(data.total)} cafés checked, only {num(disclosing)} — {disclosePct} per cent —
         say anything about where their matcha comes from: {num(data.named)} name a source and
@@ -757,43 +824,36 @@ function DisclosureBlock({ data }: { data: typeof DEFAULT_DISCLOSURE }) {
         remaining {num(data.nothing)} have nothing about origin on their website or menu.
       </p>
 
-      {/* Stacked bar — no gaps, so it reads as a single whole */}
-      <div
-        className="mt-3 flex w-full overflow-hidden"
-        style={{ height: 10, borderRadius: 5 }}
-        aria-hidden="true"
-      >
-        {rows.map((r) => (
-          <div key={r.key} style={{ width: `${r.pct}%`, background: r.color }} />
-        ))}
-      </div>
-
-      {/* Rows, same order as the bar */}
-      <div className="mt-7">
+      {/* Rows — legend, direct labels and table view in one. Same order as the ring. */}
+      <div className="mt-2">
         {rows.map((r, i) => (
           <div
             key={r.key}
-            className="flex items-center gap-3 py-3.5"
-            style={{ borderTop: i === 0 ? "none" : `0.5px solid ${hairline}` }}
+            className="flex items-center gap-2 sm:gap-3 py-3.5"
+            onMouseEnter={() => setHovered(r.key)}
+            onMouseLeave={() => setHovered(null)}
+            style={{
+              borderTop: i === 0 ? "none" : `0.5px solid ${hairline}`,
+              opacity: hovered && hovered !== r.key ? 0.45 : 1,
+              transition: "opacity 180ms ease",
+            }}
           >
             <span
               aria-hidden="true"
               className="shrink-0"
               style={{ width: 9, height: 9, background: r.color, borderRadius: 1 }}
             />
-            <span
-              className="min-w-0 flex-1"
-              style={{ fontSize: "0.9375rem", fontWeight: 400, color: "#374151" }}
-            >
+            <span className="min-w-0 flex-1" style={TYPE.rowLabel}>
               {r.label}
             </span>
             {/* Count over the total, so each row stands on its own without
                 the reader holding the denominator in their head. */}
-            <span className="shrink-0 whitespace-nowrap text-right" style={{ fontSize: "1rem" }}>
+            <span className="shrink-0 whitespace-nowrap text-right">
               <span
                 style={{
-                  fontWeight: 500,
-                  color: r.key === "named" ? "#2e6027" : "#1c2b1a",
+                  ...TYPE.rowCount,
+                  // The one row worth drawing the eye to keeps the accent.
+                  ...(r.key === "named" ? { color: "#2e6027" } : null),
                 }}
               >
                 {num(r.count)}
@@ -801,21 +861,18 @@ function DisclosureBlock({ data }: { data: typeof DEFAULT_DISCLOSURE }) {
               {/* Below 640px the denominator is dropped rather than allowed to
                   squeeze the label into four lines — the total is stated in the
                   caption directly above. */}
-              <span className="hidden sm:inline" style={{ fontWeight: 400, color: "#9ca3af" }}>
+              <span className="hidden sm:inline" style={TYPE.rowTotal}>
                 {" "}/ {num(data.total)}
               </span>
             </span>
 
             {/* The rate, one decimal — an integer would round 0.5% to 1% and
                 overstate the smallest share. */}
+            {/* Fixed width from 640px up so the rates align down the column;
+                auto below that, where the label needs every pixel it can get. */}
             <span
-              className="shrink-0 whitespace-nowrap text-right"
-              style={{
-                fontSize: "0.875rem",
-                fontWeight: 400,
-                color: r.key === "named" ? "#2e6027" : muted,
-                width: "3.75rem",
-              }}
+              className="shrink-0 whitespace-nowrap text-right w-auto sm:w-16"
+              style={TYPE.rowPercent}
             >
               {r.pct.toFixed(1)}%
             </span>
