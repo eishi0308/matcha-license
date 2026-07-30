@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Inter+Tight:wght@400;500&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap');
 @import 'leaflet/dist/leaflet.css';
 
 @tailwind base;
@@ -7,6 +7,8 @@
 
 :root {
   --font-inter: 'Inter', system-ui, sans-serif;
+  /* Two weights only (400, 500) — used by the origin-disclosure block. */
+  --font-inter-tight: 'Inter Tight', 'Inter', system-ui, sans-serif;
   --font-playfair: 'Playfair Display', Georgia, serif;
 }
 

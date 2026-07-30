@@ -29,11 +29,22 @@ const SPRING = { type: "spring" as const, stiffness: 300, damping: 28 };
 
 // Fallback only — replaced by live Supabase counts on mount. Keep in step with the
 // database so a failed fetch never shows numbers that contradict the map.
-const DEFAULT_STATS = [
-  { value: 1147, suffix: "+", label: "Cafes Indexed", sublabel: "& still growing", icon: "map" },
-  { value: 49,  suffix: "",  label: "Mention Japanese Origin", sublabel: "on their menu or site", icon: "leaf" },
-  { value: 2,   suffix: "",  label: "Cities Covered", sublabel: "Sydney & Melbourne", icon: "cities" },
-  { value: 35,  suffix: "",  label: "Name a Specific Source", sublabel: "farm or region in Japan", icon: "file" },
+// `nothing` folds C and D together: from a reader's point of view both mean the
+// site disclosed no origin, and the A/B/C/D letters are not introduced this early
+// on the page.
+const DEFAULT_DISCLOSURE = {
+  total: 1147,
+  nothing: 1098,
+  japanOnly: 6,
+  named: 43,
+};
+
+// Bar segments and the rows beneath share one source, in one order, so the two
+// can never disagree.
+const DISCLOSURE_ROWS = [
+  { key: "nothing" as const,   label: "Nothing found on their website or menu", color: "#c7ccd4" },
+  { key: "japanOnly" as const, label: "“Japanese matcha” only",       color: "#7ebfb2" },
+  { key: "named" as const,     label: "Named source, with a link",              color: "#2e6027" },
 ];
 
 const LEVEL_CARDS = [
@@ -673,6 +684,114 @@ function PressRow({ card }: { card: typeof PRESS_CARDS[number] }) {
   );
 }
 
+/**
+ * How many cafes disclose an origin, shown as one whole split three ways.
+ *
+ * The bar and the rows read from the same array in the same order, so a segment
+ * can never be a different size from the count beside it. Percentages are derived
+ * from the counts rather than written down, so they stay true as the data moves.
+ */
+function DisclosureBlock({ data }: { data: typeof DEFAULT_DISCLOSURE }) {
+  const total = data.total || 1;
+  const rows = DISCLOSURE_ROWS.map((r) => ({
+    ...r,
+    count: data[r.key],
+    pct: (data[r.key] / total) * 100,
+  }));
+
+  const num = (n: number) => n.toLocaleString("en-AU");
+  const muted = "#6b7280";
+  const hairline = "rgba(0,0,0,0.10)";
+
+  return (
+    <motion.div
+      className="rounded-2xl px-6 py-8 sm:px-10 sm:py-10"
+      style={{
+        fontFamily: "var(--font-inter-tight)",
+        fontVariantNumeric: "tabular-nums",
+        border: `0.5px solid ${hairline}`,
+      }}
+      initial={{ opacity: 0, y: 32 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.72, delay: 0.1, ease: EASE }}
+    >
+      {/* Hero count — stacks above its caption below 640px */}
+      <div className="flex flex-col sm:flex-row sm:items-baseline sm:gap-4">
+        <span
+          className="leading-none"
+          style={{
+            fontSize: "clamp(2.75rem, 9vw, 4rem)",
+            fontWeight: 500,
+            letterSpacing: "-0.045em",
+            color: "#1c2b1a",
+          }}
+        >
+          {num(data.total)}
+        </span>
+        <span className="mt-2 sm:mt-0" style={{ fontSize: "1rem", fontWeight: 400, color: muted }}>
+          cafés checked · Sydney and Melbourne
+        </span>
+      </div>
+
+      <p className="mt-8" style={{ fontSize: "0.875rem", fontWeight: 400, color: muted }}>
+        What they disclose about origin
+      </p>
+
+      {/* One sentence for screen readers, so the bar is not the only carrier */}
+      <p className="sr-only">
+        Of {num(data.total)} cafés checked, {num(data.nothing)} have nothing about origin on
+        their website or menu, {num(data.japanOnly)} say only that the matcha is Japanese,
+        and {num(data.named)} name a source and link to it.
+      </p>
+
+      {/* Stacked bar — no gaps, so it reads as a single whole */}
+      <div
+        className="mt-3 flex w-full overflow-hidden"
+        style={{ height: 10, borderRadius: 5 }}
+        aria-hidden="true"
+      >
+        {rows.map((r) => (
+          <div key={r.key} style={{ width: `${r.pct}%`, background: r.color }} />
+        ))}
+      </div>
+
+      {/* Rows, same order as the bar */}
+      <div className="mt-7">
+        {rows.map((r, i) => (
+          <div
+            key={r.key}
+            className="flex items-center gap-3 py-3.5"
+            style={{ borderTop: i === 0 ? "none" : `0.5px solid ${hairline}` }}
+          >
+            <span
+              aria-hidden="true"
+              className="shrink-0"
+              style={{ width: 9, height: 9, background: r.color, borderRadius: 1 }}
+            />
+            <span
+              className="min-w-0 flex-1"
+              style={{ fontSize: "0.9375rem", fontWeight: 400, color: "#374151" }}
+            >
+              {r.label}
+            </span>
+            <span
+              className="shrink-0 whitespace-nowrap text-right"
+              style={{
+                fontSize: "1rem",
+                fontWeight: 500,
+                color: r.key === "named" ? "#2e6027" : "#1c2b1a",
+              }}
+            >
+              {num(r.count)}
+            </span>
+          </div>
+        ))}
+      </div>
+    </motion.div>
+  );
+}
+
 function SectionLabel({ icon: Icon, text }: { icon: React.ElementType; text: string }) {
   return (
     <Reveal>
@@ -687,17 +806,17 @@ function SectionLabel({ icon: Icon, text }: { icon: React.ElementType; text: str
 
 export default function HomePage() {
   const [authOpen, setAuthOpen] = useState(false);
-  const [stats, setStats] = useState(DEFAULT_STATS);
+  const [disclosure, setDisclosure] = useState(DEFAULT_DISCLOSURE);
   const { scrollY } = useScroll();
 
   useEffect(() => {
     fetchStats().then((s) => {
-      setStats([
-        { value: s.total, suffix: "+", label: "Cafes Indexed", sublabel: "& still growing", icon: "map" },
-        { value: (s.byLevel.A ?? 0) + (s.byLevel.B ?? 0), suffix: "", label: "Mention Japanese Origin", sublabel: "on their menu or site", icon: "leaf" },
-        { value: 2, suffix: "", label: "Cities Covered", sublabel: "Sydney & Melbourne", icon: "cities" },
-        { value: s.byLevel.A ?? 0, suffix: "", label: "Name a Specific Source", sublabel: "farm, region or supplier", icon: "file" },
-      ]);
+      setDisclosure({
+        total: s.total,
+        nothing: (s.byLevel.C ?? 0) + (s.byLevel.D ?? 0),
+        japanOnly: s.byLevel.B ?? 0,
+        named: s.byLevel.A ?? 0,
+      });
     }).catch(() => {/* keep defaults */});
   }, []);
   const heroY = useTransform(scrollY, [0, 700], [0, -140]);
@@ -863,35 +982,8 @@ export default function HomePage() {
             </motion.p>
           </div>
 
-          {/* 2×2 Stats Grid */}
-          <motion.div
-            className="grid grid-cols-2 rounded-2xl overflow-hidden"
-            style={{ border: "1px solid #e5e7eb" }}
-            initial={{ opacity: 0, y: 32 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.72, delay: 0.1, ease: EASE }}
-          >
-            {stats.map((s, i) => (
-              <div
-                key={s.label}
-                className="flex flex-col items-center justify-center p-8 sm:p-12 text-center"
-                style={{
-                  borderRight: i % 2 === 0 ? "1px solid #e5e7eb" : "none",
-                  borderBottom: i < 2 ? "1px solid #e5e7eb" : "none",
-                }}
-              >
-                <span
-                  className="font-display font-black leading-none mb-3"
-                  style={{ fontSize: "clamp(2.5rem, 7vw, 4.5rem)", color: "#2e6027", letterSpacing: "-0.04em" }}
-                >
-                  <CountUp to={s.value} suffix={s.suffix} />
-                </span>
-                <div className="text-sm font-bold text-gray-900 leading-snug mb-1">{s.label}</div>
-                <div className="text-xs text-gray-400 leading-snug">{s.sublabel}</div>
-              </div>
-            ))}
-          </motion.div>
+          {/* Origin disclosure — one whole, split three ways */}
+          <DisclosureBlock data={disclosure} />
         </div>
       </section>
 
@@ -1441,7 +1533,7 @@ export default function HomePage() {
                   boxShadow: "0 0 48px rgba(90,171,71,0.38), 0 4px 24px rgba(0,0,0,0.35)",
                 }}
               >
-                <Map size={15} />Explore all {stats[0].value}+ cafes<ArrowRight size={13} />
+                <Map size={15} />Explore all {disclosure.total}+ cafes<ArrowRight size={13} />
               </Link>
             </motion.div>
             <p className="text-[11px] text-center" style={{ color: "rgba(255,255,255,0.2)" }}>
