@@ -699,6 +699,9 @@ function DisclosureBlock({ data }: { data: typeof DEFAULT_DISCLOSURE }) {
     pct: (data[r.key] / total) * 100,
   }));
 
+  // Derived, never written down, so the headline cannot drift from the rows.
+  const nothingPct = Math.round((data.nothing / total) * 100);
+
   const num = (n: number) => n.toLocaleString("en-AU");
   const muted = "#6b7280";
   const hairline = "rgba(0,0,0,0.10)";
@@ -716,7 +719,8 @@ function DisclosureBlock({ data }: { data: typeof DEFAULT_DISCLOSURE }) {
       viewport={{ once: true }}
       transition={{ duration: 0.72, delay: 0.1, ease: EASE }}
     >
-      {/* Hero count — stacks above its caption below 640px */}
+      {/* Hero — the share that discloses nothing, which is the finding.
+          Stacks above its caption below 640px. */}
       <div className="flex flex-col sm:flex-row sm:items-baseline sm:gap-4">
         <span
           className="leading-none"
@@ -727,12 +731,16 @@ function DisclosureBlock({ data }: { data: typeof DEFAULT_DISCLOSURE }) {
             color: "#1c2b1a",
           }}
         >
-          {num(data.total)}
+          {nothingPct}%
         </span>
         <span className="mt-2 sm:mt-0" style={{ fontSize: "1rem", fontWeight: 400, color: muted }}>
-          cafés checked · Sydney and Melbourne
+          of cafés don’t say where their matcha comes from
         </span>
       </div>
+
+      <p className="mt-3" style={{ fontSize: "0.875rem", fontWeight: 400, color: "#9ca3af" }}>
+        Based on {num(data.total)} cafés checked · Sydney and Melbourne
+      </p>
 
       <p className="mt-8" style={{ fontSize: "0.875rem", fontWeight: 400, color: muted }}>
         What they disclose about origin
@@ -740,9 +748,9 @@ function DisclosureBlock({ data }: { data: typeof DEFAULT_DISCLOSURE }) {
 
       {/* One sentence for screen readers, so the bar is not the only carrier */}
       <p className="sr-only">
-        Of {num(data.total)} cafés checked, {num(data.nothing)} have nothing about origin on
-        their website or menu, {num(data.japanOnly)} say only that the matcha is Japanese,
-        and {num(data.named)} name a source and link to it.
+        Of {num(data.total)} cafés checked, {num(data.nothing)} — {nothingPct} per cent — have
+        nothing about origin on their website or menu, {num(data.japanOnly)} say only that the
+        matcha is Japanese, and {num(data.named)} name a source and link to it.
       </p>
 
       {/* Stacked bar — no gaps, so it reads as a single whole */}
