@@ -45,15 +45,15 @@ const DEFAULT_DISCLOSURE = {
 // carry the hue; the 96% that disclose nothing recede into gray, because the
 // finding is how few disclose, not how many do not.
 //
-// Validated with the dataviz palette checker against a light surface: the two
-// meaning-bearing steps clear every gate (CVD ΔE 19.7, normal-vision ΔE 20.2,
-// both well past the 8 / 15 floors). The gray is deliberately below the chroma
-// floor — it is de-emphasis, not a category — and its sub-3:1 contrast is
-// relieved by the labelled rows below, which carry every value in text.
+// The two meaning-bearing steps are a green and a teal, far enough apart to
+// survive the common CVD types. The gray is deliberately below the chroma floor
+// — it is de-emphasis, not a category — and its sub-3:1 contrast is relieved by
+// the labelled rows beside it, which carry every value in text.
+// `named` draws as a gradient in the ring, so its hex is the swatch fallback.
 const DISCLOSURE_ROWS = [
-  { key: "nothing" as const,   label: "Nothing found on their website or menu", color: "#d9dce1" },
-  { key: "japanOnly" as const, label: "“Japanese matcha” only",                 color: "#2f9e88" },
-  { key: "named" as const,     label: "Named source, with a link",              color: "#2e6027" },
+  { key: "nothing" as const,   label: "Nothing found",             color: "var(--text-muted)" },
+  { key: "japanOnly" as const, label: "“Japanese matcha” only",    color: "#4FB99A" },
+  { key: "named" as const,     label: "Named source, with a link", color: "#4d7c1a" },
 ];
 
 const LEVEL_CARDS = [
@@ -693,10 +693,98 @@ function PressRow({ card }: { card: typeof PRESS_CARDS[number] }) {
   );
 }
 
+// ── Origin-disclosure donut ────────────────────────────────────────────────
+
+// One geometry for the whole drawing. Every arc length, the leader-line anchor
+// and the centre figure derive from the live counts, so the picture cannot
+// drift from the numbers printed beside it.
+const DONUT = { cx: 120, cy: 130, r: 88, stroke: 20, frame: 103 };
+const CIRC = 2 * Math.PI * DONUT.r; // 552.92
+const DONUT_EASE = "cubic-bezier(.25,.8,.3,1)";
+const ACCENT = "#639922";
+
+// Draw order is not reading order. The green sliver goes down first so the eye
+// anchors on the 4% before the grey floods the frame; the rows below still read
+// largest-first, the way the sentence does.
+const ARC_ORDER = ["named", "japanOnly", "nothing"] as const;
+
+// Per-arc entrance. Each arc grows its own dash from nothing.
+const ARC_MOTION: Record<string, { duration: number; delay: number }> = {
+  named:     { duration: 0.55, delay: 0.12 },
+  japanOnly: { duration: 0.45, delay: 0.38 },
+  nothing:   { duration: 1.10, delay: 0.55 },
+};
+
+// What the centre reads while a row is hovered — its own count, plus a caption
+// short enough not to reflow the ring.
+const CENTRE_CAPTION: Record<string, string> = {
+  nothing:   "found nothing",
+  japanOnly: "say only “Japanese”",
+  named:     "name a source",
+};
+
+/** True once the node has scrolled into view. Fires on first intersection only. */
+function useFirstIntersection<T extends HTMLElement>() {
+  const ref = useRef<T>(null);
+  const [seen, setSeen] = useState(false);
+  useEffect(() => {
+    const node = ref.current;
+    if (!node) return;
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setSeen(true);
+          io.disconnect();
+        }
+      },
+      { threshold: 0.25 },
+    );
+    io.observe(node);
+    return () => io.disconnect();
+  }, []);
+  return [ref, seen] as const;
+}
+
+function usePrefersReducedMotion() {
+  const [reduced, setReduced] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const sync = () => setReduced(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+  return reduced;
+}
+
+/** Eased 0→1 ramp the counts multiply through. */
+function useCountProgress(run: boolean, delay: number, duration = 900) {
+  const [p, setP] = useState(0);
+  useEffect(() => {
+    if (!run) return;
+    let raf = 0;
+    let t0 = 0;
+    const timer = window.setTimeout(() => {
+      const step = (t: number) => {
+        if (!t0) t0 = t;
+        const x = Math.min((t - t0) / duration, 1);
+        setP(1 - Math.pow(1 - x, 3)); // ease-out-cubic
+        if (x < 1) raf = requestAnimationFrame(step);
+      };
+      raf = requestAnimationFrame(step);
+    }, delay);
+    return () => {
+      window.clearTimeout(timer);
+      cancelAnimationFrame(raf);
+    };
+  }, [run, delay, duration]);
+  return p;
+}
+
 /**
  * How many cafes disclose an origin, shown as one whole split three ways.
  *
- * The bar and the rows read from the same array in the same order, so a segment
+ * The ring and the rows read from the same array in the same order, so a segment
  * can never be a different size from the count beside it. Percentages are derived
  * from the counts rather than written down, so they stay true as the data moves.
  */
@@ -707,6 +795,7 @@ function DisclosureBlock({ data }: { data: typeof DEFAULT_DISCLOSURE }) {
     count: data[r.key],
     pct: (data[r.key] / total) * 100,
   }));
+  const get = (key: string) => rows.find((r) => r.key === key)!;
 
   // Derived, never written down, so the headline cannot drift from the rows.
   // Leads on how few disclose rather than how many don't: the scarcity is the
@@ -715,171 +804,250 @@ function DisclosureBlock({ data }: { data: typeof DEFAULT_DISCLOSURE }) {
   const disclosePct = Math.round((disclosing / total) * 100);
 
   const num = (n: number) => n.toLocaleString("en-AU");
-  const hairline = "rgba(0,0,0,0.10)";
+
+  const [wrapRef, seen] = useFirstIntersection<HTMLDivElement>();
+  const reduced = usePrefersReducedMotion();
+  // Reduced motion lands on the final frame at once, without waiting to scroll.
+  const drawn = reduced || seen;
+  const progress = useCountProgress(seen && !reduced, 1000);
+  const p = reduced ? 1 : progress;
+  const counting = p < 1;
 
   const [hovered, setHovered] = useState<string | null>(null);
-  const active = rows.find((r) => r.key === hovered) ?? null;
+  const active = hovered ? get(hovered) : null;
 
-  // Ring geometry. Segments are laid end to end from a rotation that lands the
-  // two disclosing slices just before twelve o'clock, so the small share the
-  // headline is about sits at the top of the ring rather than buried mid-arc.
-  const RADIUS = 52;
-  const CIRC = 2 * Math.PI * RADIUS;
-  const GAP = 2; // surface gap between touching segments
-
+  // Arcs laid end to end from twelve o'clock, in draw order.
   let cursor = 0;
-  const arcs = rows.map((r) => {
-    const len = (r.pct / 100) * CIRC;
-    const start = cursor;
+  const arcs = ARC_ORDER.map((key) => {
+    const row = get(key);
+    const len = (row.count / total) * CIRC;
+    const offset = -cursor;
     cursor += len;
-    // A slice thinner than two gaps cannot give one back without misstating its
-    // size, so it renders at true length and simply has no gap. At 0.5% that is
-    // a hairline — correct, and the reason the rows carry every number in text.
-    return { ...r, start, draw: len > GAP * 2 ? len - GAP : len };
+    return { key, row, len, offset, ...ARC_MOTION[key] };
   });
 
-  // One scale for the whole block. Nothing here drops below 16px and nothing
-  // goes past weight 500 — where something needs to recede it is muted rather
-  // than shrunk, so every line stays comfortably readable.
+  // The leader anchors to where the green arc actually ends, so it keeps
+  // pointing at the sliver even if the counts move.
+  const endAngle = ((get("named").count / total) * 360 - 90) * (Math.PI / 180);
+  const dotX = DONUT.cx + DONUT.r * Math.cos(endAngle);
+  const dotY = DONUT.cy + DONUT.r * Math.sin(endAngle);
+
+  // One scale for the whole block. Outside the SVG nothing drops below 16px and
+  // nothing goes past weight 500 — where something needs to recede it is muted
+  // rather than shrunk, so every line stays comfortably readable.
   const TYPE = {
-    headline:     { fontSize: "2rem",      fontWeight: 500, letterSpacing: "-0.025em", color: "var(--text-primary)" },
-    subline:      { fontSize: "1.0625rem", fontWeight: 400, color: "var(--text-secondary)" },
-    sectionLabel: { fontSize: "1rem",      fontWeight: 400, color: "var(--text-secondary)" },
-    rowLabel:     { fontSize: "1.0625rem", fontWeight: 400, color: "var(--text-primary)" },
-    rowPercent:   { fontSize: "1rem",      fontWeight: 400, color: "var(--text-secondary)" },
-    rowCount:     { fontSize: "1.125rem",  fontWeight: 500, color: "var(--text-primary)" },
-    rowTotal:     { fontSize: "1rem",      fontWeight: 400, color: "var(--text-secondary)" },
+    subline:    { fontSize: "1.0625rem", fontWeight: 400, color: "var(--text-secondary)" },
+    caption:    { fontSize: "1rem",      fontWeight: 400, color: "var(--text-tertiary)" },
+    rowLabel:   { fontSize: "17px",      fontWeight: 400, color: "var(--text-primary)" },
+    rowPercent: { fontSize: "16px",      fontWeight: 400, color: "var(--text-secondary)" },
+    rowCount:   { fontSize: "18px",      fontWeight: 500, color: "var(--text-primary)" },
   } as const;
 
   return (
-    <motion.div
-      className="rounded-2xl px-6 py-8 sm:px-10 sm:py-10"
+    <div
+      ref={wrapRef}
       style={{
         fontFamily: "var(--font-inter-tight)",
         fontVariantNumeric: "tabular-nums",
-        border: `0.5px solid ${hairline}`,
+        background: "var(--surface-2)",
+        border: "0.5px solid var(--border)",
+        borderRadius: 14,
+        padding: "2rem 2.25rem",
       }}
-      initial={{ opacity: 0, y: 32 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.72, delay: 0.1, ease: EASE }}
     >
-      {/* Donut plus headline. The ring is the only decorative element; every
-          value it encodes is also written out in the rows beneath, so nothing
-          is reachable through colour alone. */}
-      <div className="flex flex-col sm:flex-row sm:items-center gap-7 sm:gap-10">
-        <div className="relative shrink-0 self-center" style={{ width: 168, height: 168 }}>
-          <svg viewBox="0 0 128 128" width={168} height={168} aria-hidden="true">
-            <g transform={`rotate(${-90 - (disclosing / total) * 360} 64 64)`}>
-              {arcs.map((a) => (
+      <div className="flex flex-wrap items-center" style={{ gap: 36 }}>
+        {/* The ring is the only decorative element; every value it encodes is
+            also written out in the rows beside it, so nothing is reachable
+            through colour alone. */}
+        <svg
+          viewBox="0 0 300 250"
+          width={320}
+          className="shrink-0"
+          style={{ maxWidth: "100%", height: "auto" }}
+          role="img"
+          aria-label={
+            `Of ${num(data.total)} cafés checked, ${num(data.nothing)} have nothing about ` +
+            `origin on their website or menu, ${num(data.japanOnly)} say only that the matcha ` +
+            `is Japanese, and ${num(data.named)} name a source and link to it.`
+          }
+        >
+          <defs>
+            <linearGradient id="arcNamed" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stopColor="#97C459" />
+              <stop offset="100%" stopColor="#4d7c1a" />
+            </linearGradient>
+          </defs>
+
+          {/* Hairline frame — gives the ring an outer edge to sit against so the
+              grey arc does not read as the boundary of the drawing. */}
+          <circle
+            cx={DONUT.cx}
+            cy={DONUT.cy}
+            r={DONUT.frame}
+            fill="none"
+            stroke="var(--border)"
+            strokeWidth={0.5}
+          />
+
+          <g transform={`rotate(-90 ${DONUT.cx} ${DONUT.cy})`}>
+            {arcs.map((a) => {
+              const dim = hovered !== null && hovered !== a.key;
+              return (
                 <circle
                   key={a.key}
-                  cx="64"
-                  cy="64"
-                  r={RADIUS}
+                  cx={DONUT.cx}
+                  cy={DONUT.cy}
+                  r={DONUT.r}
                   fill="none"
-                  stroke={a.color}
-                  strokeWidth="13"
+                  stroke={a.key === "named" ? "url(#arcNamed)" : a.row.color}
+                  strokeWidth={hovered === a.key ? 26 : DONUT.stroke}
                   strokeLinecap="butt"
-                  strokeDasharray={`${a.draw} ${CIRC - a.draw}`}
-                  strokeDashoffset={-a.start}
+                  strokeDasharray={drawn ? `${a.len} ${CIRC}` : `0 ${CIRC}`}
+                  strokeDashoffset={a.offset}
                   onMouseEnter={() => setHovered(a.key)}
                   onMouseLeave={() => setHovered(null)}
                   style={{
-                    opacity: hovered && hovered !== a.key ? 0.3 : 1,
-                    transition: "opacity 180ms ease",
+                    // The grey is de-emphasis, not a category — no gradient, no
+                    // glow, and it sits back at a third of its own weight.
+                    opacity: dim ? 0.08 : a.key === "nothing" ? 0.3 : 1,
+                    filter:
+                      a.key === "named"
+                        ? "drop-shadow(0 0 5px rgba(99,153,34,.45))"
+                        : undefined,
+                    transition: reduced
+                      ? "none"
+                      : `stroke-dasharray ${a.duration}s ${DONUT_EASE} ${a.delay}s,` +
+                        " stroke-width .25s ease, opacity .25s ease",
                   }}
                 />
-              ))}
-            </g>
-          </svg>
+              );
+            })}
+          </g>
 
           {/* Centre reads the hovered slice, or the headline when nothing is hovered */}
-          <div className="absolute inset-0 flex items-center justify-center">
-            <span style={TYPE.headline} className="leading-none">
-              {active ? `${active.pct.toFixed(1)}%` : `${disclosePct}%`}
-            </span>
-          </div>
-        </div>
-
-        <div className="min-w-0">
-          <p style={TYPE.subline}>
-            {active ? active.label : "of cafés say where their matcha comes from"}
-          </p>
-          <p className="mt-2" style={{ ...TYPE.sectionLabel, color: "var(--text-tertiary)" }}>
-            Only {num(disclosing)} of {num(data.total)} checked · Sydney and Melbourne
-          </p>
-        </div>
-      </div>
-
-      <p className="mt-9" style={TYPE.sectionLabel}>
-        What they disclose about origin
-      </p>
-
-      {/* One sentence for screen readers, so the ring is not the only carrier */}
-      <p className="sr-only">
-        Of {num(data.total)} cafés checked, only {num(disclosing)} — {disclosePct} per cent —
-        say anything about where their matcha comes from: {num(data.named)} name a source and
-        link to it, and {num(data.japanOnly)} say only that the matcha is Japanese. The
-        remaining {num(data.nothing)} have nothing about origin on their website or menu.
-      </p>
-
-      {/* Rows — legend, direct labels and table view in one. Same order as the ring. */}
-      <div className="mt-2">
-        {rows.map((r, i) => (
-          <div
-            key={r.key}
-            className="flex items-center gap-2 sm:gap-3 py-3.5"
-            onMouseEnter={() => setHovered(r.key)}
-            onMouseLeave={() => setHovered(null)}
+          <text
+            x={DONUT.cx}
+            y={DONUT.cy}
+            textAnchor="middle"
+            dy="0.1em"
             style={{
-              borderTop: i === 0 ? "none" : `0.5px solid ${hairline}`,
-              opacity: hovered && hovered !== r.key ? 0.45 : 1,
-              transition: "opacity 180ms ease",
+              fontSize: 46,
+              fontWeight: 500,
+              letterSpacing: "-0.04em",
+              fill: active?.key === "named" ? ACCENT : "var(--text-primary)",
+            }}
+            aria-hidden={counting || undefined}
+          >
+            {active ? num(active.count) : `${Math.round(disclosePct * p)}%`}
+          </text>
+          <text
+            x={DONUT.cx}
+            y={DONUT.cy + 30}
+            textAnchor="middle"
+            style={{ fontSize: 15, fontWeight: 400, fill: "var(--text-secondary)" }}
+          >
+            {active ? CENTRE_CAPTION[active.key] : "disclose an origin"}
+          </text>
+
+          {/* Leader line — the sliver is too thin to label in place, so the
+              number is carried outside the ring and pointed back at it. */}
+          <g
+            style={{
+              opacity: drawn ? 1 : 0,
+              transition: reduced ? "none" : `opacity .4s ${DONUT_EASE} 1.5s`,
             }}
           >
-            <span
-              aria-hidden="true"
-              className="shrink-0"
-              style={{ width: 9, height: 9, background: r.color, borderRadius: 1 }}
+            <polyline
+              points={`${dotX.toFixed(1)},${dotY.toFixed(1)} 172,14 250,14`}
+              fill="none"
+              stroke="var(--border-strong)"
+              strokeWidth={1}
             />
-            <span className="min-w-0 flex-1" style={TYPE.rowLabel}>
-              {r.label}
-            </span>
-            {/* Count over the total, so each row stands on its own without
-                the reader holding the denominator in their head. */}
-            <span className="shrink-0 whitespace-nowrap text-right">
-              <span
+            <circle cx={dotX} cy={dotY} r={2.5} fill={ACCENT} />
+            {/* Sits under the rule rather than over it: at 15px the ascenders
+                would clear the top of the viewBox and get clipped. */}
+            <text
+              x={250}
+              y={14}
+              textAnchor="end"
+              dy="1.15em"
+              style={{ fontSize: 15, fontWeight: 400, fill: "var(--text-secondary)" }}
+            >
+              {num(data.named)} of {num(data.total)}
+            </text>
+          </g>
+        </svg>
+
+        <div className="flex-1" style={{ minWidth: 260 }}>
+          <p style={TYPE.subline}>of cafés say where their matcha comes from</p>
+          <p className="mt-2" style={TYPE.caption}>
+            Only {num(disclosing)} of {num(data.total)} checked · Sydney and Melbourne
+          </p>
+
+          {/* Rows — legend, direct labels and table view in one. */}
+          <div className="mt-6">
+            {rows.map((r, i) => (
+              <div
+                key={r.key}
+                className="flex items-center gap-3 px-2 py-3.5"
+                onMouseEnter={() => setHovered(r.key)}
+                onMouseLeave={() => setHovered(null)}
                 style={{
-                  ...TYPE.rowCount,
-                  // The one row worth drawing the eye to keeps the accent.
-                  ...(r.key === "named" ? { color: "#2e6027" } : null),
+                  borderTop: i === 0 ? "none" : "0.5px solid var(--border)",
+                  background: hovered === r.key ? "var(--surface-1)" : "transparent",
+                  opacity: drawn ? 1 : 0,
+                  transform: drawn ? "translateY(0)" : "translateY(8px)",
+                  transition: reduced
+                    ? "background .25s ease"
+                    : `opacity .5s ${DONUT_EASE} ${0.9 + i * 0.12}s,` +
+                      ` transform .5s ${DONUT_EASE} ${0.9 + i * 0.12}s,` +
+                      " background .25s ease",
                 }}
               >
-                {num(r.count)}
-              </span>
-              {/* Below 640px the denominator is dropped rather than allowed to
-                  squeeze the label into four lines — the total is stated in the
-                  caption directly above. */}
-              <span className="hidden sm:inline" style={TYPE.rowTotal}>
-                {" "}/ {num(data.total)}
-              </span>
-            </span>
+                <span
+                  aria-hidden="true"
+                  className="shrink-0"
+                  style={{
+                    width: 10,
+                    height: 10,
+                    borderRadius: 1,
+                    background:
+                      r.key === "named"
+                        ? "linear-gradient(135deg,#97C459,#4d7c1a)"
+                        : r.color,
+                    opacity: r.key === "nothing" ? 0.3 : 1,
+                  }}
+                />
+                <span className="min-w-0 flex-1" style={TYPE.rowLabel}>
+                  {r.label}
+                </span>
 
-            {/* The rate, one decimal — an integer would round 0.5% to 1% and
-                overstate the smallest share. */}
-            {/* Fixed width from 640px up so the rates align down the column;
-                auto below that, where the label needs every pixel it can get. */}
-            <span
-              className="shrink-0 whitespace-nowrap text-right w-auto sm:w-16"
-              style={TYPE.rowPercent}
-            >
-              {r.pct.toFixed(1)}%
-            </span>
+                {/* The rate, one decimal — an integer would round 0.5% to 1%
+                    and overstate the smallest share. */}
+                <span
+                  className="shrink-0 whitespace-nowrap text-right"
+                  style={TYPE.rowPercent}
+                >
+                  {r.pct.toFixed(1)}%
+                </span>
+                <span
+                  className="shrink-0 whitespace-nowrap text-right"
+                  style={{
+                    ...TYPE.rowCount,
+                    width: 56,
+                    // The one row worth drawing the eye to keeps the accent.
+                    ...(r.key === "named" ? { color: ACCENT } : null),
+                  }}
+                  aria-hidden={counting || undefined}
+                >
+                  {num(Math.round(r.count * p))}
+                </span>
+              </div>
+            ))}
           </div>
-        ))}
+        </div>
       </div>
-    </motion.div>
+    </div>
   );
 }
 

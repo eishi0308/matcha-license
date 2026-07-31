@@ -16,6 +16,16 @@
   --text-primary: #1c2b1a;
   --text-secondary: #6b7280;
   --text-tertiary: #9ca3af;
+  /* Sits under the grey arc at 0.3 opacity — de-emphasis, not a category. */
+  --text-muted: #9ca3af;
+
+  /* Surfaces and hairlines. --surface-2 lifts a card off the white page by the
+     smallest step that still reads as a distinct plane; --surface-1 is the row
+     hover one step further in. */
+  --surface-1: #f4f6f4;
+  --surface-2: #fcfdfc;
+  --border: rgba(0, 0, 0, 0.10);
+  --border-strong: rgba(0, 0, 0, 0.24);
 }
 
 * {
