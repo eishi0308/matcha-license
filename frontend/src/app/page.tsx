@@ -832,15 +832,15 @@ function DisclosureBlock({ data }: { data: typeof DEFAULT_DISCLOSURE }) {
   const dotX = DONUT.cx + DONUT.r * Math.cos(endAngle);
   const dotY = DONUT.cy + DONUT.r * Math.sin(endAngle);
 
-  // One scale for the whole block. Outside the SVG nothing drops below 16px and
+  // One scale for the whole block. Outside the SVG nothing drops below 18px and
   // nothing goes past weight 500 — where something needs to recede it is muted
   // rather than shrunk, so every line stays comfortably readable.
   const TYPE = {
-    subline:    { fontSize: "1.0625rem", fontWeight: 400, color: "var(--text-secondary)" },
-    caption:    { fontSize: "1rem",      fontWeight: 400, color: "var(--text-tertiary)" },
-    rowLabel:   { fontSize: "17px",      fontWeight: 400, color: "var(--text-primary)" },
-    rowPercent: { fontSize: "16px",      fontWeight: 400, color: "var(--text-secondary)" },
-    rowCount:   { fontSize: "18px",      fontWeight: 500, color: "var(--text-primary)" },
+    subline:    { fontSize: "1.25rem",  fontWeight: 400, color: "var(--text-secondary)" },
+    caption:    { fontSize: "1.125rem", fontWeight: 400, color: "var(--text-tertiary)" },
+    rowLabel:   { fontSize: "20px",     fontWeight: 400, color: "var(--text-primary)" },
+    rowPercent: { fontSize: "18px",     fontWeight: 400, color: "var(--text-secondary)" },
+    rowCount:   { fontSize: "21px",     fontWeight: 500, color: "var(--text-primary)" },
   } as const;
 
   return (
@@ -931,7 +931,7 @@ function DisclosureBlock({ data }: { data: typeof DEFAULT_DISCLOSURE }) {
             textAnchor="middle"
             dy="0.1em"
             style={{
-              fontSize: 46,
+              fontSize: 54,
               fontWeight: 500,
               letterSpacing: "-0.04em",
               fill: active?.key === "named" ? ACCENT : "var(--text-primary)",
@@ -942,9 +942,9 @@ function DisclosureBlock({ data }: { data: typeof DEFAULT_DISCLOSURE }) {
           </text>
           <text
             x={DONUT.cx}
-            y={DONUT.cy + 30}
+            y={DONUT.cy + 34}
             textAnchor="middle"
-            style={{ fontSize: 15, fontWeight: 400, fill: "var(--text-secondary)" }}
+            style={{ fontSize: 17, fontWeight: 400, fill: "var(--text-secondary)" }}
           >
             {active ? CENTRE_CAPTION[active.key] : "disclose an origin"}
           </text>
@@ -964,14 +964,14 @@ function DisclosureBlock({ data }: { data: typeof DEFAULT_DISCLOSURE }) {
               strokeWidth={1}
             />
             <circle cx={dotX} cy={dotY} r={2.5} fill={ACCENT} />
-            {/* Sits under the rule rather than over it: at 15px the ascenders
-                would clear the top of the viewBox and get clipped. */}
+            {/* Sits under the rule rather than over it: at this size the
+                ascenders would clear the top of the viewBox and get clipped. */}
             <text
               x={250}
               y={14}
               textAnchor="end"
               dy="1.15em"
-              style={{ fontSize: 15, fontWeight: 400, fill: "var(--text-secondary)" }}
+              style={{ fontSize: 17, fontWeight: 400, fill: "var(--text-secondary)" }}
             >
               {num(data.named)} of {num(data.total)}
             </text>
@@ -1034,7 +1034,7 @@ function DisclosureBlock({ data }: { data: typeof DEFAULT_DISCLOSURE }) {
                   className="shrink-0 whitespace-nowrap text-right"
                   style={{
                     ...TYPE.rowCount,
-                    width: 56,
+                    width: 66,
                     // The one row worth drawing the eye to keeps the accent.
                     ...(r.key === "named" ? { color: ACCENT } : null),
                   }}
@@ -1231,7 +1231,7 @@ export default function HomePage() {
 
             <motion.p
               className="text-center mx-auto mt-6"
-              style={{ fontSize: "clamp(1rem, 2.5vw, 1.2rem)", color: "#9ca3af", maxWidth: "36rem", lineHeight: 1.7 }}
+              style={{ fontSize: "clamp(1.125rem, 2.5vw, 1.4rem)", color: "#9ca3af", maxWidth: "38rem", lineHeight: 1.7 }}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
