@@ -826,16 +826,19 @@ function DisclosureBlock({ data }: { data: typeof DEFAULT_DISCLOSURE }) {
     return { key, row, len, offset, ...ARC_MOTION[key] };
   });
 
-  // The leader anchors to where the green arc actually ends, so it keeps
-  // pointing at the sliver even if the counts move.
-  const endAngle = ((get("named").count / total) * 360 - 90) * (Math.PI / 180);
-  const dotX = DONUT.cx + DONUT.r * Math.cos(endAngle);
-  const dotY = DONUT.cy + DONUT.r * Math.sin(endAngle);
-
   // One scale for the whole block. Outside the SVG nothing drops below 18px and
   // nothing goes past weight 500 — where something needs to recede it is muted
   // rather than shrunk, so every line stays comfortably readable.
   const TYPE = {
+    // The one line a reader must leave with, so it is sized to be read before
+    // the chart is: statement weight, not caption weight.
+    statement:  {
+      fontSize: "clamp(1.75rem, 3.4vw, 2.5rem)",
+      fontWeight: 600,
+      lineHeight: 1.15,
+      letterSpacing: "-0.025em",
+      color: "var(--text-primary)",
+    },
     subline:    { fontSize: "1.25rem",  fontWeight: 400, color: "var(--text-secondary)" },
     caption:    { fontSize: "1.125rem", fontWeight: 400, color: "var(--text-tertiary)" },
     rowLabel:   { fontSize: "20px",     fontWeight: 400, color: "var(--text-primary)" },
@@ -855,7 +858,25 @@ function DisclosureBlock({ data }: { data: typeof DEFAULT_DISCLOSURE }) {
         padding: "2rem 2.25rem",
       }}
     >
-      <div className="flex flex-wrap items-center" style={{ gap: 36 }}>
+      {/* The finding leads the card at full width — it is the one line a reader
+          must leave with, so it is not competing with the ring for the eye. */}
+      <p style={TYPE.statement}>
+        Only <span style={{ color: ACCENT }}>{disclosePct}%</span> of cafés tell you
+        where their matcha comes from.
+      </p>
+      <p className="mt-3" style={TYPE.caption}>
+        {num(data.total)} cafés checked across Sydney and Melbourne
+      </p>
+
+      <div
+        className="flex flex-wrap items-center"
+        style={{
+          gap: 36,
+          marginTop: 28,
+          paddingTop: 32,
+          borderTop: "0.5px solid var(--border)",
+        }}
+      >
         {/* The ring is the only decorative element; every value it encodes is
             also written out in the rows beside it, so nothing is reachable
             through colour alone. */}
@@ -946,44 +967,15 @@ function DisclosureBlock({ data }: { data: typeof DEFAULT_DISCLOSURE }) {
             textAnchor="middle"
             style={{ fontSize: 17, fontWeight: 400, fill: "var(--text-secondary)" }}
           >
-            {active ? CENTRE_CAPTION[active.key] : "disclose an origin"}
+            {/* The count the ring is drawn from, so the sliver needs no leader
+                line out to a label of its own. */}
+            {active
+              ? CENTRE_CAPTION[active.key]
+              : `${num(disclosing)} of ${num(data.total)}`}
           </text>
-
-          {/* Leader line — the sliver is too thin to label in place, so the
-              number is carried outside the ring and pointed back at it. */}
-          <g
-            style={{
-              opacity: drawn ? 1 : 0,
-              transition: reduced ? "none" : `opacity .4s ${DONUT_EASE} 1.5s`,
-            }}
-          >
-            <polyline
-              points={`${dotX.toFixed(1)},${dotY.toFixed(1)} 172,14 250,14`}
-              fill="none"
-              stroke="var(--border-strong)"
-              strokeWidth={1}
-            />
-            <circle cx={dotX} cy={dotY} r={2.5} fill={ACCENT} />
-            {/* Sits under the rule rather than over it: at this size the
-                ascenders would clear the top of the viewBox and get clipped. */}
-            <text
-              x={250}
-              y={14}
-              textAnchor="end"
-              dy="1.15em"
-              style={{ fontSize: 17, fontWeight: 400, fill: "var(--text-secondary)" }}
-            >
-              {num(data.named)} of {num(data.total)}
-            </text>
-          </g>
         </svg>
 
         <div className="flex-1" style={{ minWidth: 260 }}>
-          <p style={TYPE.subline}>of cafés say where their matcha comes from</p>
-          <p className="mt-2" style={TYPE.caption}>
-            Only {num(disclosing)} of {num(data.total)} checked · Sydney and Melbourne
-          </p>
-
           {/* Rows — legend, direct labels and table view in one. */}
           <div className="mt-6">
             {rows.map((r, i) => (
