@@ -84,18 +84,20 @@ export async function fetchCafe(id: string): Promise<Cafe> {
 export async function fetchStats(): Promise<{
   total: number;
   byLevel: Record<string, number>;
+  assessable: number;
+  unassessable: number;
   sydney: number;
   melbourne: number;
   discovering: boolean;
 }> {
   const PAGE = 1000;
-  const allRows: { level: string; city: string }[] = [];
+  const allRows: { level: string; city: string; website: string | null }[] = [];
   let from = 0;
 
   while (true) {
     const { data, error } = await supabase
       .from("cafes")
-      .select("level, city")
+      .select("level, city, website")
       .range(from, from + PAGE - 1);
     if (error) throw new Error(error.message);
     if (!data || data.length === 0) break;
@@ -107,12 +109,46 @@ export async function fetchStats(): Promise<{
   const byLevel: Record<string, number> = { A: 0, B: 0, C: 0, D: 0 };
   let sydney = 0;
   let melbourne = 0;
+  let unassessable = 0;
 
   for (const row of allRows) {
     byLevel[row.level] = (byLevel[row.level] ?? 0) + 1;
     if (row.city === "Sydney") sydney++;
     if (row.city === "Melbourne") melbourne++;
+    if (!hasCheckableSource(row.website)) unassessable++;
   }
 
-  return { total: allRows.length, byLevel, sydney, melbourne, discovering: false };
+  return {
+    total: allRows.length,
+    byLevel,
+    assessable: allRows.length - unassessable,
+    unassessable,
+    sydney,
+    melbourne,
+    discovering: false,
+  };
+}
+
+/**
+ * Whether there is anywhere to look for a sourcing claim in the first place.
+ *
+ * <p>A cafe with no website, or only a social profile, has not declined to disclose its
+ * origin — nobody has been able to ask. Counting those as "discloses nothing" overstates
+ * the finding, since the same bucket holds cafes we checked and cafes we could not reach.
+ * Instagram and Facebook are here on measured grounds: every profile the crawler tried
+ * returned a login wall rather than a page.
+ */
+const UNCHECKABLE_HOSTS = [
+  "instagram.com",
+  "facebook.com",
+  "fb.com",
+  "ubereats.com",
+  "doordash.com",
+  "menulog.com.au",
+];
+
+export function hasCheckableSource(website: string | null | undefined): boolean {
+  if (!website || !website.trim()) return false;
+  const host = website.toLowerCase();
+  return !UNCHECKABLE_HOSTS.some((h) => host.includes(h));
 }

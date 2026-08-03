@@ -32,11 +32,16 @@ const SPRING = { type: "spring" as const, stiffness: 300, damping: 28 };
 // `nothing` folds C and D together: from a reader's point of view both mean the
 // site disclosed no origin, and the A/B/C/D letters are not introduced this early
 // on the page.
+// `total` is every cafe found; `nothing` counts only those with a page that could
+// actually be read, so the rate below is over cafes whose sourcing was checkable.
+// `unchecked` is the rest — no website, or only a social profile that serves a login
+// wall — and is reported separately rather than folded in as a non-disclosure.
 const DEFAULT_DISCLOSURE = {
   total: 1147,
-  nothing: 1098,
-  japanOnly: 6,
-  named: 43,
+  unchecked: 630,
+  nothing: 443,
+  japanOnly: 11,
+  named: 63,
 };
 
 // Bar segments and the rows beneath share one source, in one order, so the two
@@ -789,7 +794,10 @@ function useCountProgress(run: boolean, delay: number, duration = 900) {
  * from the counts rather than written down, so they stay true as the data moves.
  */
 function DisclosureBlock({ data }: { data: typeof DEFAULT_DISCLOSURE }) {
-  const total = data.total || 1;
+  // The ring and the rate are over cafes that could be checked. A cafe with no page
+  // to read has not withheld its origin — it was never asked — and counting it as a
+  // non-disclosure would attribute silence to the cafe that belongs to the method.
+  const total = data.nothing + data.japanOnly + data.named || 1;
   const rows = DISCLOSURE_ROWS.map((r) => ({
     ...r,
     count: data[r.key],
@@ -865,7 +873,9 @@ function DisclosureBlock({ data }: { data: typeof DEFAULT_DISCLOSURE }) {
         where their matcha comes from.
       </p>
       <p className="mt-3" style={TYPE.caption}>
-        {num(data.total)} cafés checked across Sydney and Melbourne
+        Of {num(total)} cafés with a page we could read, across Sydney and Melbourne.
+        A further {num(data.unchecked)} of {num(data.total)} publish no website at all,
+        so there was nothing to check.
       </p>
 
       <div
@@ -887,9 +897,10 @@ function DisclosureBlock({ data }: { data: typeof DEFAULT_DISCLOSURE }) {
           style={{ maxWidth: "100%", height: "auto" }}
           role="img"
           aria-label={
-            `Of ${num(data.total)} cafés checked, ${num(data.nothing)} have nothing about ` +
-            `origin on their website or menu, ${num(data.japanOnly)} say only that the matcha ` +
-            `is Japanese, and ${num(data.named)} name a source and link to it.`
+            `Of ${num(total)} cafés whose pages could be read, ${num(data.nothing)} have ` +
+            `nothing about origin, ${num(data.japanOnly)} say only that the matcha is Japanese, ` +
+            `and ${num(data.named)} name a source and link to it. A further ` +
+            `${num(data.unchecked)} of ${num(data.total)} publish no readable page at all.`
           }
         >
           <defs>
@@ -971,7 +982,7 @@ function DisclosureBlock({ data }: { data: typeof DEFAULT_DISCLOSURE }) {
                 line out to a label of its own. */}
             {active
               ? CENTRE_CAPTION[active.key]
-              : `${num(disclosing)} of ${num(data.total)}`}
+              : `${num(disclosing)} of ${num(total)}`}
           </text>
         </svg>
 
@@ -1062,9 +1073,13 @@ export default function HomePage() {
 
   useEffect(() => {
     fetchStats().then((s) => {
+      // The unreadable rows sit inside C and D, so they come out of "nothing found"
+      // rather than being added on top of the total.
+      const nothing = (s.byLevel.C ?? 0) + (s.byLevel.D ?? 0) - s.unassessable;
       setDisclosure({
         total: s.total,
-        nothing: (s.byLevel.C ?? 0) + (s.byLevel.D ?? 0),
+        unchecked: s.unassessable,
+        nothing: Math.max(0, nothing),
         japanOnly: s.byLevel.B ?? 0,
         named: s.byLevel.A ?? 0,
       });
