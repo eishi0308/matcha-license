@@ -272,4 +272,63 @@ class LiveEvidenceRegressionTest {
                 "Indulge in the exquisite combination of rich, earthy flavours of Japanese matcha "
                         + "green tea and our house blend white chocolate.").level());
     }
+
+    // ── False positives the browser-rendered sweep produced ───────────────────
+
+    @Test
+    @DisplayName("A prefecture famous for beef is not the matcha's origin")
+    void placeNameOnFoodRejected() {
+        String izakaya = "UPGRADE TO A5 Miyazaki Steak With Vegetables DESSERT MATCHA "
+                + "PANNA COTTA SAKE PAIRINGS Upgrade your experiance";
+        TransparencyGrader.Evidence e = TransparencyGrader.decide(null, izakaya);
+        assertTrue(e == null || e.level() != TransparencyLevel.A,
+                "Miyazaki is the beef, not the matcha; got: " + e);
+
+        String gyukatsu = "Warabi Mochi 16 Layer Matcha & Genmaicha Cake Reservations Visit Us "
+                + "Gyukatsu Kyoto Katsugyu Sydney Level 2.01/252 Pitt St";
+        TransparencyGrader.Evidence g = TransparencyGrader.decide(null, gyukatsu);
+        assertTrue(g == null || g.level() != TransparencyLevel.A,
+                "Kyoto is in the restaurant's name; got: " + g);
+    }
+
+    @Test
+    @DisplayName("'Japanese teas and matcha' lists two things, it does not source one")
+    void conjunctionBreaksTheModifier() {
+        String ytb = "Choose from 30-minute guided sessions exploring Japanese teas and matcha, "
+                + "a tea & cheese pairing, oyster shucking 101, or a hands-on pastry workshop.";
+        assertNull(TransparencyGrader.decide(null, ytb),
+                "a tasting session is not a sourcing statement");
+    }
+
+    @Test
+    @DisplayName("Sourcing statements found only by the browser still grade correctly")
+    void renderedDisclosuresSurvive() {
+        assertEquals(TransparencyLevel.A, TransparencyGrader.decide(null,
+                "Matcha sourced from a Japanese farm in Uji, Kyoto.").level());
+        assertEquals(TransparencyLevel.A, TransparencyGrader.decide(null,
+                "Our matcha is grown in Uji Kyoto.").level());
+        assertEquals(TransparencyLevel.A, TransparencyGrader.decide(null,
+                "Matcha Sake Highball Kagoshima matcha, yuzushu, honey, soda").level(),
+                "a cocktail listing a region for its matcha still discloses it");
+        assertEquals(TransparencyLevel.A, TransparencyGrader.decide(null,
+                "From our rich tonkotsu broth simmered for hours, to our ceremonial-grade "
+                        + "matcha sourced from Uji, we believe the details make the difference.").level(),
+                "ramen on the same page must not suppress a real matcha origin");
+        assertEquals(TransparencyLevel.B, TransparencyGrader.decide(null,
+                "House made soft serve ice cream with 100% Japanese pure matcha.").level());
+    }
+
+    @Test
+    @DisplayName("An Instagram bio's evidence is quoted without the login header")
+    void instagramChromeTrimmed() {
+        String profile = "Log In Sign Up matchaya_sydney 7,265 followers 47 following MATCHA-YA "
+                + "Japanese Matcha Dessert Cafe Darling square Sydney Japanese Cafe "
+                + "Authentic Kyoto Uji Matcha";
+        TransparencyGrader.Evidence e = TransparencyGrader.decide(null, profile);
+        assertNotNull(e);
+        assertEquals(TransparencyLevel.A, e.level());
+        assertFalse(e.quote().toLowerCase().startsWith("log in"),
+                "the login prompt is not evidence: " + e.quote());
+        assertTrue(profile.contains(e.quote()), "the quote must stay verbatim from the page");
+    }
 }

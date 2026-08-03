@@ -448,6 +448,22 @@ public class CafeService {
                 continue;
             }
 
+            // A published grade is not withdrawn just because this run came back
+            // empty-handed. A partial crawl — a page that timed out, a menu that moved
+            // behind a script — is indistinguishable from a cafe that deleted its
+            // sourcing statement, and only one of those should cost it its grade. Held
+            // and recorded, so a person can look rather than the run deciding silently.
+            if (TransparencyGrader.levelRequiresEvidence(cafe.getLevel())
+                    && evidence == null) {
+                System.out.printf("[Regrade] %s — held at %s, this run found no evidence%n",
+                        cafe.getName(), cafe.getLevel());
+                journal.record(cafe, "NEEDS-REVIEW",
+                        "was " + cafe.getLevel() + "; no evidence found this run");
+                unchanged++;
+                sleep(300);
+                continue;
+            }
+
             String newQuote = evidence == null ? null : evidence.quote();
             boolean levelSame = proposed == cafe.getLevel();
             boolean quoteSame = Objects.equals(newQuote, cafe.getEvidenceQuote());
@@ -470,10 +486,16 @@ public class CafeService {
             change.put("newQuote", newQuote);
             change.put("sourcePage", sourcePage != null ? sourcePage : url);
             change.put("pagesScraped", scraped.pageTexts().size());
+
+            // Write only what actually happened. Recording the change first meant a save
+            // that then failed still left the cafe marked done, and a resumed run skipped
+            // it — the change was reported, journalled, and never actually made. The
+            // journal is what resume trusts, so it must lag the database, never lead it.
+            if (!opts.dryRun()) {
+                applyRegrade(cafe, proposed, newQuote, sourcePage != null ? sourcePage : url);
+            }
             changes.add(change);
             journal.record(change);
-
-            if (!opts.dryRun()) applyRegrade(cafe, proposed, newQuote, sourcePage != null ? sourcePage : url);
             sleep(300);
         }
 
@@ -488,6 +510,102 @@ public class CafeService {
         result.put("examined", targets.size());
         result.put("excludedUnreachable", selection.excludedUnreachable());
         result.put("alreadyDone", selection.alreadyDone());
+        result.put("changed", changes.size());
+        result.put("unchanged", unchanged);
+        result.put("skipped", skipped);
+        result.put("changes", changes);
+        return result;
+    }
+
+    /** One cafe's page text, read by something other than the built-in crawler. */
+    public record RenderedSite(String id, String url, String text) {}
+
+    /**
+     * Grade cafes from text captured by the headless renderer.
+     *
+     * <p>Roughly three quarters of the sites the crawler could not read were not blocking
+     * it — they build their pages in the browser and serve an empty shell to anything that
+     * cannot run JavaScript. tools/render.mjs opens those in a real browser and writes out
+     * what a reader would see; this takes that text through the identical pipeline the
+     * crawler's own text goes through, analyser included. Only the source of the words
+     * differs, never the standard applied to them.
+     */
+    public Map<String, Object> regradeFromRenderedText(List<RenderedSite> sites, boolean dryRun,
+                                                       boolean analyse) {
+        Map<String, Cafe> byId = new LinkedHashMap<>();
+        for (Cafe c : cafeRepository.findAll()) byId.put(c.getId(), c);
+
+        RegradeOptions opts = new RegradeOptions(
+                "rendered", dryRun, 0, 0, analyse, false, 0, true, null);
+        RegradeJournal journal = RegradeJournal.open(opts, new Selection(List.of(), sites.size(), 0, 0));
+
+        List<Map<String, Object>> changes = new ArrayList<>();
+        int unchanged = 0, skipped = 0, examined = 0;
+
+        for (RenderedSite site : sites) {
+            Cafe cafe = byId.get(site.id());
+            if (cafe == null || site.text() == null || site.text().isBlank()) { skipped++; continue; }
+
+            if (++examined % 25 == 0 || examined == 1) {
+                System.out.printf("[Rendered] %d/%d — %d changes, %d unchanged, %d skipped%n",
+                        examined, sites.size(), changes.size(), unchanged, skipped);
+            }
+
+            String aiQuote = cafe.getEvidenceQuote();
+            if (analyse && (aiQuote == null || aiQuote.isBlank())) {
+                OpenAiService.CafeAnalysis fresh =
+                        openAiService.analyze(cafe.getName(), site.url(), site.text());
+                if (fresh != null) aiQuote = fresh.evidenceQuote();
+            }
+
+            TransparencyGrader.Evidence evidence = TransparencyGrader.decide(aiQuote, site.text());
+            TransparencyLevel proposed = evidence == null ? TransparencyLevel.C : evidence.level();
+
+            if (cafe.getLevel() == TransparencyLevel.D
+                    && !TransparencyGrader.levelRequiresEvidence(proposed)) {
+                journal.record(cafe, "HELD-AT-D", null);
+                unchanged++;
+                continue;
+            }
+            if (TransparencyGrader.levelRequiresEvidence(cafe.getLevel()) && evidence == null) {
+                journal.record(cafe, "NEEDS-REVIEW", "was " + cafe.getLevel() + "; rendered text held no evidence");
+                unchanged++;
+                continue;
+            }
+
+            String newQuote = evidence == null ? null : evidence.quote();
+            if (proposed == cafe.getLevel() && Objects.equals(newQuote, cafe.getEvidenceQuote())) {
+                journal.record(cafe, "UNCHANGED", null);
+                unchanged++;
+                continue;
+            }
+
+            Map<String, Object> change = new LinkedHashMap<>();
+            change.put("id", cafe.getId());
+            change.put("name", cafe.getName());
+            change.put("from", cafe.getLevel().name());
+            change.put("to", proposed.name());
+            change.put("direction", proposed.compareTo(cafe.getLevel()) < 0 ? "PROMOTE"
+                    : proposed.compareTo(cafe.getLevel()) > 0 ? "DEMOTE" : "QUOTE-ONLY");
+            change.put("oldQuote", cafe.getEvidenceQuote());
+            change.put("newQuote", newQuote);
+            change.put("sourcePage", site.url());
+            change.put("via", "rendered");
+
+            // Journalled after the write, so resume can never skip an unsaved change.
+            if (!dryRun) applyRegrade(cafe, proposed, newQuote, site.url());
+            changes.add(change);
+            journal.record(change);
+        }
+
+        System.out.printf("[Rendered] %s — %d changes, %d unchanged, %d skipped%n",
+                dryRun ? "DRY RUN" : "APPLIED", changes.size(), unchanged, skipped);
+        journal.close();
+
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("dryRun", dryRun);
+        result.put("journal", journal.path());
+        result.put("examined", examined);
         result.put("changed", changes.size());
         result.put("unchanged", unchanged);
         result.put("skipped", skipped);

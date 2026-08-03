@@ -67,4 +67,39 @@ class ProposedChangesTest {
                 disagreements.size() + " published grade(s) no longer follow:\n  "
                         + String.join("\n  ", disagreements));
     }
+
+    @Test
+    @DisplayName("Both channels refuse a region that belongs to another tea")
+    void channelsAgreeOnOtherTeaRegions() {
+        String[] otherTea = {
+                "Single origin 1st spring harvested sencha green tea from Uji Kyoto",
+                "We stock a range of premium tea from Shizuoka, Mt Fuji, in leaf form from "
+                        + "Sencha, Genmaicha and Hojicha.",
+        };
+        for (String quote : otherTea) {
+            assertEquals(TransparencyLevel.C, TransparencyGrader.gradeVerifiedQuote(quote),
+                    "analyser channel: " + quote);
+            assertNull(TransparencyGrader.decide(quote, quote),
+                    "both channels together: " + quote);
+        }
+    }
+
+    @Test
+    @DisplayName("A country named for another product is not this cafe's matcha origin")
+    void countryForAnotherProductRejected() {
+        assertEquals(TransparencyLevel.C, TransparencyGrader.gradeVerifiedQuote("Origin: Japan"),
+                "a genmaicha product page states Japan for the genmaicha");
+        assertNull(TransparencyGrader.decide("Origin: Japan", "Origin: Japan"));
+    }
+
+    @Test
+    @DisplayName("A quote naming no other tea keeps its grade")
+    void soleProductQuotesUnaffected() {
+        assertEquals(TransparencyLevel.A, TransparencyGrader.gradeVerifiedQuote(
+                "Sourced from Kyoto, Japan, this first-harvest blend is crafted for those who "
+                        + "want a reliable, high-quality staple in their collection."));
+        assertEquals(TransparencyLevel.A, TransparencyGrader.gradeVerifiedQuote(
+                "Sourced across Japan, with a focus on Uji and a handful of smaller regions "
+                        + "where climate and soil create a more distinctive expression."));
+    }
 }

@@ -1,0 +1,7 @@
+{
+  "name": "matcha-renderer",
+  "private": true,
+  "type": "module",
+  "description": "Renders cafe sites in a real browser so JavaScript-built pages can be read.",
+  "dependencies": { "playwright": "^1.49.0" }
+}

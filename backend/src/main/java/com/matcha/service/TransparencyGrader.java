@@ -223,13 +223,17 @@ public final class TransparencyGrader {
         // Bibliographic text names prefectures without disclosing anything about the leaf.
         boolean academic = ACADEMIC_NOISE.matcher(quote).find();
 
-        // A named Japanese region is the strongest possible disclosure.
-        if (!academic && JAPANESE_ORIGINS.stream().anyMatch(region -> containsWord(lower, region))) {
+        // A named Japanese region is the strongest possible disclosure — unless the quote
+        // is about a different tea entirely.
+        boolean otherTeasOnly = regionClaimedByAnotherTea(quote);
+
+        if (!academic && !otherTeasOnly
+                && JAPANESE_ORIGINS.stream().anyMatch(region -> containsWord(lower, region))) {
             return TransparencyLevel.A;
         }
 
         // Region embedded in a product name: "Matcha Ujicha", "Yamecha".
-        if (!academic && COMPOUND_ORIGIN.matcher(quote).find()) {
+        if (!academic && !otherTeasOnly && COMPOUND_ORIGIN.matcher(quote).find()) {
             return TransparencyLevel.A;
         }
 
@@ -247,7 +251,14 @@ public final class TransparencyGrader {
         // sentence is defining matcha rather than sourcing it. Applied to the analyser's
         // quote as well as to extracted text: a definition is not evidence whichever
         // channel surfaced it.
-        if (namesJapan && !GENERIC_MATCHA_LORE.matcher(quote).find()) return TransparencyLevel.B;
+        // Japan must be said about matcha. "Origin: Japan" lifted off a genmaicha product
+        // page names a country for the wrong tea, and a quote that never mentions matcha
+        // cannot establish where this cafe's matcha comes from.
+        if (namesJapan
+                && MATCHA.matcher(quote).find()
+                && !GENERIC_MATCHA_LORE.matcher(quote).find()) {
+            return TransparencyLevel.B;
+        }
 
         // Names only a brand or distributor, or is pure marketing copy.
         return TransparencyLevel.C;
@@ -293,6 +304,16 @@ public final class TransparencyGrader {
      * Storefront furniture that scrapes into the text ahead of the sentence that
      * matters — shipping banners, breadcrumbs, pickup notices.
      */
+    /**
+     * The header Instagram puts above every profile — the login prompt, the handle, and
+     * the follower counts. Reading profiles in a browser is the only way to get at a bio
+     * that names a region, and this arrives welded to the front of it.
+     */
+    private static final Pattern INSTAGRAM_CHROME = Pattern.compile(
+            "^\\s*log\\s*in\\s*sign\\s*up\\s+\\S+\\s+[\\d.,]+[KkMm]?\\s+followers\\s+"
+                    + "[\\d.,]+[KkMm]?\\s+following\\s*",
+            Pattern.CASE_INSENSITIVE);
+
     private static final Pattern LEADING_CHROME = Pattern.compile(
             "^(?:\\W*\\b(?:couldn't load pickup availability|pickup availability|refresh|"
                     + "skip to (?:content|main)|learn more|free (?:express )?shipping[^.]{0,60}?|"
@@ -310,7 +331,8 @@ public final class TransparencyGrader {
     }
 
     private static String polish(String passage) {
-        String out = LEADING_CHROME.matcher(passage).replaceAll("").strip();
+        String out = INSTAGRAM_CHROME.matcher(passage).replaceAll("").strip();
+        out = LEADING_CHROME.matcher(out).replaceAll("").strip();
         // Drop a dangling partial word left by the window edge ("ow Free Express...").
         if (out.length() > 30 && out.matches("(?s)^[a-z]{1,3}\\s.*")) {
             out = out.substring(out.indexOf(' ') + 1).strip();
@@ -372,8 +394,11 @@ public final class TransparencyGrader {
      * Japan", "our Matcha ... harvested in Japan").
      */
     private static final Pattern JAPANESE_MATCHA_CLAIM = Pattern.compile(
-            // "Japanese matcha", "Japanese Organic Matcha", "Japan-grown Matcha"
-            "\\bjapan(?:ese)?(?:[-\\s]grown|[-\\s]sourced)?\\s+(?:\\w+\\s+){0,2}matcha\\b"
+            // "Japanese matcha", "Japanese Organic Matcha", "Japan-grown Matcha".
+            // A conjunction in the gap breaks the modifier: "Japanese teas and matcha"
+            // describes a tasting of Japanese teas plus matcha, not Japanese matcha.
+            "\\bjapan(?:ese)?(?:[-\\s]grown|[-\\s]sourced)?\\s+"
+                    + "(?:(?!and\\s|or\\s|with\\s)\\w+\\s+){0,2}matcha\\b"
                     // "matcha ... from Japan". Only "from" — a bare "in Japan" also covers
                     // "introducing Japanese food culture to people ... in Japan", which is a
                     // statement about an audience, not about where the leaf was grown.
@@ -420,6 +445,42 @@ public final class TransparencyGrader {
         return false;
     }
 
+    /**
+     * A quote that names another tea and never names matcha is about that other tea, and
+     * any region in it is that tea's origin.
+     *
+     * <p>The analyser-quote route to Level A trusted the analyser to have picked a matcha
+     * sourcing statement, and mostly it does. Across the full Level C sweep it also
+     * produced "Single origin 1st spring harvested sencha green tea from Uji Kyoto" and
+     * a shop listing "premium tea from Shizuoka, Mt Fuji, in leaf form from Sencha,
+     * Genmaicha and Hojicha" — both graded A on a region belonging to leaf tea. The page
+     * scan already refuses these; without the same refusal here, which grade a cafe gets
+     * depends on which channel happened to speak, and {@link #decide} prefers this one on
+     * a tie.
+     *
+     * <p>Deliberately narrow: a quote naming no other tea is left alone, so evidence like
+     * "Sourced from Kyoto, Japan, this first-harvest blend..." keeps its grade.
+     */
+    private static boolean regionClaimedByAnotherTea(String quote) {
+        return OTHER_PRODUCT.matcher(quote).find() && !MATCHA.matcher(quote).find();
+    }
+
+    /**
+     * Japanese place names that arrive attached to food rather than to tea.
+     *
+     * <p>Prefectures are famous for more than leaf. "A5 Miyazaki Steak … DESSERT MATCHA
+     * PANNA COTTA" puts a beef region within a few words of a matcha dessert, and
+     * "Gyukatsu Kyoto Katsugyu Sydney" is a restaurant's own name sitting beside a matcha
+     * cake on the same menu. Both read as a matcha origin on proximity alone. Nothing is
+     * ever co-sourced between a steak and a tea, so unlike another tea there is no
+     * coordination case to allow.
+     */
+    private static final Pattern NON_TEA_PRODUCT = Pattern.compile(
+            "\\b(?:\\w*katsu\\w*|steak|beef|wagyu|pork|chicken|ramen|udon|soba|sushi|"
+                    + "sashimi|gyoza|karaage|donburi|curry|burger|yakitori|tempura|"
+                    + "okonomiyaki|yakiniku)\\b",
+            Pattern.CASE_INSENSITIVE);
+
     /** How far from a region a matcha mention may sit and still be the thing it describes. */
     private static final int ORIGIN_PROXIMITY = 80;
 
@@ -428,6 +489,10 @@ public final class TransparencyGrader {
 
         int matcha = nearestMatch(lower, MATCHA, start, end);
         if (matcha < 0 || matcha > ORIGIN_PROXIMITY) return false;
+
+        // A dish standing closer to the place name than the matcha does owns it.
+        int dish = nearestMatch(lower, NON_TEA_PRODUCT, start, end);
+        if (dish >= 0 && dish < matcha) return false;
 
         int other = nearestMatch(lower, OTHER_PRODUCT, start, end);
         if (other < 0 || matcha <= other) return true;

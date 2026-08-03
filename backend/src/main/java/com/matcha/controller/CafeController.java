@@ -82,6 +82,24 @@ public class CafeController {
      * Every run writes a JSONL journal under data/regrade-runs, flushed per cafe, so an
      * interrupted sweep keeps its work and a dry run leaves something to audit.
      */
+    /**
+     * POST /api/cafes/regrade-rendered?dryRun=true
+     * Body: [{ "id": "...", "url": "...", "text": "..." }, ...]
+     *
+     * Grades cafes from text captured by tools/render.mjs, which opens sites in a real
+     * browser. Most sites the crawler cannot read are not refusing it — they build the
+     * page in JavaScript and serve an empty shell. The grading standard is identical to
+     * the crawler's; only the means of reading the words differs.
+     */
+    @PostMapping("/regrade-rendered")
+    public ResponseEntity<Map<String, Object>> regradeRendered(
+            @RequestBody List<CafeService.RenderedSite> sites,
+            @RequestParam(defaultValue = "true") boolean dryRun,
+            @RequestParam(defaultValue = "true") boolean analyse
+    ) {
+        return ResponseEntity.ok(cafeService.regradeFromRenderedText(sites, dryRun, analyse));
+    }
+
     @PostMapping("/regrade")
     public ResponseEntity<Map<String, Object>> regrade(
             @RequestParam(required = false) String level,

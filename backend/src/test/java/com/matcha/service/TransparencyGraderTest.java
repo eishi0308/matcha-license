@@ -22,8 +22,16 @@ class TransparencyGraderTest {
                 + "CHA HAUS - Matcha Powder 50g | 抹茶パウダー | Yame, Fukuoka 50g Regular price $38.00 AUD";
         String weakAiQuote = "Our collection includes a variety of teas sourced from different regions of Japan.";
 
-        assertEquals(TransparencyLevel.B, TransparencyGrader.gradeVerifiedQuote(weakAiQuote),
-                "the AI's quote alone only proves Japan");
+        // Not even B on its own: it places a collection of teas in Japan without saying
+        // anything about the matcha. The page scan has always read it that way, and the
+        // analyser channel now agrees rather than grading the same words one step higher.
+        assertEquals(TransparencyLevel.C, TransparencyGrader.gradeVerifiedQuote(weakAiQuote),
+                "'a variety of teas' is not a claim about this cafe's matcha");
+        assertEquals(TransparencyGrader.gradeVerifiedQuote(weakAiQuote),
+                TransparencyGrader.decide(null, weakAiQuote) == null
+                        ? TransparencyLevel.C
+                        : TransparencyGrader.decide(null, weakAiQuote).level(),
+                "both channels must reach the same verdict on the same sentence");
 
         TransparencyGrader.Evidence decided = TransparencyGrader.decide(weakAiQuote, page);
         assertNotNull(decided);

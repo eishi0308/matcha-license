@@ -38,10 +38,10 @@ const SPRING = { type: "spring" as const, stiffness: 300, damping: 28 };
 // wall — and is reported separately rather than folded in as a non-disclosure.
 const DEFAULT_DISCLOSURE = {
   total: 1147,
-  unchecked: 630,
-  nothing: 443,
-  japanOnly: 11,
-  named: 63,
+  unchecked: 476,
+  nothing: 578,
+  japanOnly: 12,
+  named: 81,
 };
 
 // Bar segments and the rows beneath share one source, in one order, so the two
@@ -873,9 +873,9 @@ function DisclosureBlock({ data }: { data: typeof DEFAULT_DISCLOSURE }) {
         where their matcha comes from.
       </p>
       <p className="mt-3" style={TYPE.caption}>
-        Of {num(total)} cafés with a page we could read, across Sydney and Melbourne.
-        A further {num(data.unchecked)} of {num(data.total)} publish no website at all,
-        so there was nothing to check.
+        Of {num(total)} cafés with a page we could check, across Sydney and Melbourne —
+        a website or a public Instagram profile. A further {num(data.unchecked)} of{" "}
+        {num(data.total)} publish neither, so there was nothing to look at.
       </p>
 
       <div
@@ -900,7 +900,7 @@ function DisclosureBlock({ data }: { data: typeof DEFAULT_DISCLOSURE }) {
             `Of ${num(total)} cafés whose pages could be read, ${num(data.nothing)} have ` +
             `nothing about origin, ${num(data.japanOnly)} say only that the matcha is Japanese, ` +
             `and ${num(data.named)} name a source and link to it. A further ` +
-            `${num(data.unchecked)} of ${num(data.total)} publish no readable page at all.`
+            `${num(data.unchecked)} of ${num(data.total)} publish no page we could check at all.`
           }
         >
           <defs>

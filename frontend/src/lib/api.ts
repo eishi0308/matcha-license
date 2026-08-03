@@ -132,14 +132,18 @@ export async function fetchStats(): Promise<{
 /**
  * Whether there is anywhere to look for a sourcing claim in the first place.
  *
- * <p>A cafe with no website, or only a social profile, has not declined to disclose its
- * origin — nobody has been able to ask. Counting those as "discloses nothing" overstates
- * the finding, since the same bucket holds cafes we checked and cafes we could not reach.
- * Instagram and Facebook are here on measured grounds: every profile the crawler tried
- * returned a login wall rather than a page.
+ * <p>A cafe with no website has not declined to disclose its origin — nobody has been
+ * able to ask. Counting those as "discloses nothing" overstates the finding, since the
+ * same bucket would hold cafes we checked and cafes we could not reach.
+ *
+ * <p>Instagram used to sit on this list, on the measured grounds that every profile the
+ * crawler tried returned a login wall. That was true of the crawler, not of Instagram:
+ * opening the same profiles in a real browser read 135 of 154 bios, and two cafes were
+ * promoted to Level A on what they said there. A profile is a place we can look, so it
+ * counts. What remains here is what stayed unreadable however it was opened, or carries
+ * no sourcing claim by construction — a delivery listing is a menu with prices.
  */
 const UNCHECKABLE_HOSTS = [
-  "instagram.com",
   "facebook.com",
   "fb.com",
   "ubereats.com",

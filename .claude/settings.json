@@ -11,7 +11,11 @@
       "Bash(python3 -c \":*)",
       "Bash(/opt/homebrew/bin/mvn spring-boot:run -q)",
       "Bash(curl -s -X POST http://localhost:8080/api/cafes/cleanup-evidence)",
-      "Read(//usr/local/**)"
+      "Read(//usr/local/**)",
+      "Bash(echo \"PATH=$PATH\")",
+      "Bash(ls /usr/local/bin/node /usr/local/bin/npm /opt/homebrew/bin/node /opt/homebrew/bin/npm ~/.nvm/versions/node/*/bin/node)",
+      "Read(//Users/Eishi/Desktop/Matcha/**)",
+      "Bash(export PATH=/usr/local/bin:$PATH)"
     ]
   }
 }

@@ -5,7 +5,27 @@
       "Bash(git add:*)",
       "Bash(git commit:*)",
       "Bash(git branch:*)",
-      "Bash(git remote:*)"
+      "Bash(git remote:*)",
+      "Bash(curl -sL \"https://commons.wikimedia.org/w/api.php?action=query&prop=imageinfo&iiprop=url&titles=File:Japanese_cup_of_matcha_during_the_tea_ceremony.jpg&format=json\")",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); pages=d[''''query''''][''''pages'''']; print\\(list\\(pages.values\\(\\)\\)[0][''''imageinfo''''][0][''''url'''']\\)\")",
+      "Bash(curl -sL -A \"Mozilla/5.0\" \"https://upload.wikimedia.org/wikipedia/commons/c/cc/Japanese_cup_of_matcha_during_the_tea_ceremony.jpg\" -o /Users/Eishi/Desktop/Matcha/frontend/public/matcha-hero.jpg -w \"HTTP: %{http_code}\\\\n\")",
+      "WebFetch(domain:www.nbcnews.com)",
+      "WebFetch(domain:www.sbs.com.au)",
+      "WebFetch(domain:perfectdailygrind.com)",
+      "WebFetch(domain:bakingbusiness.com.au)",
+      "WebFetch(domain:thetab.com)",
+      "WebFetch(domain:www.drweil.com)",
+      "WebFetch(domain:www.assurefoodsafety.com)",
+      "WebFetch(domain:www.foodsafetynews.com)",
+      "WebFetch(domain:www.myheraldreview.com)",
+      "WebFetch(domain:www.japantimes.co.jp)",
+      "WebFetch(domain:blog.btrax.com)",
+      "Bash(source ~/.nvm/nvm.sh)",
+      "Bash(. \"$NVM_DIR/nvm.sh\")",
+      "Bash(claude doctor)",
+      "Bash(npm run *)",
+      "Bash(disown)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:3000)"
     ]
   }
 }
