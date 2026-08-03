@@ -382,38 +382,67 @@ public class CafeService {
      * @param levelFilter only regrade cafes at this level, or null for all
      * @param dryRun      when true, nothing is written; the proposed changes are returned
      * @param limit       maximum cafes to process, 0 for no limit
+     * @param analyse     when true, cafes holding no quote get one from the analyser, so
+     *                    every row is judged on both evidence channels rather than on
+     *                    whichever one its level happens to have left it with
      */
-    public Map<String, Object> regrade(String levelFilter, boolean dryRun, int limit) {
-        List<Cafe> targets = cafeRepository.findAll().stream()
-                .filter(c -> levelFilter == null || levelFilter.isBlank()
-                        || c.getLevel() == TransparencyLevel.valueOf(levelFilter.toUpperCase()))
-                .sorted(Comparator.comparing(Cafe::getId))
-                .limit(limit > 0 ? limit : Long.MAX_VALUE)
-                .toList();
+    public Map<String, Object> regrade(RegradeOptions opts) {
+        Selection selection = select(opts);
+        List<Cafe> targets = selection.targets();
 
+        RegradeJournal journal = RegradeJournal.open(opts, selection);
         List<Map<String, Object>> changes = new ArrayList<>();
         int unchanged = 0, skipped = 0;
 
+        int examined = 0;
         for (Cafe cafe : targets) {
-            String url = startUrl(cafe);
-            if (url == null) { skipped++; continue; }
+            // A full sweep is hours long; without a heartbeat there is no way to tell a
+            // slow crawl from a stalled one.
+            if (++examined % 25 == 0 || examined == 1) {
+                System.out.printf("[Regrade] %d/%d — %d changes, %d unchanged, %d skipped%n",
+                        examined, targets.size(), changes.size(), unchanged, skipped);
+            }
 
-            ScraperService.ScrapeResult scraped;
+            SiteContent content;
             try {
-                scraped = scraperService.scrapeWithTracking(url);
+                content = gatherContent(cafe);
             } catch (Exception e) {
-                System.out.printf("[Regrade] Could not scrape '%s': %s%n", cafe.getName(), e.getMessage());
+                System.out.printf("[Regrade] Could not read '%s': %s%n", cafe.getName(), e.getMessage());
+                journal.record(cafe, "UNREACHABLE", e.getMessage());
                 skipped++;
                 continue;
             }
-            if (scraped == null || scraped.combinedText().isBlank()) { skipped++; continue; }
+            if (content == null || content.text().isBlank()) {
+                journal.record(cafe, "NO-CONTENT", null);
+                skipped++;
+                continue;
+            }
+
+            String url = content.startUrl();
+            ScraperService.ScrapeResult scraped =
+                    new ScraperService.ScrapeResult(content.text(), content.pageTexts());
+
+            // Both channels, for every row. A cafe demoted to C had its quote cleared, so
+            // without this the C set would be judged on the page scan alone while the B set
+            // that was regraded before it had the analyser's quote as well.
+            String aiQuote = cafe.getEvidenceQuote();
+            if (opts.analyse() && (aiQuote == null || aiQuote.isBlank())) {
+                OpenAiService.CafeAnalysis fresh =
+                        openAiService.analyze(cafe.getName(), url, content.text());
+                if (fresh != null) aiQuote = fresh.evidenceQuote();
+                System.out.printf("[Regrade] %s — analyser %s%n", cafe.getName(),
+                        fresh == null ? "unavailable"
+                                : aiQuote == null ? "found no quote"
+                                : "quoted: \"" + preview(aiQuote) + "\"");
+            }
 
             TransparencyGrader.Evidence evidence =
-                    TransparencyGrader.decide(cafe.getEvidenceQuote(), scraped.combinedText());
+                    TransparencyGrader.decide(aiQuote, content.text());
             TransparencyLevel proposed = evidence == null ? TransparencyLevel.C : evidence.level();
 
             // "Insufficient information" is not the same claim as "no disclosure".
             if (cafe.getLevel() == TransparencyLevel.D && !TransparencyGrader.levelRequiresEvidence(proposed)) {
+                journal.record(cafe, "HELD-AT-D", null);
                 unchanged++;
                 sleep(300);
                 continue;
@@ -422,7 +451,12 @@ public class CafeService {
             String newQuote = evidence == null ? null : evidence.quote();
             boolean levelSame = proposed == cafe.getLevel();
             boolean quoteSame = Objects.equals(newQuote, cafe.getEvidenceQuote());
-            if (levelSame && quoteSame) { unchanged++; sleep(300); continue; }
+            if (levelSame && quoteSame) {
+                journal.record(cafe, "UNCHANGED", null);
+                unchanged++;
+                sleep(300);
+                continue;
+            }
 
             String sourcePage = locateQuotePage(newQuote, scraped);
             Map<String, Object> change = new LinkedHashMap<>();
@@ -437,21 +471,266 @@ public class CafeService {
             change.put("sourcePage", sourcePage != null ? sourcePage : url);
             change.put("pagesScraped", scraped.pageTexts().size());
             changes.add(change);
+            journal.record(change);
 
-            if (!dryRun) applyRegrade(cafe, proposed, newQuote, sourcePage != null ? sourcePage : url);
+            if (!opts.dryRun()) applyRegrade(cafe, proposed, newQuote, sourcePage != null ? sourcePage : url);
             sleep(300);
         }
 
         System.out.printf("[Regrade] %s — %d changes, %d unchanged, %d skipped%n",
-                dryRun ? "DRY RUN" : "APPLIED", changes.size(), unchanged, skipped);
+                opts.dryRun() ? "DRY RUN" : "APPLIED", changes.size(), unchanged, skipped);
+        journal.close();
 
         Map<String, Object> result = new LinkedHashMap<>();
-        result.put("dryRun", dryRun);
+        result.put("dryRun", opts.dryRun());
+        result.put("journal", journal.path());
+        result.put("selected", selection.total());
         result.put("examined", targets.size());
+        result.put("excludedUnreachable", selection.excludedUnreachable());
+        result.put("alreadyDone", selection.alreadyDone());
         result.put("changed", changes.size());
         result.put("unchanged", unchanged);
         result.put("skipped", skipped);
         result.put("changes", changes);
+        return result;
+    }
+
+    /** Everything that decides which cafes a run touches. */
+    public record RegradeOptions(
+            String level, boolean dryRun, int limit, int offset, boolean analyse,
+            boolean sample, long seed, boolean includeUnreachable, String resumeFrom) {}
+
+    private record Selection(List<Cafe> targets, int total, int excludedUnreachable, int alreadyDone) {}
+
+    /**
+     * Choose the cafes to run against.
+     *
+     * <p>Ordering by id alone made {@code limit} useless as a sample: ids sort city-first,
+     * so the first hundred were a single contiguous Melbourne discovery batch every time.
+     * {@code sample=true} shuffles under a caller-supplied seed instead, which is both
+     * representative and reproducible — the same seed and offset return the same cafes,
+     * so a run can be repeated or extended without re-drawing the sample.
+     */
+    private Selection select(RegradeOptions opts) {
+        List<Cafe> all = cafeRepository.findAll().stream()
+                .filter(c -> opts.level() == null || opts.level().isBlank()
+                        || c.getLevel() == TransparencyLevel.valueOf(opts.level().toUpperCase()))
+                .sorted(Comparator.comparing(Cafe::getId))
+                .collect(java.util.stream.Collectors.toCollection(ArrayList::new));
+
+        int before = all.size();
+        if (!opts.includeUnreachable()) all.removeIf(this::cannotBeRead);
+        int excluded = before - all.size();
+
+        Set<String> done = readJournalIds(opts.resumeFrom());
+        int alreadyDone = 0;
+        if (!done.isEmpty()) {
+            int n = all.size();
+            all.removeIf(c -> done.contains(c.getId()));
+            alreadyDone = n - all.size();
+        }
+
+        if (opts.sample()) Collections.shuffle(all, new Random(opts.seed()));
+
+        int total = all.size();
+        List<Cafe> targets = all.stream()
+                .skip(Math.max(0, opts.offset()))
+                .limit(opts.limit() > 0 ? opts.limit() : Long.MAX_VALUE)
+                .toList();
+
+        System.out.printf("[Regrade] selected %d of %d (excluded %d unreadable, %d already journalled)%n",
+                targets.size(), before, excluded, alreadyDone);
+        return new Selection(targets, total, excluded, alreadyDone);
+    }
+
+    /**
+     * Hosts that cannot yield sourcing text however long the crawler is given: a record
+     * with nothing to fetch, a platform that serves a login wall, or a delivery listing
+     * that carries a menu but never a sourcing claim. Excluded by default so an hours-long
+     * sweep spends its time on cafes that can actually move, and counted in the result so
+     * they are reported rather than quietly folded into "no disclosure".
+     *
+     * <p>Instagram is on the list on measured grounds rather than assumed ones: across a
+     * random sample of the Level C pool, every one of 32 profiles returned nothing at all.
+     * The bio path in {@link #gatherContent} is still there and still correct — Instagram
+     * simply does not serve it to a server-side client. Pass includeUnreachable=true to
+     * try them anyway.
+     */
+    private static final List<String> UNREADABLE_HOSTS = List.of(
+            "instagram.com", "facebook.com", "fb.com",
+            "ubereats.com", "doordash.com", "menulog.com.au");
+
+    private boolean cannotBeRead(Cafe cafe) {
+        String website = cafe.getWebsite();
+        boolean noWebsite = website == null || website.isBlank();
+        boolean noInstagram = cafe.getInstagram() == null || cafe.getInstagram().isBlank();
+        if (noWebsite && noInstagram) return true;
+        if (noWebsite) return false;
+        String host = withScheme(website).toLowerCase();
+        return UNREADABLE_HOSTS.stream().anyMatch(host::contains);
+    }
+
+    /** Cafe ids already processed by an earlier run, so a resumed sweep does not repeat them. */
+    private Set<String> readJournalIds(String journalPath) {
+        if (journalPath == null || journalPath.isBlank()) return Set.of();
+        try {
+            Set<String> ids = new LinkedHashSet<>();
+            for (String line : java.nio.file.Files.readAllLines(java.nio.file.Path.of(journalPath))) {
+                if (line.isBlank()) continue;
+                com.fasterxml.jackson.databind.JsonNode n = JSON.readTree(line);
+                if (n.hasNonNull("id")) ids.add(n.get("id").asText());
+            }
+            System.out.printf("[Regrade] resuming — %d cafes already recorded in %s%n", ids.size(), journalPath);
+            return ids;
+        } catch (Exception e) {
+            System.out.printf("[Regrade] could not read journal %s: %s%n", journalPath, e.getMessage());
+            return Set.of();
+        }
+    }
+
+    private static final com.fasterxml.jackson.databind.ObjectMapper JSON =
+            new com.fasterxml.jackson.databind.ObjectMapper();
+
+    /**
+     * An append-as-you-go record of every cafe a run touched.
+     *
+     * <p>A full sweep takes hours and previously existed only as the response body of a
+     * single HTTP request: a dropped connection discarded the whole crawl, and a dry run
+     * left nothing behind to audit. Each line is flushed as it is written, so the file is
+     * complete up to the moment of any interruption and can be fed back as
+     * {@code resumeFrom}.
+     */
+    private static final class RegradeJournal {
+        private final java.io.PrintWriter out;
+        private final String path;
+
+        private RegradeJournal(java.io.PrintWriter out, String path) {
+            this.out = out;
+            this.path = path;
+        }
+
+        static RegradeJournal open(RegradeOptions opts, Selection selection) {
+            try {
+                java.nio.file.Path dir = java.nio.file.Path.of("data", "regrade-runs");
+                java.nio.file.Files.createDirectories(dir);
+                String stamp = LocalDate.now() + "-" + System.currentTimeMillis();
+                java.nio.file.Path file = dir.resolve(
+                        "regrade-" + (opts.level() == null ? "all" : opts.level().toLowerCase())
+                                + (opts.dryRun() ? "-dry" : "-applied") + "-" + stamp + ".jsonl");
+                var writer = new java.io.PrintWriter(java.nio.file.Files.newBufferedWriter(file), true);
+                RegradeJournal journal = new RegradeJournal(writer, file.toString());
+                journal.write(Map.of("event", "start", "options", opts.toString(),
+                        "selected", selection.targets().size(), "pool", selection.total()));
+                System.out.printf("[Regrade] journal: %s%n", file);
+                return journal;
+            } catch (Exception e) {
+                System.out.printf("[Regrade] journal unavailable (%s) — continuing without one%n", e.getMessage());
+                return new RegradeJournal(null, null);
+            }
+        }
+
+        void record(Cafe cafe, String outcome, String detail) {
+            Map<String, Object> row = new LinkedHashMap<>();
+            row.put("id", cafe.getId());
+            row.put("name", cafe.getName());
+            row.put("from", cafe.getLevel().name());
+            row.put("outcome", outcome);
+            if (detail != null) row.put("detail", detail);
+            write(row);
+        }
+
+        void record(Map<String, Object> change) {
+            Map<String, Object> row = new LinkedHashMap<>(change);
+            row.put("outcome", "CHANGE");
+            write(row);
+        }
+
+        private void write(Map<String, Object> row) {
+            if (out == null) return;
+            try {
+                out.println(JSON.writeValueAsString(row));
+            } catch (Exception ignored) {
+                // A journal failure must never take the crawl down with it.
+            }
+        }
+
+        void close() { if (out != null) out.close(); }
+
+        String path() { return path; }
+    }
+
+    /**
+     * Write a set of changes that has already been read and approved.
+     *
+     * <p>Re-running the sweep with {@code dryRun=false} would write a fresh set rather
+     * than the reviewed one: crawls vary between runs — a cafe whose sourcing page was
+     * reached on Tuesday may only yield its menu on Wednesday — so what lands in the
+     * database would not be what was checked. This takes the reviewed file instead.
+     *
+     * <p>Every quote is graded again on the way in and must still produce the level the
+     * file claims. A journal accumulated across several runs can hold verdicts from a
+     * build whose gates were looser, and those must not reach the site on the strength of
+     * having once been written down.
+     */
+    public Map<String, Object> applyReviewedChanges(String path, boolean dryRun) {
+        List<Map<String, Object>> applied = new ArrayList<>();
+        List<Map<String, Object>> rejected = new ArrayList<>();
+
+        List<com.fasterxml.jackson.databind.JsonNode> entries;
+        try {
+            com.fasterxml.jackson.databind.JsonNode root =
+                    JSON.readTree(java.nio.file.Files.readString(java.nio.file.Path.of(path)));
+            entries = new ArrayList<>();
+            root.forEach(entries::add);
+        } catch (Exception e) {
+            return Map.of("error", "could not read " + path + ": " + e.getMessage());
+        }
+
+        for (com.fasterxml.jackson.databind.JsonNode entry : entries) {
+            String id = entry.path("id").asText(null);
+            String quote = entry.hasNonNull("newQuote") ? entry.get("newQuote").asText() : null;
+            String claimed = entry.path("to").asText(null);
+            if (id == null || claimed == null) continue;
+
+            Map<String, Object> note = new LinkedHashMap<>();
+            note.put("id", id);
+            note.put("to", claimed);
+
+            Optional<Cafe> found = cafeRepository.findById(id);
+            if (found.isEmpty()) {
+                note.put("reason", "no such cafe");
+                rejected.add(note);
+                continue;
+            }
+
+            // The grade must follow from the quote now, not merely have followed once.
+            TransparencyGrader.Evidence evidence = TransparencyGrader.decide(null, quote);
+            TransparencyLevel derived = evidence == null ? TransparencyLevel.C : evidence.level();
+            if (!derived.name().equals(claimed)) {
+                note.put("reason", "grader now derives " + derived + " from this quote");
+                rejected.add(note);
+                continue;
+            }
+
+            Cafe cafe = found.get();
+            note.put("name", cafe.getName());
+            note.put("from", cafe.getLevel().name());
+            applied.add(note);
+            if (!dryRun) {
+                applyRegrade(cafe, derived, quote,
+                        entry.path("sourcePage").asText(cafe.getWebsite()));
+            }
+        }
+
+        System.out.printf("[Apply] %s — %d written, %d rejected%n",
+                dryRun ? "DRY RUN" : "APPLIED", applied.size(), rejected.size());
+
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("dryRun", dryRun);
+        result.put("applied", applied.size());
+        result.put("rejected", rejected.size());
+        result.put("appliedRows", applied);
+        result.put("rejectedRows", rejected);
         return result;
     }
 
@@ -467,6 +746,63 @@ public class CafeService {
         cafe.setEvidenceSourceLabel("Official Website");
         cafe.setEvidenceVerifiedDate(LocalDate.now().format(DateTimeFormatter.ofPattern("MMMM yyyy")));
         cafeRepository.save(cafe);
+    }
+
+    /** Everything readable about one cafe, and which page each part came from. */
+    private record SiteContent(String startUrl, String text, Map<String, String> pageTexts) {}
+
+    /**
+     * Read a cafe the way discovery reads one: its website <em>and</em> its Instagram bio.
+     *
+     * <p>Regrading previously took the website alone. That mattered most for the records
+     * whose website field <em>is</em> a profile link — fetching those as an ordinary page
+     * returns a login wall, so a cafe assessed at discovery through its bio was reassessed
+     * against nothing at all, then left at the level that produced.
+     */
+    private SiteContent gatherContent(Cafe cafe) {
+        Map<String, String> pageTexts = new LinkedHashMap<>();
+        StringBuilder combined = new StringBuilder();
+        String website = cafe.getWebsite();
+        boolean websiteIsProfile = website != null && scraperService.isInstagramUrl(withScheme(website));
+        String startUrl = null;
+
+        if (website != null && !website.isBlank() && !websiteIsProfile) {
+            startUrl = startUrl(cafe);
+            ScraperService.ScrapeResult scraped = scraperService.scrapeWithTracking(startUrl);
+            if (scraped != null) {
+                combined.append(scraped.combinedText());
+                pageTexts.putAll(scraped.pageTexts());
+            }
+        }
+
+        // The handle proper, or the profile that was filed as a website.
+        String handle = cafe.getInstagram();
+        if ((handle == null || handle.isBlank()) && websiteIsProfile) handle = website;
+
+        if (handle != null && !handle.isBlank()) {
+            String bio = scraperService.scrapeInstagram(handle);
+            if (bio != null && !bio.isBlank()) {
+                combined.append(' ').append(bio);
+                String profileUrl = scraperService.instagramProfileUrl(handle);
+                if (profileUrl != null) {
+                    pageTexts.put(profileUrl, bio);
+                    if (startUrl == null) startUrl = profileUrl;
+                }
+            }
+        }
+
+        if (startUrl == null) return null;
+        return new SiteContent(startUrl, combined.toString().replaceAll("\\s+", " ").strip(), pageTexts);
+    }
+
+    private String withScheme(String url) {
+        return url.startsWith("http") ? url : "https://" + url;
+    }
+
+    /** Enough of a quote to recognise it in a log without flooding the line. */
+    private String preview(String s) {
+        String flat = s.replaceAll("\\s+", " ").strip();
+        return flat.length() <= 70 ? flat : flat.substring(0, 70) + "…";
     }
 
     /**

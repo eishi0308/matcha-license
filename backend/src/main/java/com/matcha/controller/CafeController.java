@@ -59,19 +59,58 @@ public class CafeController {
     }
 
     /**
-     * POST /api/cafes/regrade?level=B&dryRun=true&limit=20
+     * POST /api/cafes/regrade?level=C&dryRun=true&limit=100&sample=true&seed=7
      *
      * Re-scrapes stored cafes and re-derives level and evidence from the live site.
      * Unlike cleanup-evidence this can promote as well as demote. Defaults to a dry
      * run so the proposed changes can be reviewed before anything is written.
+     *
+     * <p>Parameters:
+     * <ul>
+     *   <li>analyse=false suppresses the per-cafe analyser call for rows holding no
+     *       quote. Cheaper, but it grades those rows on the page scan alone — which is
+     *       not the bar the rows that kept a quote are held to.</li>
+     *   <li>sample=true draws the cafes at random under {@code seed} instead of by id.
+     *       Ids sort city-first, so limit alone returns the same Melbourne block every
+     *       time and measures that batch rather than the level.</li>
+     *   <li>offset skips forward in the selection, so a long sweep can run in chunks.</li>
+     *   <li>includeUnreachable=true keeps records with no website, and platforms that
+     *       serve no readable text; excluded by default so hours are not spent on rows
+     *       that cannot move.</li>
+     *   <li>resumeFrom=&lt;journal path&gt; skips cafes an earlier run already recorded.</li>
+     * </ul>
+     * Every run writes a JSONL journal under data/regrade-runs, flushed per cafe, so an
+     * interrupted sweep keeps its work and a dry run leaves something to audit.
      */
     @PostMapping("/regrade")
     public ResponseEntity<Map<String, Object>> regrade(
             @RequestParam(required = false) String level,
             @RequestParam(defaultValue = "true") boolean dryRun,
-            @RequestParam(defaultValue = "0") int limit
+            @RequestParam(defaultValue = "0") int limit,
+            @RequestParam(defaultValue = "0") int offset,
+            @RequestParam(defaultValue = "true") boolean analyse,
+            @RequestParam(defaultValue = "false") boolean sample,
+            @RequestParam(defaultValue = "7") long seed,
+            @RequestParam(defaultValue = "false") boolean includeUnreachable,
+            @RequestParam(required = false) String resumeFrom
     ) {
-        return ResponseEntity.ok(cafeService.regrade(level, dryRun, limit));
+        return ResponseEntity.ok(cafeService.regrade(new CafeService.RegradeOptions(
+                level, dryRun, limit, offset, analyse, sample, seed, includeUnreachable, resumeFrom)));
+    }
+
+    /**
+     * POST /api/cafes/apply-regrade?file=data/regrade-runs/final-changes.json&dryRun=false
+     *
+     * Write a reviewed set of changes. Each quote is graded again on the way in and is
+     * refused if it no longer produces the level the file claims, so a verdict recorded
+     * by an earlier, looser build cannot reach the site unexamined.
+     */
+    @PostMapping("/apply-regrade")
+    public ResponseEntity<Map<String, Object>> applyRegrade(
+            @RequestParam String file,
+            @RequestParam(defaultValue = "true") boolean dryRun
+    ) {
+        return ResponseEntity.ok(cafeService.applyReviewedChanges(file, dryRun));
     }
 
     /**

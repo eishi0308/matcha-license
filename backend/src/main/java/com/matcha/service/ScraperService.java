@@ -196,19 +196,63 @@ public class ScraperService {
         return text != null && text.toLowerCase().contains("matcha");
     }
 
+    /** The public profile URL a handle resolves to, so callers can cite it as a source. */
+    public String instagramProfileUrl(String handle) {
+        if (handle == null || handle.isBlank()) return null;
+        String username = normaliseInstagramHandle(handle);
+        return username.isBlank() ? null : "https://www.instagram.com/" + username + "/";
+    }
+
+    /**
+     * True when this URL is an Instagram profile rather than a site of the cafe's own.
+     * Stored as the website for a large share of records, where fetching it as a normal
+     * page yields a login wall — {@link #scrapeInstagram} reads the bio meta tags instead.
+     */
+    public boolean isInstagramUrl(String url) {
+        if (url == null) return false;
+        String host = extractDomain(url);
+        return host.equals("instagram.com") || host.endsWith(".instagram.com");
+    }
+
     // ── Private helpers ────────────────────────────────────────────────────────
 
+    /**
+     * Fetch a page, retrying once when the failure looks transient.
+     *
+     * <p>A sweep of the whole database issues thousands of lookups in a row, and the
+     * resolver gives out under that load long before the sites do: a full re-run once
+     * recorded 438 of 454 cafes as unreachable, every one of them an
+     * {@link java.net.UnknownHostException} for a host that resolved perfectly a minute
+     * later. Treating that as "this cafe publishes nothing" is how a network hiccup turns
+     * into a grade.
+     *
+     * <p>Only name resolution is retried. Retrying timeouts as well looked like the safer
+     * choice and was not: a slow host costs a full {@link #TIMEOUT_MS} per attempt, and
+     * with up to {@link #MAX_SUBPAGES} pages behind it a single cafe could occupy four
+     * minutes. That took the sweep from twelve seconds a cafe to nearly two hundred. A
+     * name that will not resolve fails in milliseconds, so retrying it is nearly free —
+     * and it is the failure that was actually corrupting grades.
+     */
     private Document fetchDocument(String url) {
-        try {
-            return Jsoup.connect(url)
-                    .userAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
-                    .timeout(TIMEOUT_MS)
-                    .followRedirects(true)
-                    .get();
-        } catch (Exception e) {
-            System.out.printf("[Scraper] Failed to fetch %s: %s%n", url, e.getMessage());
-            return null;
+        for (int attempt = 1; attempt <= 2; attempt++) {
+            try {
+                return Jsoup.connect(url)
+                        .userAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+                        .timeout(TIMEOUT_MS)
+                        .followRedirects(true)
+                        .get();
+            } catch (java.net.UnknownHostException e) {
+                if (attempt == 2) {
+                    System.out.printf("[Scraper] Could not resolve %s after retry%n", url);
+                    return null;
+                }
+                sleep(800);
+            } catch (Exception e) {
+                System.out.printf("[Scraper] Failed to fetch %s: %s%n", url, e.getMessage());
+                return null;
+            }
         }
+        return null;
     }
 
     /**
@@ -321,10 +365,21 @@ public class ScraperService {
         return kept.toString().strip();
     }
 
+    /**
+     * Reduce anything that identifies a profile to the bare username.
+     *
+     * <p>The scheme is optional and the query string is dropped: records store the
+     * profile as a website, and those arrive as "www.instagram.com/cafe?igsh=MTJi…",
+     * which the earlier form left intact — producing a request for a username with a
+     * share token welded onto it.
+     */
     private String normaliseInstagramHandle(String handle) {
         return handle
+                .trim()
                 .replaceAll("^@", "")
-                .replaceAll("(?i)^https?://(www\\.)?instagram\\.com/", "")
+                .replaceAll("(?i)^https?://", "")
+                .replaceAll("(?i)^(www\\.)?instagram\\.com/", "")
+                .replaceAll("[?#].*$", "")
                 .replaceAll("/$", "")
                 .trim();
     }
