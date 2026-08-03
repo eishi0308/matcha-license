@@ -25,7 +25,9 @@ import java.util.regex.Pattern;
  *   <li>Names a Japanese tea region/prefecture → A</li>
  *   <li>Region fused into a product name ("Matcha Ujicha") → A</li>
  *   <li>Names a Japanese tea producer that grew or milled the leaf → A</li>
- *   <li>Pairs a named farm/garden WITH Japan → A</li>
+ *   <li>Pairs a named farm/garden WITH Japan → A (evidence read straight off the page
+ *       must also carry a sourcing verb, since nothing has vouched for it as a
+ *       sourcing statement first)</li>
  *   <li>Says Japan but names nothing specific → B</li>
  *   <li>Anything else (incl. naming a non-Japanese distributor) → C</li>
  * </ol>
@@ -113,6 +115,26 @@ public final class TransparencyGrader {
             "\\s*[-,:]?\\s*(sencha|gyokuro|hojicha|houjicha|genmaicha|bancha|kukicha|"
                     + "kamairicha|oolong|black tea|barley|mugicha|sobacha|yuzu|"
                     + "teaware|tea ware|ware|pottery|porcelain|ceramic|bowl|whisk|chasen)\\b",
+            Pattern.CASE_INSENSITIVE);
+
+    /**
+     * Encyclopedia copy about matcha as a category, rather than a claim about the matcha
+     * this cafe pours.
+     *
+     * <p>"Matcha is a traditional Japanese green tea" names Japan and mentions matcha, and
+     * so cleared the Japan-alone route to B — but it is the opening line of every matcha
+     * explainer on the web and discloses nothing whatever about sourcing. Level B means
+     * this cafe has established its own matcha is Japanese; a definition of the drink is
+     * not that claim, and admitting it would manufacture disclosures wholesale across a
+     * bucket of cafes whose pages carry a stock matcha blurb.
+     */
+    private static final Pattern GENERIC_MATCHA_LORE = Pattern.compile(
+            "\\bmatcha\\s+(?:is|was|has\\s+been|are)\\b"
+                    + "|\\bwhat\\s+is\\s+matcha\\b"
+                    + "|\\btea\\s+ceremony\\b"
+                    + "|\\boriginat(?:ed|es|ing)\\b"
+                    + "|\\bfor\\s+centuries\\b"
+                    + "|\\bdates?\\s+back\\b",
             Pattern.CASE_INSENSITIVE);
 
     /** Language that marks a genuine sourcing statement rather than a product label. */
@@ -221,8 +243,11 @@ public final class TransparencyGrader {
             return TransparencyLevel.A;
         }
 
-        // Mentions Japan with no specifics — that is the definition of B.
-        if (namesJapan) return TransparencyLevel.B;
+        // Mentions Japan with no specifics — that is the definition of B, unless the
+        // sentence is defining matcha rather than sourcing it. Applied to the analyser's
+        // quote as well as to extracted text: a definition is not evidence whichever
+        // channel surfaced it.
+        if (namesJapan && !GENERIC_MATCHA_LORE.matcher(quote).find()) return TransparencyLevel.B;
 
         // Names only a brand or distributor, or is pure marketing copy.
         return TransparencyLevel.C;
@@ -297,12 +322,14 @@ public final class TransparencyGrader {
     /**
      * Grade a passage lifted straight from the page.
      *
-     * <p>Stricter than {@link #gradeVerifiedQuote} in one respect: the
-     * "named farm/garden + Japan" route to Level A is not available. That rule was
-     * written for a quote the analyser had already chosen as a sourcing statement;
-     * against raw page text a navigation menu reading "Single Estate Plantation …
-     * Japanese Green Teas" satisfies it while disclosing nothing. Extracted evidence
-     * must therefore name a region or a producer outright.
+     * <p>Runs the same ladder as {@link #gradeVerifiedQuote}, including the
+     * "named farm/garden + Japan" route to Level A — with one extra condition on that
+     * route only. An analyser-supplied quote arrives having already been chosen as a
+     * sourcing statement; a passage cut from raw page text has not, and a navigation
+     * menu reading "Single Estate Plantation … Japanese Green Teas" satisfies
+     * facility-plus-Japan while disclosing nothing. Requiring a sourcing verb in the
+     * same passage restores the guarantee the analyser was providing, so both routes
+     * to A now rest on the same evidence rather than on which channel found it.
      */
     private static TransparencyLevel gradeExtractedPassage(String passage) {
         if (ACADEMIC_NOISE.matcher(passage).find()) return TransparencyLevel.C;
@@ -310,14 +337,70 @@ public final class TransparencyGrader {
 
         if (namesRegionForMatcha(passage)) return TransparencyLevel.A;
         if (JAPANESE_PRODUCER.matcher(passage).find()) return TransparencyLevel.A;
-        if (JAPAN.matcher(passage).find()) return TransparencyLevel.B;
+
+        boolean namesJapan = JAPAN.matcher(passage).find();
+        if (namesJapan
+                && NAMED_FACILITY.matcher(passage).find()
+                && SOURCING_VERB.matcher(passage).find()) {
+            return TransparencyLevel.A;
+        }
+
+        // Japan must be attached to the matcha, not merely present on the page.
+        if (namesJapan
+                && !GENERIC_MATCHA_LORE.matcher(passage).find()
+                && claimsJapaneseMatcha(passage)) {
+            return TransparencyLevel.B;
+        }
         return TransparencyLevel.C;
     }
 
     /**
-     * True when the passage names a Japanese region that is not claimed by a different
-     * product. A region immediately followed by another tea or a piece of teaware
-     * belongs to that item, so it only counts when at least one mention stands free.
+     * Japan tied to the cafe's own matcha, rather than to its décor, its cuisine or its
+     * navigation menu.
+     *
+     * <p>Level B previously followed from any matcha-bearing passage that mentioned Japan
+     * anywhere in it. Across a full sweep of the Level C bucket that admitted, among
+     * others: "Japanese-inspired cafe menu, coffee, matcha and more", "Tokyo vibes,
+     * premium Matcha, Japanese sweets", "seasonal creations inspired by Japan's quiet
+     * beauty", "Japanese refinement meets Italian classic tradition", and a tea shop's
+     * navigation bar listing every variety it stocks. None of them says where the matcha
+     * came from, and "Japanese-inspired" says almost the opposite.
+     *
+     * <p>What the published Level B records actually look like is narrower: the word
+     * Japanese modifying matcha directly ("Japanese Organic Matcha", "Japan-grown
+     * Matcha"), or matcha linked to Japan by a verb of supply ("matcha ... imported from
+     * Japan", "our Matcha ... harvested in Japan").
+     */
+    private static final Pattern JAPANESE_MATCHA_CLAIM = Pattern.compile(
+            // "Japanese matcha", "Japanese Organic Matcha", "Japan-grown Matcha"
+            "\\bjapan(?:ese)?(?:[-\\s]grown|[-\\s]sourced)?\\s+(?:\\w+\\s+){0,2}matcha\\b"
+                    // "matcha ... from Japan". Only "from" — a bare "in Japan" also covers
+                    // "introducing Japanese food culture to people ... in Japan", which is a
+                    // statement about an audience, not about where the leaf was grown.
+                    + "|\\bmatcha\\b[^.!?]{0,90}?\\bfrom\\s+japan\\b"
+                    // "matcha, grown in Japan" with the verb ahead of the country
+                    + "|\\bmatcha\\b[^.!?]{0,90}?\\b(?:sourced|grown|harvested|imported|milled|"
+                    + "produced|shipped|cultivated)\\b[^.!?]{0,30}?\\bjapan\\b",
+            Pattern.CASE_INSENSITIVE);
+
+    private static boolean claimsJapaneseMatcha(String passage) {
+        return JAPANESE_MATCHA_CLAIM.matcher(passage).find();
+    }
+
+    /**
+     * True when the passage names a Japanese region that belongs to the matcha rather than
+     * to something else on the page.
+     *
+     * <p>Checking only the words immediately after the region was not enough. A tea list
+     * reading "premium tea from Shizuoka, Mt Fuji, in leaf form from Sencha, Genmaicha and
+     * Hojicha" states a region for the leaf teas while the matcha paragraph above it names
+     * no origin at all, and "single origin sencha green tea from Uji Kyoto" puts the other
+     * tea in front of the region rather than behind it. Both read as Level A evidence under
+     * an after-only test.
+     *
+     * <p>So the region must sit near a mention of matcha, and matcha must be the nearest
+     * product to it — unless the two are named together ("our matcha and hojicha travel
+     * from Kyoto"), where the origin is being claimed for both.
      */
     private static boolean namesRegionForMatcha(String passage) {
         String lower = passage.toLowerCase(Locale.ROOT);
@@ -325,14 +408,58 @@ public final class TransparencyGrader {
         for (String region : JAPANESE_ORIGINS) {
             var m = Pattern.compile("\\b" + Pattern.quote(region) + "\\b").matcher(lower);
             while (m.find()) {
-                if (!claimedByOtherProduct(passage, m.end())) return true;
+                if (regionBelongsToMatcha(passage, lower, m.start(), m.end())) return true;
             }
         }
         var c = COMPOUND_ORIGIN.matcher(passage);
         while (c.find()) {
+            // The region is fused into the product name itself ("Matcha Ujicha"), so there
+            // is no neighbouring product it could belong to instead.
             if (!claimedByOtherProduct(passage, c.end())) return true;
         }
         return false;
+    }
+
+    /** How far from a region a matcha mention may sit and still be the thing it describes. */
+    private static final int ORIGIN_PROXIMITY = 80;
+
+    private static boolean regionBelongsToMatcha(String passage, String lower, int start, int end) {
+        if (claimedByOtherProduct(passage, end)) return false;
+
+        int matcha = nearestMatch(lower, MATCHA, start, end);
+        if (matcha < 0 || matcha > ORIGIN_PROXIMITY) return false;
+
+        int other = nearestMatch(lower, OTHER_PRODUCT, start, end);
+        if (other < 0 || matcha <= other) return true;
+
+        // The nearer product may simply be listed alongside the matcha, in which case the
+        // origin covers both: "our matcha and hojicha", "matcha, sencha and gyokuro".
+        return namedTogetherWithMatcha(lower);
+    }
+
+    /** Distance from the region to the closest match of {@code what}, or -1 if absent. */
+    private static int nearestMatch(String lower, Pattern what, int start, int end) {
+        int best = -1;
+        var m = what.matcher(lower);
+        while (m.find()) {
+            int distance = m.end() <= start ? start - m.end()
+                    : m.start() >= end ? m.start() - end
+                    : 0;
+            if (best < 0 || distance < best) best = distance;
+        }
+        return best;
+    }
+
+    /** Matcha and another tea joined in one list, so a stated origin covers both. */
+    private static final Pattern COORDINATED_WITH_MATCHA = Pattern.compile(
+            "\\bmatcha\\b\\s*(?:,|and|&|/)\\s*(?:\\w+\\s+){0,2}"
+                    + "(?:sencha|gyokuro|hojicha|houjicha|genmaicha|bancha|kukicha)\\b"
+                    + "|(?:sencha|gyokuro|hojicha|houjicha|genmaicha|bancha|kukicha)\\b"
+                    + "\\s*(?:,|and|&|/)\\s*(?:\\w+\\s+){0,2}\\bmatcha\\b",
+            Pattern.CASE_INSENSITIVE);
+
+    private static boolean namedTogetherWithMatcha(String lower) {
+        return COORDINATED_WITH_MATCHA.matcher(lower).find();
     }
 
     /**

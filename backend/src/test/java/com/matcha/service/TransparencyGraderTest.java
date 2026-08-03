@@ -239,4 +239,44 @@ class TransparencyGraderTest {
         assertEquals(TransparencyLevel.A, TransparencyGrader.grade(null, "our matcha comes from Uji"),
                 "the page proves Uji whether or not the analyser quoted it");
     }
+
+    // ── One ladder for both channels ──────────────────────────────────────────
+    // A cafe holding a stored quote was graded on a different rule set from one
+    // holding none: the farm+Japan route to A existed only for the quote. Levels C
+    // and B were regraded on opposite sides of that split, so the same sentence
+    // could yield A on one row and B on another.
+
+    @Test
+    @DisplayName("The farm+Japan route reaches A from page text too, not only from a quote")
+    void facilityRouteReachableFromPageText() {
+        String sentence = "Our matcha is grown on a single family farm in Japan and milled the week it ships.";
+
+        assertEquals(TransparencyLevel.A, TransparencyGrader.gradeVerifiedQuote(sentence),
+                "quote channel");
+        assertEquals(TransparencyLevel.A, TransparencyGrader.decide(null, sentence).level(),
+                "text channel must reach the same level on the same words");
+    }
+
+    @Test
+    @DisplayName("Without a sourcing verb the facility route still cannot fire on raw page text")
+    void facilityRouteNeedsSourcingVerbInPageText() {
+        String menu = "Japanese Green Teas Single Estate Plantation Matcha Sencha Gyokuro Accessories";
+
+        TransparencyGrader.Evidence e = TransparencyGrader.decide(null, menu);
+        assertTrue(e == null || e.level() != TransparencyLevel.A,
+                "a menu listing 'Estate' and 'Japanese' states no sourcing; got: " + e);
+    }
+
+    @Test
+    @DisplayName("A cafe with no stored quote grades the same as one whose quote says the same thing")
+    void bothChannelsAgreeOnTheSamePage() {
+        String page = "We serve matcha sourced from our own tea garden in Japan, harvested each May.";
+
+        TransparencyGrader.Evidence withQuote = TransparencyGrader.decide(page, page);
+        TransparencyGrader.Evidence withoutQuote = TransparencyGrader.decide(null, page);
+
+        assertNotNull(withoutQuote);
+        assertEquals(withQuote.level(), withoutQuote.level(),
+                "the grade must not depend on whether a quote happened to be stored");
+    }
 }
