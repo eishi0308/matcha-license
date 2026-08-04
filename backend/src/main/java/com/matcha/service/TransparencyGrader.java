@@ -247,16 +247,16 @@ public final class TransparencyGrader {
             return TransparencyLevel.A;
         }
 
-        // Mentions Japan with no specifics — that is the definition of B, unless the
-        // sentence is defining matcha rather than sourcing it. Applied to the analyser's
-        // quote as well as to extracted text: a definition is not evidence whichever
-        // channel surfaced it.
-        // Japan must be said about matcha. "Origin: Japan" lifted off a genmaicha product
-        // page names a country for the wrong tea, and a quote that never mentions matcha
-        // cannot establish where this cafe's matcha comes from.
+        // Japan named, nothing more specific — Level B, on exactly the terms the page scan
+        // uses. The country has to be said about the matcha: "Origin: Japan" lifted off a
+        // genmaicha product page names it for the wrong tea, and "premium Japanese Green
+        // Tea blended with Matcha powder" describes a blend whose Japanese half is the
+        // green tea. Both cleared this route while the page scan refused them, which is
+        // the same split, in the same place, that {@link #claimsJapaneseMatcha} was written
+        // to close on the other side.
         if (namesJapan
-                && MATCHA.matcher(quote).find()
-                && !GENERIC_MATCHA_LORE.matcher(quote).find()) {
+                && !GENERIC_MATCHA_LORE.matcher(quote).find()
+                && claimsJapaneseMatcha(quote)) {
             return TransparencyLevel.B;
         }
 

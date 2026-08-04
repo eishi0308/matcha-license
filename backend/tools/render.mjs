@@ -25,12 +25,30 @@ if (!inputPath || !outputPath) {
 const CONCURRENCY = Number(concurrencyArg) || 4;
 const PAGE_TIMEOUT = 20_000;
 const SETTLE_MS = 1_200;
-const MAX_SUBPAGES = 4;
+const MAX_SUBPAGES = 10;
 
-// The pages a sourcing statement actually lives on, in the order worth trying. Mirrors
-// the ranking the Java crawler uses so both channels look in the same places.
-const WORTH_VISITING =
-  /(about|story|our-story|matcha|menu|drinks|tea|sourcing|origin|product|shop|collections)/i;
+/**
+ * How likely a link is to lead to a sourcing statement.
+ *
+ * Four pages taken in document order was too few and in the wrong order. Tea Drop states
+ * "shade-grown ... in Kagoshima Prefecture" on an individual product page, several links
+ * down a shop index — the crawl never reached it, and the cafe stayed at Level C until the
+ * page was fetched by hand. Ranking by what the URL promises, rather than where it happens
+ * to sit in the navigation, puts the pages that carry origin claims first.
+ */
+function linkScore(href) {
+  const u = href.toLowerCase();
+  let score = 0;
+  if (/(sourcing|origin|provenance|farm|grower|supplier)/.test(u)) score += 10;
+  if (/(matcha|tencha|gyokuro)/.test(u)) score += 8;
+  if (/(about|our-story|story|philosophy|who-we-are)/.test(u)) score += 6;
+  if (/(product|products|collections|shop)/.test(u)) score += 4;
+  if (/(menu|drinks|tea|beverage)/.test(u)) score += 3;
+  if (/(blog|news|journal)/.test(u)) score += 1;
+  // Deep product pages carry the specifics; index pages carry the names.
+  if (/\/products\/[a-z0-9-]{4,}/.test(u)) score += 5;
+  return score;
+}
 
 const SKIP = /(mailto:|tel:|\.pdf|\.jpg|\.png|\.webp|instagram\.com|facebook\.com|#)/i;
 
@@ -96,8 +114,12 @@ async function readSite(browser, { id, url }) {
       Array.from(document.querySelectorAll("a[href]")).map((a) => a.href)
     );
     const candidates = [...new Set(links)]
-      .filter((href) => href.startsWith(origin) && !SKIP.test(href) && WORTH_VISITING.test(href))
-      .slice(0, MAX_SUBPAGES);
+      .filter((href) => href.startsWith(origin) && !SKIP.test(href))
+      .map((href) => ({ href, score: linkScore(href) }))
+      .filter((c) => c.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, MAX_SUBPAGES)
+      .map((c) => c.href);
 
     for (const href of candidates) {
       if (visited.has(href)) continue;
