@@ -136,20 +136,16 @@ export async function fetchStats(): Promise<{
  * able to ask. Counting those as "discloses nothing" overstates the finding, since the
  * same bucket would hold cafes we checked and cafes we could not reach.
  *
- * <p>Instagram used to sit on this list, on the measured grounds that every profile the
- * crawler tried returned a login wall. That was true of the crawler, not of Instagram:
- * opening the same profiles in a real browser read 135 of 154 bios, and two cafes were
- * promoted to Level A on what they said there. A profile is a place we can look, so it
- * counts. What remains here is what stayed unreadable however it was opened, or carries
- * no sourcing claim by construction — a delivery listing is a menu with prices.
+ * <p>Instagram and Facebook both used to sit on this list, on the measured grounds that
+ * every profile the crawler tried returned a login wall. That was true of the crawler and
+ * not of the platforms: opened in a real browser, 135 of 154 Instagram bios read, and all
+ * 44 Facebook pages did. Cafes were promoted to Level A on what they said there. A page we
+ * can open is a place we can look, so it counts.
+ *
+ * <p>What remains is what carries no sourcing claim by construction: a delivery listing is
+ * a menu with prices, and no cafe has ever stated a tea's origin on one.
  */
-const UNCHECKABLE_HOSTS = [
-  "facebook.com",
-  "fb.com",
-  "ubereats.com",
-  "doordash.com",
-  "menulog.com.au",
-];
+const UNCHECKABLE_HOSTS = ["ubereats.com", "doordash.com", "menulog.com.au"];
 
 export function hasCheckableSource(website: string | null | undefined): boolean {
   if (!website || !website.trim()) return false;
