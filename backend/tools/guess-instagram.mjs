@@ -129,6 +129,35 @@ async function readProfile(page, handle, attempt = 1) {
 const PRIVATE = /this (profile|account) is private/i;
 
 /**
+ * Something in the bio that says this account sells food or drink.
+ *
+ * <p>A cafe name is not unique to cafes. "Haus Espresso" in Richmond matched @hausrichmond
+ * — a gym, "Elite fitness, focused work & world-class recovery under one roof" — and
+ * "La Petite Tour" matched a French clothing label, "Vente de vêtements à la classe
+ * française". Both agreed on the name and the suburb and were still the wrong business.
+ * Every record in this dataset is a cafe, so a profile that never mentions anything
+ * edible is not the one being looked for.
+ */
+const FOOD_SIGNAL = new RegExp(
+  "\\b(cafe|café|coffee|espresso|matcha|tea|latte|brew|roast\\w*|bakery|baked|pastry|"
+    + "patisserie|dessert\\w*|sweets|cake\\w*|bread|kitchen|restaurant|dining|eatery|menu|"
+    + "brunch|breakfast|lunch|milktea|boba|gelato|ice cream|mochi|donut\\w*|waffle\\w*|"
+    + "sushi|ramen|noodle\\w*|pho|drinks?)\\b",
+  "i"
+);
+
+/**
+ * Suburbs short enough or common enough to match by accident.
+ *
+ * <p>One record carries the literal string "and" in its suburb column. Three characters
+ * clears a length check, and "and" appears in almost every bio ever written — it matched
+ * "matcha and milkshake" and attributed a stranger's account to a cafe.
+ */
+const UNUSABLE_SUBURB = new Set([
+  "and", "the", "of", "in", "at", "st", "rd", "ave", "n/a", "na", "null", "none",
+]);
+
+/**
  * The words the cafe wrote, with Instagram's own furniture removed.
  *
  * <p>Matching against the raw page was circular and produced nonsense. Instagram echoes
@@ -171,9 +200,14 @@ export function attribution(cafe, profileText, handle) {
   const bioText = extractBio(profileText, handle);
   if (bioText.length < 12) return { ok: false, why: "profile has no readable bio" };
 
+  if (!FOOD_SIGNAL.test(bioText)) {
+    return { ok: false, why: "profile is not a food or drink business" };
+  }
+
   const bio = fold(bioText);
   const tokens = nameTokens(cafe.name);
-  const suburb = words(cafe.suburb).join(" ");
+  const rawSuburb = words(cafe.suburb).join(" ");
+  const suburb = UNUSABLE_SUBURB.has(rawSuburb) || rawSuburb.length < 4 ? "" : rawSuburb;
 
   const named = tokens.filter((t) => bio.includes(t));
   if (named.length === 0) return { ok: false, why: "profile does not name this business" };
