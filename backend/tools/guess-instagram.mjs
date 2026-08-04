@@ -21,6 +21,7 @@
  */
 import { chromium } from "playwright";
 import { readFileSync, appendFileSync, existsSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 
 const [, , inputPath, outputPath, concurrencyArg] = process.argv;
 const CONCURRENCY = Number(concurrencyArg) || 4;
@@ -125,22 +126,88 @@ async function readProfile(page, handle, attempt = 1) {
  * suburb out of their bio are missed; that is the correct way to be wrong, because the
  * alternative is publishing a stranger's sourcing claim under this cafe's name.
  */
-function attribution(cafe, profileText) {
+const PRIVATE = /this (profile|account) is private/i;
+
+/**
+ * The words the cafe wrote, with Instagram's own furniture removed.
+ *
+ * <p>Matching against the raw page was circular and produced nonsense. Instagram echoes
+ * the handle back in its boilerplate — "Already follow sticksnstraws? Log in to see their
+ * photos" — and the handle was generated from the cafe's name, so the name "appeared in
+ * the profile" for accounts that had no bio at all. Every private profile matched itself.
+ * The footer ("Meta About Blog Jobs Help API Privacy Terms Locations…") supplied more
+ * stray vocabulary on top.
+ *
+ * <p>So: cut the header, cut everything from the post list or footer onward, and delete
+ * the handle itself. What remains is what the account holder typed.
+ */
+export function extractBio(profileText, handle) {
+  let t = profileText
+    .replace(/^\s*Log In Sign Up\s*/i, "")
+    .replace(/^\s*See everyday moments.*?Log into Instagram\s*/i, "");
+
+  for (const marker of [
+    "Show more posts from",
+    "Meta About Blog Jobs",
+    "Already follow",
+    "Related accounts",
+  ]) {
+    const at = t.indexOf(marker);
+    if (at > 0) t = t.slice(0, at);
+  }
+
+  return t
+    .replace(new RegExp(handle.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi"), " ")
+    .replace(/[\d.,]+[KkMm]?\s*(followers|following|posts)/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+export function attribution(cafe, profileText, handle) {
   if (!profileText || MISSING.test(profileText)) return { ok: false, why: "no such profile" };
   if (LOGIN_WALL.test(profileText)) return { ok: false, why: "blocked by login wall", blocked: true };
+  if (PRIVATE.test(profileText)) return { ok: false, why: "profile is private — nothing to verify against" };
 
-  const bio = fold(profileText);
+  const bioText = extractBio(profileText, handle);
+  if (bioText.length < 12) return { ok: false, why: "profile has no readable bio" };
+
+  const bio = fold(bioText);
   const tokens = nameTokens(cafe.name);
   const suburb = words(cafe.suburb).join(" ");
 
   const named = tokens.filter((t) => bio.includes(t));
   if (named.length === 0) return { ok: false, why: "profile does not name this business" };
-  if (!suburb || suburb.length < 3) return { ok: false, why: "no suburb on record to confirm against" };
-  if (!bio.includes(suburb)) return { ok: false, why: `profile is not in ${cafe.suburb}` };
 
-  return { ok: true, why: `bio names the business and places it in ${cafe.suburb}` };
+  // A suburb that is just the city name proves nothing: every Melbourne business says
+  // Melbourne, which is how a personal account reading "Resident of Melbourne Australia, a
+  // Father, a Scotch lover" came back as a gelato shop.
+  const suburbIsCity = suburb === fold(cafe.city);
+  if (suburb.length >= 3 && !suburbIsCity && bio.includes(suburb)) {
+    return { ok: true, why: `bio names the business and places it in ${cafe.suburb}` };
+  }
+
+  // A bio with no address at all is common — @forknpath gives opening hours and its coffee
+  // roaster and never says Northcote. Two distinct words of the business name, both found
+  // in the profile's own text, carry it instead. Checked against the bio and not the
+  // handle: the handle was built from the name, so matching it proves nothing. "Boom Boom
+  // Tea" reduces to one distinct word and so cannot reach this bar, which is why
+  // @boomboomalbury stays rejected.
+  if (tokens.length >= 2 && named.length === tokens.length) {
+    return { ok: true, why: "profile text carries the whole business name" };
+  }
+
+  return {
+    ok: false,
+    why: suburb.length < 3
+      ? "no usable suburb, and the name is not distinctive enough alone"
+      : `bio does not place it in ${cafe.suburb}, and the name only partly matches`,
+  };
 }
 
+// The attribution rules are importable on their own, so they can be replayed against
+// stored profile text without going near Instagram. Only crawl when run directly.
+const runDirectly = process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1];
+if (runDirectly) {
 const all = JSON.parse(readFileSync(inputPath, "utf8"));
 const done = new Set();
 if (existsSync(outputPath)) {
@@ -154,6 +221,21 @@ console.error(`${all.length} cafes, ${done.size} already tried, ${queue.length} 
 const browser = await chromium.launch();
 let index = 0;
 let found = 0;
+
+/**
+ * Instagram tolerates a steady trickle and shuts the door on a burst — and once it does,
+ * every profile reads as a login wall, so a run that keeps going records hundreds of real
+ * accounts as absent. Consecutive walls are treated as the signal they are: back off until
+ * pages start rendering again, rather than spending the rest of the queue on nothing.
+ */
+let consecutiveWalls = 0;
+async function respectRateLimit(page) {
+  if (consecutiveWalls < 6) return;
+  const pause = Math.min(300, 60 * Math.ceil(consecutiveWalls / 6));
+  console.error(`  ${consecutiveWalls} walls in a row — pausing ${pause}s`);
+  await page.waitForTimeout(pause * 1000);
+  consecutiveWalls = 0;
+}
 
 async function worker() {
   const ctx = await browser.newContext({
@@ -182,9 +264,14 @@ async function worker() {
         } catch {
           continue;
         }
-        const verdict = attribution(cafe, text);
+        const verdict = attribution(cafe, text, handle);
         tried.push(`${handle}: ${verdict.why}`);
-        if (verdict.blocked) row.blocked = (row.blocked || 0) + 1;
+        if (verdict.blocked) {
+          row.blocked = (row.blocked || 0) + 1;
+          consecutiveWalls++;
+        } else {
+          consecutiveWalls = 0;
+        }
         if (verdict.ok) {
           row.handle = handle;
           row.text = text;
@@ -196,6 +283,8 @@ async function worker() {
       row.error = String(e.message || e).slice(0, 120);
     }
     row.tried = tried.slice(-6);
+    await respectRateLimit(page);
+    await page.waitForTimeout(1500); // a steady trickle, not a burst
     if (row.handle) found++;
     appendFileSync(outputPath, JSON.stringify(row) + "\n");
     if (at % 20 === 0 || at === queue.length) {
@@ -208,3 +297,4 @@ async function worker() {
 await Promise.all(Array.from({ length: CONCURRENCY }, worker));
 await browser.close();
 console.error(`done: ${found} of ${queue.length} cafes matched to a profile`);
+}
