@@ -32,16 +32,17 @@ const SPRING = { type: "spring" as const, stiffness: 300, damping: 28 };
 // `nothing` folds C and D together: from a reader's point of view both mean the
 // site disclosed no origin, and the A/B/C/D letters are not introduced this early
 // on the page.
-// `total` is every cafe found; `nothing` counts only those with a page that could
-// actually be read, so the rate below is over cafes whose sourcing was checkable.
-// `unchecked` is the rest — no website, or only a social profile that serves a login
-// wall — and is reported separately rather than folded in as a non-disclosure.
+// `total` is every cafe found. The rate below is quoted over the cafes whose page was
+// actually read, not the cafes that merely list a link — of those that list one, a
+// quarter sit behind a login and a further share no longer resolve. `unchecked` is
+// everything we could not read, reported on its own rather than folded in as a
+// non-disclosure, because "we could not ask" is not the same finding as "they do not say".
 const DEFAULT_DISCLOSURE = {
   total: 1147,
-  unchecked: 432,
-  nothing: 617,
-  japanOnly: 13,
-  named: 85,
+  unchecked: 559,
+  nothing: 488,
+  japanOnly: 14,
+  named: 86,
 };
 
 // Bar segments and the rows beneath share one source, in one order, so the two
@@ -873,9 +874,10 @@ function DisclosureBlock({ data }: { data: typeof DEFAULT_DISCLOSURE }) {
         where their matcha comes from.
       </p>
       <p className="mt-3" style={TYPE.caption}>
-        Of {num(total)} cafés with a page we could check, across Sydney and Melbourne —
-        a website or a public social page. A further {num(data.unchecked)} of{" "}
-        {num(data.total)} publish neither, so there was nothing to look at.
+        Of {num(total)} cafés whose website or social page we were able to read, across
+        Sydney and Melbourne. For the other {num(data.unchecked)} of {num(data.total)}{" "}
+        there was nothing to read — no page listed, a profile behind a login, or a site
+        that no longer loads — so they are left uncounted rather than counted as silent.
       </p>
 
       <div
@@ -900,7 +902,8 @@ function DisclosureBlock({ data }: { data: typeof DEFAULT_DISCLOSURE }) {
             `Of ${num(total)} cafés whose pages could be read, ${num(data.nothing)} have ` +
             `nothing about origin, ${num(data.japanOnly)} say only that the matcha is Japanese, ` +
             `and ${num(data.named)} name a source and link to it. A further ` +
-            `${num(data.unchecked)} of ${num(data.total)} publish no page we could check at all.`
+            `For a further ${num(data.unchecked)} of ${num(data.total)} there was no page ` +
+            `we could read, so they are not counted either way.`
           }
         >
           <defs>

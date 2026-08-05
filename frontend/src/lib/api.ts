@@ -1,5 +1,6 @@
 import { supabase } from "./supabase";
 import { Cafe } from "@/data/cafes";
+import coverage from "./crawl-coverage.json";
 
 function rowToCafe(row: Record<string, unknown>): Cafe {
   const evidence =
@@ -109,20 +110,24 @@ export async function fetchStats(): Promise<{
   const byLevel: Record<string, number> = { A: 0, B: 0, C: 0, D: 0 };
   let sydney = 0;
   let melbourne = 0;
-  let unassessable = 0;
 
   for (const row of allRows) {
     byLevel[row.level] = (byLevel[row.level] ?? 0) + 1;
     if (row.city === "Sydney") sydney++;
     if (row.city === "Melbourne") melbourne++;
-    if (!hasCheckableSource(row.website)) unassessable++;
   }
+
+  // Holding a link is not the same as having been read, and the gap is large: of the
+  // cafes listing a website or a profile, a quarter sat behind a login and a further
+  // share no longer resolve at all. Counting those as checked inflates the base the
+  // disclosure rate is quoted over, so the measured figure is used instead.
+  const assessable = Math.min(coverage.read, allRows.length);
 
   return {
     total: allRows.length,
     byLevel,
-    assessable: allRows.length - unassessable,
-    unassessable,
+    assessable,
+    unassessable: allRows.length - assessable,
     sydney,
     melbourne,
     discovering: false,
@@ -130,7 +135,11 @@ export async function fetchStats(): Promise<{
 }
 
 /**
- * Whether there is anywhere to look for a sourcing claim in the first place.
+ * Whether this cafe lists anywhere to look at all.
+ *
+ * <p>Kept for filtering, not for counting. The disclosure rate is quoted over
+ * crawl-coverage.json — what was actually read — because listing a link and having that
+ * link yield a page turned out to be very different things.
  *
  * <p>A cafe with no website has not declined to disclose its origin — nobody has been
  * able to ask. Counting those as "discloses nothing" overstates the finding, since the

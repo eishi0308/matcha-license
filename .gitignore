@@ -42,3 +42,4 @@ frontend/tsconfig.tsbuildinfo
 
 backend/tools/offset.json
 backend/tools/ddg.mjs
+backend/tools/verify-attribution.mjs.log
