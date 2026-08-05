@@ -48,8 +48,9 @@ const DEFAULT_DISCLOSURE = {
 // Bar segments and the rows beneath share one source, in one order, so the two
 // can never disagree.
 // Emphasis palette — one hue plus gray. The two classes that disclose something
-// carry the hue; the 96% that disclose nothing recede into gray, because the
-// finding is how few disclose, not how many do not.
+// carry the hue; the large majority that disclose nothing recede into gray, because
+// the finding is how few disclose, not how many do not. Kept unquantified here so the
+// comment cannot drift from the live counts the way a hardcoded share would.
 //
 // The two meaning-bearing steps are a green and a teal, far enough apart to
 // survive the common CVD types. The gray is deliberately below the chroma floor
@@ -710,7 +711,7 @@ const DONUT_EASE = "cubic-bezier(.25,.8,.3,1)";
 const ACCENT = "#639922";
 
 // Draw order is not reading order. The green sliver goes down first so the eye
-// anchors on the 4% before the grey floods the frame; the rows below still read
+// anchors on the disclosing sliver before the grey floods the frame; the rows still read
 // largest-first, the way the sentence does.
 const ARC_ORDER = ["named", "japanOnly", "nothing"] as const;
 
