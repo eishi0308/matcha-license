@@ -74,6 +74,10 @@ for (const cafe of cafes) {
     read++;
     continue;
   }
+  // Later journals supersede earlier ones: a retry that got through proves the cafe was
+  // never absent, only throttled at the time, and a run that reads a page settles it
+  // outright. Treating a stale "blocked" as final would keep reporting cafes as unreachable
+  // after they had been reached.
   let state = "couldNotFetch";
   for (const journal of journals) {
     const row = journal.get(cafe.id);
@@ -82,7 +86,7 @@ for (const cafe of cafes) {
       state = "read";
       break;
     }
-    if (row.blocked) state = "blockedByLogin";
+    state = row.blocked ? "blockedByLogin" : "couldNotFetch";
   }
   if (state === "read") read++;
   else if (state === "blockedByLogin") blockedByLogin++;
