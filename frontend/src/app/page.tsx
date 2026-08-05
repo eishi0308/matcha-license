@@ -57,7 +57,12 @@ const DEFAULT_DISCLOSURE = {
 // — it is de-emphasis, not a category — and its sub-3:1 contrast is relieved by
 // the labelled rows beside it, which carry every value in text.
 // `named` draws as a gradient in the ring, so its hex is the swatch fallback.
+// `unchecked` is not a finding and is styled so it cannot be mistaken for one: no fill,
+// only an outline, because an empty band reads as absence where a solid one reads as a
+// result. It is on the ring at all because a ring drawn over 588 of 1,147 cafes silently
+// asserts the other 559 do not exist.
 const DISCLOSURE_ROWS = [
+  { key: "unchecked" as const, label: "No page we could read",     color: "transparent" },
   { key: "nothing" as const,   label: "Nothing found",             color: "var(--text-muted)" },
   { key: "japanOnly" as const, label: "“Japanese matcha” only",    color: "#4FB99A" },
   { key: "named" as const,     label: "Named source, with a link", color: "#4d7c1a" },
@@ -713,13 +718,14 @@ const ACCENT = "#639922";
 // Draw order is not reading order. The green sliver goes down first so the eye
 // anchors on the disclosing sliver before the grey floods the frame; the rows still read
 // largest-first, the way the sentence does.
-const ARC_ORDER = ["named", "japanOnly", "nothing"] as const;
+const ARC_ORDER = ["named", "japanOnly", "nothing", "unchecked"] as const;
 
 // Per-arc entrance. Each arc grows its own dash from nothing.
 const ARC_MOTION: Record<string, { duration: number; delay: number }> = {
   named:     { duration: 0.55, delay: 0.12 },
   japanOnly: { duration: 0.45, delay: 0.38 },
   nothing:   { duration: 1.10, delay: 0.55 },
+  unchecked: { duration: 1.10, delay: 0.95 },
 };
 
 // What the centre reads while a row is hovered — its own count, plus a caption
@@ -728,6 +734,7 @@ const CENTRE_CAPTION: Record<string, string> = {
   nothing:   "found nothing",
   japanOnly: "say only “Japanese”",
   named:     "name a source",
+  unchecked: "had no page to read",
 };
 
 /** True once the node has scrolled into view. Fires on first intersection only. */
@@ -799,11 +806,15 @@ function DisclosureBlock({ data }: { data: typeof DEFAULT_DISCLOSURE }) {
   // The ring and the rate are over cafes that could be checked. A cafe with no page
   // to read has not withheld its origin — it was never asked — and counting it as a
   // non-disclosure would attribute silence to the cafe that belongs to the method.
-  const total = data.nothing + data.japanOnly + data.named || 1;
+  // Two bases, and they are not interchangeable. The ring and its rows cover every cafe
+  // found, so nothing is left off the drawing. The rate above it is over the cafes that
+  // could actually be read, because a cafe nobody could ask has not declined to answer.
+  const checked = data.nothing + data.japanOnly + data.named || 1;
+  const everyCafe = checked + data.unchecked;
   const rows = DISCLOSURE_ROWS.map((r) => ({
     ...r,
     count: data[r.key],
-    pct: (data[r.key] / total) * 100,
+    pct: (data[r.key] / everyCafe) * 100,
   }));
   const get = (key: string) => rows.find((r) => r.key === key)!;
 
@@ -811,7 +822,7 @@ function DisclosureBlock({ data }: { data: typeof DEFAULT_DISCLOSURE }) {
   // Leads on how few disclose rather than how many don't: the scarcity is the
   // point, and a small number carries it better than a large one.
   const disclosing = data.japanOnly + data.named;
-  const disclosePct = Math.round((disclosing / total) * 100);
+  const disclosePct = Math.round((disclosing / checked) * 100);
 
   const num = (n: number) => n.toLocaleString("en-AU");
 
@@ -830,7 +841,7 @@ function DisclosureBlock({ data }: { data: typeof DEFAULT_DISCLOSURE }) {
   let cursor = 0;
   const arcs = ARC_ORDER.map((key) => {
     const row = get(key);
-    const len = (row.count / total) * CIRC;
+    const len = (row.count / everyCafe) * CIRC;
     const offset = -cursor;
     cursor += len;
     return { key, row, len, offset, ...ARC_MOTION[key] };
@@ -875,7 +886,7 @@ function DisclosureBlock({ data }: { data: typeof DEFAULT_DISCLOSURE }) {
         where their matcha comes from.
       </p>
       <p className="mt-3" style={TYPE.caption}>
-        Of {num(total)} cafés whose website or social page we were able to read, across
+        Of {num(checked)} cafés whose website or social page we were able to read, across
         Sydney and Melbourne. For the other {num(data.unchecked)} of {num(data.total)}{" "}
         there was nothing to read — no page listed, a profile behind a login, or a site
         that no longer loads — so they are left uncounted rather than counted as silent.
@@ -900,11 +911,11 @@ function DisclosureBlock({ data }: { data: typeof DEFAULT_DISCLOSURE }) {
           style={{ maxWidth: "100%", height: "auto" }}
           role="img"
           aria-label={
-            `Of ${num(total)} cafés whose pages could be read, ${num(data.nothing)} have ` +
+            `Of ${num(checked)} cafés whose pages could be read, ${num(data.nothing)} have ` +
             `nothing about origin, ${num(data.japanOnly)} say only that the matcha is Japanese, ` +
-            `and ${num(data.named)} name a source and link to it. A further ` +
-            `For a further ${num(data.unchecked)} of ${num(data.total)} there was no page ` +
-            `we could read, so they are not counted either way.`
+            `and ${num(data.named)} name a source and link to it. The ring also carries ` +
+            `${num(data.unchecked)} cafés with no page we could read, drawn as an outline ` +
+            `because they are uncounted rather than silent, for ${num(everyCafe)} in total.`
           }
         >
           <defs>
@@ -935,8 +946,18 @@ function DisclosureBlock({ data }: { data: typeof DEFAULT_DISCLOSURE }) {
                   cy={DONUT.cy}
                   r={DONUT.r}
                   fill="none"
-                  stroke={a.key === "named" ? "url(#arcNamed)" : a.row.color}
-                  strokeWidth={hovered === a.key ? 26 : DONUT.stroke}
+                  stroke={
+                    a.key === "named"
+                      ? "url(#arcNamed)"
+                      // Absence gets a hairline, not a band: an unfilled span reads as
+                      // "no reading taken" where a filled one would read as a result.
+                      : a.key === "unchecked"
+                        ? "var(--border-strong)"
+                        : a.row.color
+                  }
+                  strokeWidth={
+                    a.key === "unchecked" ? 1.5 : hovered === a.key ? 26 : DONUT.stroke
+                  }
                   strokeLinecap="butt"
                   strokeDasharray={drawn ? `${a.len} ${CIRC}` : `0 ${CIRC}`}
                   strokeDashoffset={a.offset}
@@ -945,7 +966,7 @@ function DisclosureBlock({ data }: { data: typeof DEFAULT_DISCLOSURE }) {
                   style={{
                     // The grey is de-emphasis, not a category — no gradient, no
                     // glow, and it sits back at a third of its own weight.
-                    opacity: dim ? 0.08 : a.key === "nothing" ? 0.3 : 1,
+                    opacity: dim ? 0.08 : a.key === "nothing" ? 0.3 : a.key === "unchecked" ? 0.55 : 1,
                     filter:
                       a.key === "named"
                         ? "drop-shadow(0 0 5px rgba(99,153,34,.45))"
@@ -986,7 +1007,7 @@ function DisclosureBlock({ data }: { data: typeof DEFAULT_DISCLOSURE }) {
                 line out to a label of its own. */}
             {active
               ? CENTRE_CAPTION[active.key]
-              : `${num(disclosing)} of ${num(total)}`}
+              : `${num(disclosing)} of ${num(checked)}`}
           </text>
         </svg>
 
