@@ -66,12 +66,12 @@ export default function Navbar() {
               <Leaf size={15} className="text-white" />
             </motion.div>
             <div className="flex flex-col leading-none">
-              <span className="font-semibold text-sm tracking-tight transition-colors duration-300"
+              <span className="font-semibold text-[16px] tracking-tight transition-colors duration-300"
                 style={{ color: light ? "#fff" : "#1a1a1a" }}
               >
                 MatchaScope
               </span>
-              <span className="text-[10px] tracking-widest uppercase font-medium transition-colors duration-300"
+              <span className="text-[16px] tracking-widest uppercase font-medium transition-colors duration-300"
                 style={{ color: light ? "rgba(255,255,255,0.65)" : "#6eb35c" }}
               >
                 Transparency Map
@@ -85,7 +85,7 @@ export default function Navbar() {
               <motion.div key={href} className="relative" initial="rest" whileHover="hover" animate="rest">
                 <Link
                   href={href}
-                  className="flex items-center gap-1.5 text-sm font-medium py-1 transition-colors duration-300"
+                  className="flex items-center gap-1.5 text-[16px] font-medium py-1 transition-colors duration-300"
                   style={{ color: light ? "rgba(255,255,255,0.85)" : "#374151" }}
                 >
                   <Icon size={15} />{label}
@@ -104,7 +104,7 @@ export default function Navbar() {
           <div className="hidden md:flex items-center gap-2.5">
             <motion.button
               onClick={openLogin}
-              className="px-4 py-2 rounded-full text-sm font-medium transition-colors duration-300"
+              className="px-4 py-2 rounded-full text-[16px] font-medium transition-colors duration-300"
               style={{ color: light ? "rgba(255,255,255,0.9)" : "#374151" }}
               whileHover={{ scale: 1.04 }}
               whileTap={{ scale: 0.96 }}
@@ -113,7 +113,7 @@ export default function Navbar() {
             </motion.button>
             <motion.button
               onClick={openSignup}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold text-white"
+              className="flex items-center gap-1.5 px-4 py-2 rounded-full text-[16px] font-semibold text-white"
               style={{
                 background: "linear-gradient(135deg, #2e6027, #4d9740)",
                 boxShadow: "0 2px 12px rgba(46,96,39,0.35)",
@@ -176,7 +176,7 @@ export default function Navbar() {
                     key={href}
                     href={href}
                     onClick={() => setMobileMenuOpen(false)}
-                    className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 active:bg-gray-100 transition-colors"
+                    className="flex items-center gap-3 px-3 py-3 rounded-xl text-[16px] font-medium text-gray-700 hover:bg-gray-50 active:bg-gray-100 transition-colors"
                   >
                     <Icon size={16} className="text-matcha-600" />
                     {label}
@@ -187,13 +187,13 @@ export default function Navbar() {
               <div className="pt-3 mt-2 border-t border-gray-100 flex gap-2">
                 <button
                   onClick={() => { openLogin(); setMobileMenuOpen(false); }}
-                  className="flex-1 py-2.5 rounded-xl text-sm font-medium text-gray-700 border border-gray-200 hover:bg-gray-50 active:bg-gray-100 transition-colors"
+                  className="flex-1 py-2.5 rounded-xl text-[16px] font-medium text-gray-700 border border-gray-200 hover:bg-gray-50 active:bg-gray-100 transition-colors"
                 >
                   Sign in
                 </button>
                 <button
                   onClick={() => { openSignup(); setMobileMenuOpen(false); }}
-                  className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white"
+                  className="flex-1 py-2.5 rounded-xl text-[16px] font-semibold text-white"
                   style={{ background: "linear-gradient(135deg, #2e6027, #4d9740)" }}
                 >
                   Get started

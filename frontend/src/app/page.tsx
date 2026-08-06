@@ -278,12 +278,12 @@ function FactList({ items }: { items: typeof PROBLEM_FACTS }) {
           transition={{ duration: 0.55, delay: i * 0.09, ease: EASE_EXPO }}
         >
           <span
-            className="text-[10px] font-semibold tracking-[0.25em] tabular-nums"
+            className="text-[16px] font-semibold tracking-[0.25em] tabular-nums"
             style={{ color: "#4d9740" }}
           >
             {num}
           </span>
-          <p className="text-[15px] font-semibold text-gray-800 leading-snug">{phrase}</p>
+          <p className="text-[16px] font-semibold text-gray-800 leading-snug">{phrase}</p>
         </motion.div>
       ))}
     </div>
@@ -315,21 +315,21 @@ function ComparisonCard() {
         <div style={{ background: "#f9f9f9" }}>
           <div className="px-7 pt-7 pb-6">
             <div className="flex items-center justify-between mb-4">
-              <span className="text-[9px] uppercase tracking-[0.22em] font-semibold" style={{ color: "#9ca3af" }}>
+              <span className="text-[16px] uppercase tracking-[0.22em] font-semibold" style={{ color: "#9ca3af" }}>
                 Without Origin Disclosure
               </span>
-              <span className="text-[10px] font-bold px-2.5 py-1 rounded-full" style={{ background: "#fef2f2", color: "#dc2626" }}>
+              <span className="text-[16px] font-bold px-2.5 py-1 rounded-full" style={{ background: "#fef2f2", color: "#dc2626" }}>
                 Level C
               </span>
             </div>
-            <p className="text-sm leading-relaxed italic mb-5" style={{ color: "#9ca3af" }}>
+            <p className="text-[16px] leading-relaxed italic mb-5" style={{ color: "#9ca3af" }}>
               "Premium authentic Japanese matcha, ceremonial grade experience crafted with care and passion..."
             </p>
             <div className="space-y-2.5">
               {["No source URL provided", "Country of origin not stated", "Cannot be independently verified"].map((t) => (
                 <div key={t} className="flex items-center gap-2.5">
-                  <span className="text-[11px]" style={{ color: "#fca5a5" }}>✕</span>
-                  <span className="text-[12px]" style={{ color: "#d1d5db" }}>{t}</span>
+                  <span className="text-[16px]" style={{ color: "#fca5a5" }}>✕</span>
+                  <span className="text-[16px]" style={{ color: "#d1d5db" }}>{t}</span>
                 </div>
               ))}
             </div>
@@ -360,23 +360,23 @@ function ComparisonCard() {
         >
           <div className="px-7 pt-6 pb-7">
             <div className="flex items-center justify-between mb-4">
-              <span className="text-[9px] uppercase tracking-[0.22em] text-matcha-700 font-semibold">
+              <span className="text-[16px] uppercase tracking-[0.22em] text-matcha-700 font-semibold">
                 With Origin Disclosure
               </span>
-              <span className="text-[10px] font-bold px-2.5 py-1 rounded-full" style={{ background: "#e6f4e0", color: "#2e6027" }}>
+              <span className="text-[16px] font-bold px-2.5 py-1 rounded-full" style={{ background: "#e6f4e0", color: "#2e6027" }}>
                 Level A
               </span>
             </div>
             <div className="rounded-xl p-4 mb-5" style={{ background: "#f2f8f0", borderLeft: "3px solid #4d9740" }}>
-              <p className="text-[13px] leading-relaxed italic text-gray-700">
+              <p className="text-[16px] leading-relaxed italic text-gray-700">
                 "Our matcha is sourced exclusively from Uji, Kyoto. Each tin includes the harvest date and garden name."
               </p>
             </div>
             <div className="flex items-center justify-between pt-4" style={{ borderTop: "1px solid rgba(0,0,0,0.06)" }}>
-              <div className="flex items-center gap-1.5 text-[11px] font-semibold text-matcha-700">
+              <div className="flex items-center gap-1.5 text-[16px] font-semibold text-matcha-700">
                 <CheckCircle2 size={12} />Official Website
               </div>
-              <span className="text-[10px] text-gray-400">Verified Jun 2026</span>
+              <span className="text-[16px] text-gray-400">Verified Jun 2026</span>
             </div>
           </div>
         </motion.div>
@@ -384,7 +384,7 @@ function ComparisonCard() {
 
       {/* Floating verify badge */}
       <motion.div
-        className="absolute -right-3 -bottom-4 flex items-center gap-2 px-4 py-2 rounded-full bg-white text-[11px] font-semibold text-matcha-700"
+        className="absolute -right-3 -bottom-4 flex items-center gap-2 px-4 py-2 rounded-full bg-white text-[16px] font-semibold text-matcha-700"
         style={{ boxShadow: "0 8px 28px rgba(46,96,39,0.18), 0 2px 8px rgba(0,0,0,0.07)", border: "1px solid #b3dda6" }}
         initial={{ opacity: 0, scale: 0.8 }}
         animate={inView ? { opacity: 1, scale: 1 } : {}}
@@ -427,10 +427,10 @@ function MenuEvidenceCard() {
       >
         <div className="px-10 pt-9 pb-10 rounded-2xl overflow-hidden relative" style={{ border: "1px solid rgba(0,0,0,0.07)" }}>
           <div className="flex items-center justify-between mb-7">
-            <span className="text-[12px] uppercase tracking-[0.22em] font-semibold" style={{ color: "#b3ada0" }}>
+            <span className="text-[16px] uppercase tracking-[0.22em] font-semibold" style={{ color: "#b3ada0" }}>
               Menu — Beverages
             </span>
-            <span className="text-[12px] font-semibold" style={{ color: "#d4cfc3" }}>
+            <span className="text-[16px] font-semibold" style={{ color: "#d4cfc3" }}>
               Sydney, AU
             </span>
           </div>
@@ -468,7 +468,7 @@ function MenuEvidenceCard() {
             ))}
           </div>
 
-          <p className="text-[14px] leading-relaxed mt-7 italic" style={{ color: "#c7c1b5" }}>
+          <p className="text-[16px] leading-relaxed mt-7 italic" style={{ color: "#c7c1b5" }}>
             Iced or hot · oat milk available
           </p>
         </div>
@@ -499,7 +499,7 @@ function MenuEvidenceCard() {
 
       <motion.p
         className="text-center mt-10"
-        style={{ fontSize: "0.9rem", color: "rgba(255,255,255,0.3)" }}
+        style={{ fontSize: "16px", color: "rgba(255,255,255,0.3)" }}
         initial={{ opacity: 0 }}
         animate={inView ? { opacity: 1 } : {}}
         transition={{ duration: 0.6, delay: 2.0 }}
@@ -561,7 +561,7 @@ function ChainStep({ item, isLast }: { item: typeof PROBLEM_FACTS[number]; isLas
         animate={inView ? { opacity: 1, x: 0 } : {}}
         transition={{ duration: 0.55, delay: 0.12, ease: EASE_EXPO }}
       >
-        <span className="block text-[10px] font-bold uppercase tracking-[0.25em] mb-2" style={{ color: "#6abf5e" }}>
+        <span className="block text-[16px] font-bold uppercase tracking-[0.25em] mb-2" style={{ color: "#6abf5e" }}>
           {item.tag}
         </span>
         <p
@@ -602,7 +602,7 @@ function HarmCard({ card, index }: { card: typeof HARM_CARDS[number]; index: num
             transition={{ duration: 1.1, delay: 0.15 }}
           />
         </motion.div>
-        <span className="text-[11px] font-bold uppercase tracking-[0.25em]" style={{ color: "#6abf5e" }}>
+        <span className="text-[16px] font-bold uppercase tracking-[0.25em]" style={{ color: "#6abf5e" }}>
           {String(index).padStart(2, "0")} — {card.label}
         </span>
       </div>
@@ -617,7 +617,7 @@ function HarmCard({ card, index }: { card: typeof HARM_CARDS[number]; index: num
           href={card.sourceUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-1.5 mt-5 text-sm font-semibold"
+          className="inline-flex items-center gap-1.5 mt-5 text-[16px] font-semibold"
           style={{ color: "#7dd56f", textDecoration: "none" }}
           whileHover={{ x: 4 }}
           transition={{ duration: 0.18 }}
@@ -657,8 +657,8 @@ function PressRow({ card }: { card: typeof PRESS_CARDS[number] }) {
         {/* Content */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1.5">
-            {card.flag && <span className="text-sm leading-none">{card.flag}</span>}
-            <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">{card.source}</span>
+            {card.flag && <span className="text-[16px] leading-none">{card.flag}</span>}
+            <span className="text-[16px] font-semibold text-gray-400 uppercase tracking-wide">{card.source}</span>
           </div>
           <h3 className="font-semibold text-gray-900 leading-snug" style={{ fontSize: "clamp(1rem, 2.5vw, 1.2rem)" }}>
             &ldquo;{card.headline}&rdquo;
@@ -683,14 +683,14 @@ function PressRow({ card }: { card: typeof PRESS_CARDS[number] }) {
         className="overflow-hidden"
       >
         <div className="pb-8 pl-16 sm:pl-[4.75rem] pr-4">
-          <p className="text-[15px] text-gray-500 leading-relaxed mb-5 max-w-2xl">
+          <p className="text-[16px] text-gray-500 leading-relaxed mb-5 max-w-2xl">
             {card.quote}
           </p>
           <motion.a
             href={card.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 text-sm font-semibold"
+            className="inline-flex items-center gap-2 text-[16px] font-semibold"
             style={{ color: card.accent, textDecoration: "none" }}
             whileHover={{ x: 4 }}
             transition={{ duration: 0.18 }}
@@ -1082,7 +1082,7 @@ function DisclosureBlock({ data }: { data: typeof DEFAULT_DISCLOSURE }) {
 function SectionLabel({ icon: Icon, text }: { icon: React.ElementType; text: string }) {
   return (
     <Reveal>
-      <span className="inline-flex items-center gap-2 text-matcha-700 text-[11px] font-bold tracking-[0.22em] uppercase mb-5">
+      <span className="inline-flex items-center gap-2 text-matcha-700 text-[16px] font-bold tracking-[0.22em] uppercase mb-5">
         <Icon size={10} />{text}
       </span>
     </Reveal>
@@ -1138,7 +1138,7 @@ export default function HomePage() {
               className="inline-flex items-center px-5 py-2 rounded-full"
               style={{ background: "#e8ede8", border: "1px solid #d0ddd0" }}
             >
-              <span className="text-[11px] font-semibold tracking-[0.2em] uppercase" style={{ color: "#5a7a58" }}>
+              <span className="text-[16px] font-semibold tracking-[0.2em] uppercase" style={{ color: "#5a7a58" }}>
                 Sydney & Melbourne
               </span>
             </motion.div>
@@ -1216,7 +1216,7 @@ export default function HomePage() {
             transition={{ duration: 0.65, delay: 2.0, ease: EASE_EXPO }}
           >
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.96 }}>
-              <Link href="/map" className="inline-flex items-center gap-2.5 px-8 py-3.5 rounded-full font-semibold text-white text-sm"
+              <Link href="/map" className="inline-flex items-center gap-2.5 px-8 py-3.5 rounded-full font-semibold text-white text-[16px]"
                 style={{ background: "#3d6b35" }}
               >
                 Explore the map <ArrowRight size={14} />
@@ -1239,7 +1239,7 @@ export default function HomePage() {
               transition={{ duration: 0.6, ease: EASE }}
             >
               <div style={{ width: 40, height: 1, background: "#2e6027" }} />
-              <span className="uppercase tracking-[0.2em] font-semibold" style={{ fontSize: "0.7rem", color: "#2e6027" }}>
+              <span className="uppercase tracking-[0.2em] font-semibold" style={{ fontSize: "16px", color: "#2e6027" }}>
                 How it works
               </span>
               <div style={{ width: 40, height: 1, background: "#2e6027" }} />
@@ -1310,7 +1310,7 @@ export default function HomePage() {
             >
               <span
                 className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full uppercase tracking-[0.22em] font-semibold"
-                style={{ fontSize: "0.65rem", color: "#6abf5e", background: "rgba(77,151,64,0.1)", border: "1px solid rgba(77,151,64,0.2)" }}
+                style={{ fontSize: "16px", color: "#6abf5e", background: "rgba(77,151,64,0.1)", border: "1px solid rgba(77,151,64,0.2)" }}
               >
                 <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#6abf5e" }} />
                 The Problem
@@ -1375,7 +1375,7 @@ export default function HomePage() {
             <div className="text-center mb-16 sm:mb-20">
               <span
                 className="block uppercase tracking-[0.22em] font-semibold mb-5"
-                style={{ fontSize: "0.65rem", color: "#7dd56f" }}
+                style={{ fontSize: "16px", color: "#7dd56f" }}
               >
                 Who Pays For The Silence
               </span>
@@ -1401,7 +1401,7 @@ export default function HomePage() {
           <div className="flex flex-col items-center justify-center px-1 pb-24 sm:pb-36 lg:pb-44">
             <span
               className="uppercase tracking-[0.22em] font-semibold mb-6"
-              style={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.4)" }}
+              style={{ fontSize: "16px", color: "rgba(255,255,255,0.4)" }}
             >
               What we check for
             </span>
@@ -1419,7 +1419,7 @@ export default function HomePage() {
           <Reveal>
             <div className="flex items-center justify-center gap-3 mb-6">
               <div style={{ width: 40, height: 1, background: "#d1d5db" }} />
-              <span className="uppercase tracking-[0.22em] font-semibold" style={{ fontSize: "0.65rem", color: "#9ca3af" }}>
+              <span className="uppercase tracking-[0.22em] font-semibold" style={{ fontSize: "16px", color: "#9ca3af" }}>
                 As reported by
               </span>
               <div style={{ width: 40, height: 1, background: "#d1d5db" }} />
@@ -1462,7 +1462,7 @@ export default function HomePage() {
             <Reveal>
               <div className="flex items-center justify-center gap-3 mb-10">
                 <div style={{ width: 40, height: 1, background: "#2e6027" }} />
-                <span className="uppercase tracking-[0.22em] font-semibold" style={{ fontSize: "0.65rem", color: "#2e6027" }}>
+                <span className="uppercase tracking-[0.22em] font-semibold" style={{ fontSize: "16px", color: "#2e6027" }}>
                   Classification System
                 </span>
                 <div style={{ width: 40, height: 1, background: "#2e6027" }} />
@@ -1480,7 +1480,7 @@ export default function HomePage() {
               <div className="flex justify-center">
                 <span
                   className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full font-semibold"
-                  style={{ fontSize: "0.78rem", color: "#2e6027", background: "rgba(46,96,39,0.08)", border: "1px solid rgba(46,96,39,0.18)" }}
+                  style={{ fontSize: "16px", color: "#2e6027", background: "rgba(46,96,39,0.08)", border: "1px solid rgba(46,96,39,0.18)" }}
                 >
                   <CheckCircle2 size={13} strokeWidth={2.5} />
                   Publicly verifiable evidence only — never taste, never guesswork
@@ -1521,7 +1521,7 @@ export default function HomePage() {
                         </span>
                         <div>
                           <div
-                            className="text-[10px] font-bold tracking-[0.2em] uppercase mb-1.5"
+                            className="text-[16px] font-bold tracking-[0.2em] uppercase mb-1.5"
                             style={{ color: card.onDark ? "rgba(255,255,255,0.78)" : card.accent, opacity: card.onDark ? 1 : 0.7 }}
                           >
                             Level {card.level}
@@ -1544,7 +1544,7 @@ export default function HomePage() {
                     {/* Description */}
                     <p
                       className="leading-relaxed"
-                      style={{ fontSize: "clamp(0.95rem, 1.8vw, 1.1rem)", color: card.onDark ? "rgba(255,255,255,0.82)" : "#6b7280" }}
+                      style={{ fontSize: "clamp(1rem, 1.8vw, 1.1rem)", color: card.onDark ? "rgba(255,255,255,0.82)" : "#6b7280" }}
                     >
                       {card.desc}
                     </p>
@@ -1567,7 +1567,7 @@ export default function HomePage() {
                 <p className="font-bold text-gray-900 mb-2" style={{ fontSize: "clamp(1.05rem, 2vw, 1.25rem)" }}>
                   Legal commitment: We never say &ldquo;fake&rdquo; or &ldquo;bad&rdquo;.
                 </p>
-                <p className="text-gray-500 leading-relaxed" style={{ fontSize: "clamp(0.95rem, 1.8vw, 1.1rem)" }}>
+                <p className="text-gray-500 leading-relaxed" style={{ fontSize: "clamp(1rem, 1.8vw, 1.1rem)" }}>
                   We only report what cafes publicly disclose — or don&apos;t. &ldquo;No disclosure found&rdquo; is a factual observation, not an accusation. Every classification can be independently verified.
                 </p>
               </div>
@@ -1586,7 +1586,7 @@ export default function HomePage() {
             <Reveal>
               <div className="flex items-center justify-center gap-3 mb-10">
                 <div style={{ width: 40, height: 1, background: "#2e6027" }} />
-                <span className="uppercase tracking-[0.22em] font-semibold" style={{ fontSize: "0.65rem", color: "#2e6027" }}>
+                <span className="uppercase tracking-[0.22em] font-semibold" style={{ fontSize: "16px", color: "#2e6027" }}>
                   Process
                 </span>
                 <div style={{ width: 40, height: 1, background: "#2e6027" }} />
@@ -1640,7 +1640,7 @@ export default function HomePage() {
                     <div className={`pb-16 sm:pb-20 ${isLast ? "pb-0 sm:pb-0" : ""}`}>
                       <span
                         className="font-bold tabular-nums block mb-3"
-                        style={{ fontSize: "clamp(0.7rem, 1.2vw, 0.8rem)", color: "#2e6027", letterSpacing: "0.15em" }}
+                        style={{ fontSize: "clamp(1rem, 1.2vw, 1.05rem)", color: "#2e6027", letterSpacing: "0.15em" }}
                       >
                         STEP {item.step}
                       </span>
@@ -1694,7 +1694,7 @@ export default function HomePage() {
                 animate={{ scale: [1, 1.7, 1], opacity: [1, 0.45, 1] }}
                 transition={{ duration: 2.2, repeat: Infinity }}
               />
-              <span className="text-white/55 text-[11px] font-medium tracking-[0.18em] uppercase">
+              <span className="text-white/55 text-[16px] font-medium tracking-[0.18em] uppercase">
                 Real Evidence · From Our Database
               </span>
             </motion.div>
@@ -1737,7 +1737,7 @@ export default function HomePage() {
                       animate={{ opacity: [0.7, 1, 0.7] }}
                       transition={{ duration: 2.8, repeat: Infinity }}
                     />
-                    <span className="text-[11px]" style={{ color: "rgba(255,255,255,0.28)" }}>matcha-origin.com/map</span>
+                    <span className="text-[16px]" style={{ color: "rgba(255,255,255,0.28)" }}>matcha-origin.com/map</span>
                   </div>
                 </div>
                 <div className="w-16" />
@@ -1766,10 +1766,10 @@ export default function HomePage() {
                         {/* Cafe header */}
                         <div className="flex items-start justify-between gap-2 mb-4">
                           <div>
-                            <div className="font-semibold text-[14px] text-gray-900 leading-tight">{card.cafe}</div>
-                            <div className="text-[11px] text-gray-400 mt-0.5">{card.suburb}</div>
+                            <div className="font-semibold text-[16px] text-gray-900 leading-tight">{card.cafe}</div>
+                            <div className="text-[16px] text-gray-400 mt-0.5">{card.suburb}</div>
                           </div>
-                          <span className="text-[10px] font-bold px-2.5 py-1 rounded-full shrink-0 mt-0.5"
+                          <span className="text-[16px] font-bold px-2.5 py-1 rounded-full shrink-0 mt-0.5"
                             style={{ background: card.badgeBg, color: card.accent }}
                           >
                             Level {card.level}
@@ -1779,14 +1779,14 @@ export default function HomePage() {
                         {/* Quote or no-disclosure */}
                         {card.quote ? (
                           <div className="rounded-lg p-3.5 mb-4" style={{ background: card.badgeBg, borderLeft: `3px solid ${card.accent}` }}>
-                            <p className="text-[12px] leading-relaxed italic text-gray-700">"{card.quote}"</p>
+                            <p className="text-[16px] leading-relaxed italic text-gray-700">"{card.quote}"</p>
                           </div>
                         ) : (
                           <div className="rounded-lg p-3.5 mb-4 flex items-start gap-2.5"
                             style={{ background: "#f9fafb", border: "1px dashed #e5e7eb" }}
                           >
-                            <span className="text-[13px] text-gray-300 mt-px leading-none">—</span>
-                            <p className="text-[12px] text-gray-400 italic leading-relaxed">
+                            <span className="text-[16px] text-gray-300 mt-px leading-none">—</span>
+                            <p className="text-[16px] text-gray-400 italic leading-relaxed">
                               No sourcing information found on any public channel.
                             </p>
                           </div>
@@ -1797,11 +1797,11 @@ export default function HomePage() {
                           style={{ borderTop: "1px solid rgba(0,0,0,0.06)" }}
                         >
                           <div>
-                            <div className="text-[10px] font-medium text-gray-500 leading-tight">{card.source}</div>
-                            <div className="text-[10px] text-gray-400 mt-0.5">Verified {card.date}</div>
+                            <div className="text-[16px] font-medium text-gray-500 leading-tight">{card.source}</div>
+                            <div className="text-[16px] text-gray-400 mt-0.5">Verified {card.date}</div>
                           </div>
                           {card.level !== "C" && (
-                            <span className="text-[10px] font-semibold flex items-center gap-1" style={{ color: card.accent }}>
+                            <span className="text-[16px] font-semibold flex items-center gap-1" style={{ color: card.accent }}>
                               <CheckCircle2 size={11} />Evidence found
                             </span>
                           )}
@@ -1818,7 +1818,7 @@ export default function HomePage() {
           <div className="flex flex-col items-center gap-5 mt-10">
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.96 }}>
               <Link href="/map"
-                className="inline-flex items-center gap-2.5 px-8 py-3.5 rounded-full font-semibold text-white text-sm"
+                className="inline-flex items-center gap-2.5 px-8 py-3.5 rounded-full font-semibold text-white text-[16px]"
                 style={{
                   background: "linear-gradient(135deg, #2d6025, #5aab47)",
                   boxShadow: "0 0 48px rgba(90,171,71,0.38), 0 4px 24px rgba(0,0,0,0.35)",
@@ -1827,7 +1827,7 @@ export default function HomePage() {
                 <Map size={15} />Explore all {disclosure.total}+ cafes<ArrowRight size={13} />
               </Link>
             </motion.div>
-            <p className="text-[11px] text-center" style={{ color: "rgba(255,255,255,0.2)" }}>
+            <p className="text-[16px] text-center" style={{ color: "rgba(255,255,255,0.2)" }}>
               Illustrative examples based on our classification format. Visit the map for live verified data.
             </p>
           </div>
@@ -1871,14 +1871,14 @@ export default function HomePage() {
 
               <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.96 }}>
-                  <Link href="/map" className="inline-flex items-center gap-2.5 px-8 py-4 rounded-full font-semibold text-sm text-white"
+                  <Link href="/map" className="inline-flex items-center gap-2.5 px-8 py-4 rounded-full font-semibold text-[16px] text-white"
                     style={{ background: "linear-gradient(135deg, #3a7a30, #6eb35c)", boxShadow: "0 0 44px rgba(110,179,92,0.38), 0 4px 20px rgba(0,0,0,0.3)" }}
                   >
                     <Map size={16} />Open the Map
                   </Link>
                 </motion.div>
                 <motion.button onClick={() => setAuthOpen(true)}
-                  className="inline-flex items-center gap-2.5 px-8 py-4 rounded-full font-semibold text-sm border"
+                  className="inline-flex items-center gap-2.5 px-8 py-4 rounded-full font-semibold text-[16px] border"
                   style={{ color: "rgba(255,255,255,0.72)", borderColor: "rgba(255,255,255,0.14)", background: "rgba(255,255,255,0.05)" }}
                   whileHover={{ scale: 1.05, borderColor: "rgba(255,255,255,0.3)", color: "rgba(255,255,255,0.95)" } as any}
                   whileTap={{ scale: 0.96 }}
@@ -1898,12 +1898,12 @@ export default function HomePage() {
             <div className="w-7 h-7 rounded-full flex items-center justify-center" style={{ background: "linear-gradient(135deg, #2e6027, #6eb35c)" }}>
               <Leaf size={12} className="text-white" />
             </div>
-            <span className="text-sm font-semibold text-gray-700">MatchaScope</span>
+            <span className="text-[16px] font-semibold text-gray-700">MatchaScope</span>
           </div>
-          <p className="text-xs text-gray-400">© 2026 MatchaScope. All classifications based on publicly verifiable evidence.</p>
+          <p className="text-[16px] text-gray-400">© 2026 MatchaScope. All classifications based on publicly verifiable evidence.</p>
           <div className="flex gap-5">
             {["Privacy", "Terms", "Contact"].map((l) => (
-              <span key={l} className="text-xs text-gray-400 hover:text-matcha-700 cursor-pointer transition-colors">{l}</span>
+              <span key={l} className="text-[16px] text-gray-400 hover:text-matcha-700 cursor-pointer transition-colors">{l}</span>
             ))}
           </div>
         </div>

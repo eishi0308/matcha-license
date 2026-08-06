@@ -20,7 +20,7 @@ const MapClient = dynamic(() => import("@/components/MapClient"), {
           transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
         />
         <motion.span
-          className="text-sm text-gray-500"
+          className="text-[16px] text-gray-500"
           animate={{ opacity: [0.5, 1, 0.5] }}
           transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
         >
@@ -154,7 +154,7 @@ export default function MapPage() {
         animate={{ opacity: 1 }}
         transition={{ delay: 0.2, duration: 0.4, ease: EASE }}
       >
-        <div className="text-[10px] uppercase tracking-widest text-gray-400 font-semibold mb-3">
+        <div className="text-[16px] uppercase tracking-widest text-gray-400 font-semibold mb-3">
           Transparency Levels
         </div>
         <div className="space-y-1.5">
@@ -175,16 +175,16 @@ export default function MapPage() {
                 transition={{ duration: 0.15 }}
               >
                 <div
-                  className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0"
+                  className="w-6 h-6 rounded-full flex items-center justify-center text-[16px] font-bold text-white flex-shrink-0"
                   style={{ background: cfg.color }}
                 >
                   {lvl}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-xs font-medium text-gray-700 truncate">{cfg.shortLabel}</div>
+                  <div className="text-[16px] font-medium text-gray-700 truncate">{cfg.shortLabel}</div>
                 </div>
                 <motion.span
-                  className="text-xs font-bold px-1.5 py-0.5 rounded-md"
+                  className="text-[16px] font-bold px-1.5 py-0.5 rounded-md"
                   style={{ background: cfg.bg, color: cfg.color }}
                   key={levelCounts[lvl]}
                   initial={{ scale: 1.25 }}
@@ -201,7 +201,7 @@ export default function MapPage() {
 
       {/* Cafe list */}
       <div className="p-3">
-        <div className="text-[10px] uppercase tracking-widest text-gray-400 font-semibold mb-3 px-1">
+        <div className="text-[16px] uppercase tracking-widest text-gray-400 font-semibold mb-3 px-1">
           Results ({filtered.length})
         </div>
 
@@ -222,13 +222,13 @@ export default function MapPage() {
                     animate={{ rotate: 360 }}
                     transition={{ duration: 0.9, repeat: Infinity, ease: "linear" }}
                   />
-                  <p className="text-sm font-medium text-matcha-700">Discovering cafes…</p>
-                  <p className="text-xs text-gray-400 mt-1">Searching Google Maps & analysing menus</p>
+                  <p className="text-[16px] font-medium text-matcha-700">Discovering cafes…</p>
+                  <p className="text-[16px] text-gray-400 mt-1">Searching Google Maps & analysing menus</p>
                 </>
               ) : (
                 <>
                   <div className="text-2xl mb-2">🍵</div>
-                  <p className="text-sm text-gray-400">No cafes match your filters.</p>
+                  <p className="text-[16px] text-gray-400">No cafes match your filters.</p>
                 </>
               )}
             </motion.div>
@@ -258,7 +258,7 @@ export default function MapPage() {
                     transition={{ duration: 0.12 }}
                   >
                     <motion.div
-                      className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0 mt-0.5"
+                      className="w-8 h-8 rounded-full flex items-center justify-center text-[16px] font-bold text-white flex-shrink-0 mt-0.5"
                       style={{ background: cfg.color }}
                       whileHover={{ scale: 1.1 }}
                       transition={SPRING}
@@ -266,10 +266,10 @@ export default function MapPage() {
                       {cafe.level}
                     </motion.div>
                     <div className="flex-1 min-w-0">
-                      <div className="text-sm font-semibold text-gray-800 truncate">{cafe.name}</div>
+                      <div className="text-[16px] font-semibold text-gray-800 truncate">{cafe.name}</div>
                       <div className="flex items-center gap-1 mt-0.5">
                         <MapPin size={10} className="text-gray-400" />
-                        <span className="text-xs text-gray-400">{cafe.suburb}, {cafe.city}</span>
+                        <span className="text-[16px] text-gray-400">{cafe.suburb}, {cafe.city}</span>
                       </div>
                     </div>
                     {isMobile && (
@@ -296,7 +296,7 @@ export default function MapPage() {
             animate={{ rotate: 360 }}
             transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
           />
-          <span className="text-sm text-gray-400">Loading cafes…</span>
+          <span className="text-[16px] text-gray-400">Loading cafes…</span>
         </div>
       </div>
     );
@@ -328,7 +328,7 @@ export default function MapPage() {
               placeholder="Search cafes, suburbs…"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              className="w-full pl-9 pr-9 py-2.5 rounded-xl bg-gray-100 text-sm text-gray-700 placeholder:text-gray-400 outline-none focus:bg-white focus:ring-2 focus:ring-matcha-200 transition-all"
+              className="w-full pl-9 pr-9 py-2.5 rounded-xl bg-gray-100 text-[16px] text-gray-700 placeholder:text-gray-400 outline-none focus:bg-white focus:ring-2 focus:ring-matcha-200 transition-all"
             />
             <AnimatePresence>
               {query && (
@@ -350,7 +350,7 @@ export default function MapPage() {
           {/* Count — visible only on mobile in this row */}
           <motion.span
             key={filtered.length}
-            className="sm:hidden text-xs text-gray-400 whitespace-nowrap"
+            className="sm:hidden text-[16px] text-gray-400 whitespace-nowrap"
             initial={{ opacity: 0, y: -4 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.2 }}
@@ -370,7 +370,7 @@ export default function MapPage() {
               <select
                 value={f.val}
                 onChange={(e) => f.set(e.target.value)}
-                className="appearance-none pl-3.5 pr-8 py-2 sm:py-2.5 rounded-xl bg-gray-100 text-sm text-gray-700 outline-none focus:ring-2 focus:ring-matcha-200 cursor-pointer transition-all"
+                className="appearance-none pl-3.5 pr-8 py-2 sm:py-2.5 rounded-xl bg-gray-100 text-[16px] text-gray-700 outline-none focus:ring-2 focus:ring-matcha-200 cursor-pointer transition-all"
                 style={f.val !== "All" ? { background: "#e6f4e0", color: "#2e6027" } : {}}
               >
                 {f.opts.map((o) => (
@@ -385,7 +385,7 @@ export default function MapPage() {
             {activeFilters > 0 && (
               <motion.button
                 onClick={clearAll}
-                className="flex-shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-medium"
+                className="flex-shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[16px] font-medium"
                 style={{ background: "#fee2e2", color: "#dc2626" }}
                 initial={{ opacity: 0, scale: 0.8, x: -8 }}
                 animate={{ opacity: 1, scale: 1, x: 0 }}
@@ -402,7 +402,7 @@ export default function MapPage() {
           {/* Count — desktop only */}
           <motion.span
             key={filtered.length}
-            className="hidden sm:block text-xs text-gray-400 ml-auto whitespace-nowrap"
+            className="hidden sm:block text-[16px] text-gray-400 ml-auto whitespace-nowrap"
             initial={{ opacity: 0, y: -4 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.2 }}
@@ -413,7 +413,7 @@ export default function MapPage() {
           <AnimatePresence>
             {discovering && (
               <motion.div
-                className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium"
+                className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[16px] font-medium"
                 style={{ background: "#e6f4e0", color: "#2e6027" }}
                 initial={{ opacity: 0, scale: 0.85 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -492,13 +492,13 @@ export default function MapPage() {
 
                 <button
                   onClick={() => setMobileView("list")}
-                  className="relative z-10 flex-1 flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-full text-sm font-semibold transition-colors duration-200"
+                  className="relative z-10 flex-1 flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-full text-[16px] font-semibold transition-colors duration-200"
                   style={{ color: mobileView === "list" ? "#1a1a1a" : "rgba(255,255,255,0.65)" }}
                 >
                   <List size={14} />
                   List
                   <span
-                    className="text-[10px] font-bold px-1.5 py-0.5 rounded-full transition-colors duration-200"
+                    className="text-[16px] font-bold px-1.5 py-0.5 rounded-full transition-colors duration-200"
                     style={{
                       background: mobileView === "list" ? "#e6f4e0" : "rgba(255,255,255,0.15)",
                       color: mobileView === "list" ? "#2e6027" : "rgba(255,255,255,0.65)",
@@ -510,7 +510,7 @@ export default function MapPage() {
 
                 <button
                   onClick={() => setMobileView("map")}
-                  className="relative z-10 flex-1 flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-full text-sm font-semibold transition-colors duration-200"
+                  className="relative z-10 flex-1 flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-full text-[16px] font-semibold transition-colors duration-200"
                   style={{ color: mobileView === "map" ? "#1a1a1a" : "rgba(255,255,255,0.65)" }}
                 >
                   <Map size={14} />
@@ -537,7 +537,7 @@ export default function MapPage() {
             {/* Sidebar toggle */}
             <motion.button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="absolute bottom-6 z-[60] flex items-center gap-1.5 px-3 py-2 rounded-r-xl text-xs font-medium bg-white border border-l-0 border-gray-200 text-gray-600 hover:bg-gray-50 shadow-sm"
+              className="absolute bottom-6 z-[60] flex items-center gap-1.5 px-3 py-2 rounded-r-xl text-[16px] font-medium bg-white border border-l-0 border-gray-200 text-gray-600 hover:bg-gray-50 shadow-sm"
               animate={{ left: sidebarOpen ? 300 : 0 }}
               transition={SPRING}
               whileHover={{ paddingRight: "14px" }}
@@ -590,11 +590,11 @@ export default function MapPage() {
                             transition={{ duration: 0.1 }}
                           >
                             <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: cfg.color }} />
-                            <span className="text-[11px] whitespace-nowrap text-gray-600">
+                            <span className="text-[16px] whitespace-nowrap text-gray-600">
                               <span className="font-bold" style={{ color: cfg.color }}>{lvl}</span>
                               {" — "}{cfg.shortLabel}
                             </span>
-                            <span className="ml-auto pl-3 text-[10px] font-semibold tabular-nums" style={{ color: cfg.color }}>
+                            <span className="ml-auto pl-3 text-[16px] font-semibold tabular-nums" style={{ color: cfg.color }}>
                               {levelCounts[lvl]}
                             </span>
                           </motion.button>

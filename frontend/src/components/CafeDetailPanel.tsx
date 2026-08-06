@@ -62,7 +62,7 @@ function PanelContent({
         {/* Level badge */}
         <div className="flex items-center gap-2 mb-2">
           <motion.span
-            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[16px] font-bold uppercase tracking-wider"
             style={{ background: "rgba(255,255,255,0.2)", color: "#fff" }}
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -88,7 +88,7 @@ function PanelContent({
           transition={{ delay: 0.18, duration: 0.35, ease: EASE }}
         >
           <MapPin size={12} className="text-white/70" />
-          <span className="text-white/70 text-xs">{cafe.suburb}, {cafe.city}</span>
+          <span className="text-white/70 text-[16px]">{cafe.suburb}, {cafe.city}</span>
         </motion.div>
       </motion.div>
 
@@ -101,18 +101,18 @@ function PanelContent({
       >
         {/* Description */}
         {cafe.description && (
-          <motion.p className="text-sm text-gray-600 leading-relaxed" variants={rowVariants}>
+          <motion.p className="text-[16px] text-gray-600 leading-relaxed" variants={rowVariants}>
             {cafe.description}
           </motion.p>
         )}
 
         {/* Meta tags */}
         <motion.div className="flex flex-wrap gap-2" variants={rowVariants}>
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gray-100 text-xs text-gray-600">
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gray-100 text-[16px] text-gray-600">
             <Tag size={11} />
             {cafe.type.charAt(0).toUpperCase() + cafe.type.slice(1)}
           </span>
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gray-100 text-xs text-gray-600">
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gray-100 text-[16px] text-gray-600">
             <Star size={11} />
             {cafe.priceRange} — {PRICE_LABEL[cafe.priceRange]}
           </span>
@@ -120,12 +120,12 @@ function PanelContent({
 
         {/* Specialties */}
         <motion.div variants={rowVariants}>
-          <div className="text-[10px] uppercase tracking-widest text-gray-400 font-semibold mb-2">Specialties</div>
+          <div className="text-[16px] uppercase tracking-widest text-gray-400 font-semibold mb-2">Specialties</div>
           <div className="flex flex-wrap gap-1.5">
             {cafe.specialties.map((s, i) => (
               <motion.span
                 key={s}
-                className="px-2.5 py-1 rounded-full text-xs font-medium"
+                className="px-2.5 py-1 rounded-full text-[16px] font-medium"
                 style={{ background: "#e6f4e0", color: "#2e6027" }}
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -142,7 +142,7 @@ function PanelContent({
         <motion.div variants={rowVariants}>
           <div className="flex items-center gap-2 mb-2">
             <Shield size={14} className="text-matcha-700" />
-            <div className="text-[10px] uppercase tracking-widest text-gray-400 font-semibold">Transparency Evidence</div>
+            <div className="text-[16px] uppercase tracking-widest text-gray-400 font-semibold">Transparency Evidence</div>
           </div>
 
           {cafe.evidence ? (
@@ -153,22 +153,22 @@ function PanelContent({
             >
               <div className="p-4" style={{ background: "#f2f8f0" }}>
                 <Quote size={16} className="text-matcha-400 mb-2" />
-                <p className="text-sm text-gray-700 italic leading-relaxed">"{cafe.evidence.quote}"</p>
+                <p className="text-[16px] text-gray-700 italic leading-relaxed">"{cafe.evidence.quote}"</p>
               </div>
               <div className="p-4 space-y-2" style={{ borderTop: "1px solid #c2e1b5" }}>
                 <div className="flex items-center gap-2">
                   <ExternalLink size={12} className="text-matcha-600 flex-shrink-0" />
-                  <span className="text-xs text-gray-500">{cafe.evidence.sourceLabel}</span>
+                  <span className="text-[16px] text-gray-500">{cafe.evidence.sourceLabel}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Calendar size={12} className="text-matcha-600 flex-shrink-0" />
-                  <span className="text-xs text-gray-500">Verified {cafe.evidence.verifiedDate}</span>
+                  <span className="text-[16px] text-gray-500">Verified {cafe.evidence.verifiedDate}</span>
                 </div>
                 <motion.a
                   href={cafe.evidence.source}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-xs font-medium text-matcha-700 mt-1"
+                  className="inline-flex items-center gap-1.5 text-[16px] font-medium text-matcha-700 mt-1"
                   whileHover={{ x: 3, color: "#1e4a1a" } as any}
                   transition={{ duration: 0.15 }}
                 >
@@ -178,10 +178,10 @@ function PanelContent({
             </motion.div>
           ) : unsupported ? (
             <div className="rounded-2xl p-4" style={{ background: "#fffbeb", border: "1px solid #fcd34d" }}>
-              <p className="text-sm font-semibold" style={{ color: "#92400e" }}>
+              <p className="text-[16px] font-semibold" style={{ color: "#92400e" }}>
                 Grade withheld — evidence missing
               </p>
-              <p className="text-xs mt-1.5 leading-relaxed" style={{ color: "#b45309" }}>
+              <p className="text-[16px] mt-1.5 leading-relaxed" style={{ color: "#b45309" }}>
                 This listing carries a Level {cafe.level} grade but no supporting quote, so we
                 cannot show you proof. Treat it as unverified until we re-check it. We never
                 display a transparency grade we cannot back with a source.
@@ -189,10 +189,10 @@ function PanelContent({
             </div>
           ) : (
             <div className="rounded-2xl border border-gray-200 p-4 bg-gray-50">
-              <p className="text-sm text-gray-400 italic">
+              <p className="text-[16px] text-gray-400 italic">
                 No public Japanese-origin disclosure found across website, menu, or official social media.
               </p>
-              <p className="text-xs text-gray-400 mt-2">
+              <p className="text-[16px] text-gray-400 mt-2">
                 Last checked: {new Date().toLocaleDateString("en-AU", { month: "long", year: "numeric" })}
               </p>
             </div>
@@ -201,10 +201,10 @@ function PanelContent({
 
         {/* Address */}
         <motion.div variants={rowVariants}>
-          <div className="text-[10px] uppercase tracking-widest text-gray-400 font-semibold mb-2">Address</div>
+          <div className="text-[16px] uppercase tracking-widest text-gray-400 font-semibold mb-2">Address</div>
           <div className="flex items-start gap-2">
             <MapPin size={14} className="text-gray-400 mt-0.5 flex-shrink-0" />
-            <span className="text-sm text-gray-600">{cafe.address}</span>
+            <span className="text-[16px] text-gray-600">{cafe.address}</span>
           </div>
         </motion.div>
 
@@ -214,7 +214,7 @@ function PanelContent({
             <motion.a
               href={`https://${cafe.website}`}
               target="_blank" rel="noopener noreferrer"
-              className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-semibold border border-gray-200 text-gray-700"
+              className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-[16px] font-semibold border border-gray-200 text-gray-700"
               whileHover={{ scale: 1.03, borderColor: "#c2e1b5", color: "#2e6027", backgroundColor: "#f2f8f0" } as any}
               whileTap={{ scale: 0.97 }}
               transition={SPRING}
@@ -226,7 +226,7 @@ function PanelContent({
             <motion.a
               href={`https://instagram.com/${cafe.instagram.replace("@", "")}`}
               target="_blank" rel="noopener noreferrer"
-              className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-semibold border border-gray-200 text-gray-700"
+              className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-[16px] font-semibold border border-gray-200 text-gray-700"
               whileHover={{ scale: 1.03, borderColor: "#c2e1b5", color: "#2e6027", backgroundColor: "#f2f8f0" } as any}
               whileTap={{ scale: 0.97 }}
               transition={SPRING}
@@ -243,7 +243,7 @@ function PanelContent({
 
         {/* Suggest update */}
         <motion.button
-          className="w-full py-2.5 rounded-xl text-xs font-medium text-matcha-700 border border-matcha-200"
+          className="w-full py-2.5 rounded-xl text-[16px] font-medium text-matcha-700 border border-matcha-200"
           variants={rowVariants}
           whileHover={{ scale: 1.02, backgroundColor: "#f2f8f0" } as any}
           whileTap={{ scale: 0.98 }}

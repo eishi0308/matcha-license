@@ -119,7 +119,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab = "login" }: Aut
                 >
                   <Leaf size={15} className="text-white" />
                 </motion.div>
-                <span className="font-semibold text-matcha-900 text-sm tracking-wide">MatchaScope</span>
+                <span className="font-semibold text-matcha-900 text-[16px] tracking-wide">MatchaScope</span>
               </motion.div>
 
               {/* Tab switcher with sliding pill */}
@@ -139,7 +139,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab = "login" }: Aut
                   <button
                     key={t}
                     onClick={() => setTab(t)}
-                    className="relative z-10 flex-1 py-2 rounded-lg text-sm font-medium transition-colors duration-200"
+                    className="relative z-10 flex-1 py-2 rounded-lg text-[16px] font-medium transition-colors duration-200"
                     style={{ color: tab === t ? "#2e6027" : "#6b7280" }}
                   >
                     {t === "login" ? "Sign in" : "Create account"}
@@ -159,14 +159,14 @@ export default function AuthModal({ isOpen, onClose, defaultTab = "login" }: Aut
                   <h2 className="text-2xl font-display font-semibold text-gray-900 mb-1">
                     {tab === "login" ? "Welcome back" : "Join MatchaScope"}
                   </h2>
-                  <p className="text-sm text-gray-500 mb-6">
+                  <p className="text-[16px] text-gray-500 mb-6">
                     {tab === "login"
                       ? "Sign in to save cafes and suggest updates."
                       : "Create a free account to track your favourite transparent cafes."}
                   </p>
 
                   {error && (
-                    <div className="mb-4 px-4 py-3 rounded-xl bg-red-50 border border-red-200 text-sm text-red-600">
+                    <div className="mb-4 px-4 py-3 rounded-xl bg-red-50 border border-red-200 text-[16px] text-red-600">
                       {error}
                     </div>
                   )}
@@ -174,33 +174,33 @@ export default function AuthModal({ isOpen, onClose, defaultTab = "login" }: Aut
                   <form onSubmit={handleSubmit} className="space-y-4">
                     {tab === "signup" && (
                       <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} transition={{ duration: 0.25, ease: EASE }}>
-                        <label className="block text-xs font-medium text-gray-700 mb-1.5">Full name</label>
+                        <label className="block text-[16px] font-medium text-gray-700 mb-1.5">Full name</label>
                         <motion.input
                           type="text" required placeholder="Yuki Tanaka"
                           value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
-                          className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none placeholder:text-gray-300 transition-all"
+                          className="w-full px-4 py-3 rounded-xl border border-gray-200 text-[16px] outline-none placeholder:text-gray-300 transition-all"
                           whileFocus={{ boxShadow: "0 0 0 3px rgba(78,151,64,0.15), 0 0 0 1px #4d9740" } as any}
                         />
                       </motion.div>
                     )}
 
                     <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1.5">Email address</label>
+                      <label className="block text-[16px] font-medium text-gray-700 mb-1.5">Email address</label>
                       <motion.input
                         type="email" required placeholder="you@example.com"
                         value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })}
-                        className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none placeholder:text-gray-300 transition-all"
+                        className="w-full px-4 py-3 rounded-xl border border-gray-200 text-[16px] outline-none placeholder:text-gray-300 transition-all"
                         whileFocus={{ boxShadow: "0 0 0 3px rgba(78,151,64,0.15), 0 0 0 1px #4d9740" } as any}
                       />
                     </div>
 
                     <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1.5">Password</label>
+                      <label className="block text-[16px] font-medium text-gray-700 mb-1.5">Password</label>
                       <div className="relative">
                         <motion.input
                           type={showPassword ? "text" : "password"} required placeholder="••••••••"
                           value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })}
-                          className="w-full px-4 py-3 pr-12 rounded-xl border border-gray-200 text-sm outline-none placeholder:text-gray-300 transition-all"
+                          className="w-full px-4 py-3 pr-12 rounded-xl border border-gray-200 text-[16px] outline-none placeholder:text-gray-300 transition-all"
                           whileFocus={{ boxShadow: "0 0 0 3px rgba(78,151,64,0.15), 0 0 0 1px #4d9740" } as any}
                         />
                         <motion.button
@@ -216,7 +216,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab = "login" }: Aut
 
                     {tab === "login" && (
                       <div className="flex justify-end">
-                        <motion.button type="button" className="text-xs text-matcha-700 font-medium"
+                        <motion.button type="button" className="text-[16px] text-matcha-700 font-medium"
                           whileHover={{ color: "#1e4a1a" } as any} transition={{ duration: 0.15 }}
                         >
                           Forgot password?
@@ -227,7 +227,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab = "login" }: Aut
                     <motion.button
                       type="submit"
                       disabled={loading}
-                      className="w-full py-3 rounded-xl font-semibold text-sm text-white mt-2 relative overflow-hidden"
+                      className="w-full py-3 rounded-xl font-semibold text-[16px] text-white mt-2 relative overflow-hidden"
                       style={{
                         background: loading ? "#9ca3af" : "linear-gradient(135deg, #2e6027 0%, #4d9740 100%)",
                         boxShadow: loading ? "none" : "0 4px 16px rgba(46,96,39,0.35)",
@@ -257,7 +257,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab = "login" }: Aut
               {/* Divider */}
               <div className="flex items-center gap-3 my-5">
                 <div className="flex-1 h-px bg-gray-100" />
-                <span className="text-xs text-gray-400">or continue with</span>
+                <span className="text-[16px] text-gray-400">or continue with</span>
                 <div className="flex-1 h-px bg-gray-100" />
               </div>
 
@@ -265,7 +265,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab = "login" }: Aut
               <motion.button
                 onClick={handleGoogle}
                 type="button"
-                className="w-full flex items-center justify-center gap-3 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                className="w-full flex items-center justify-center gap-3 py-2.5 rounded-xl border border-gray-200 text-[16px] font-medium text-gray-700 hover:bg-gray-50 transition-colors"
                 whileHover={{ scale: 1.02, borderColor: "#d1d5db" } as any}
                 whileTap={{ scale: 0.98 }}
               >
@@ -278,7 +278,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab = "login" }: Aut
                 Continue with Google
               </motion.button>
 
-              <p className="text-center text-xs text-gray-400 mt-5">
+              <p className="text-center text-[16px] text-gray-400 mt-5">
                 By continuing, you agree to our{" "}
                 <span className="text-matcha-700 cursor-pointer hover:underline">Terms</span> and{" "}
                 <span className="text-matcha-700 cursor-pointer hover:underline">Privacy Policy</span>.
