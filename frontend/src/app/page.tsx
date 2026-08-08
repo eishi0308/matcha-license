@@ -1798,10 +1798,10 @@ export default function HomePage() {
               </span>
             </motion.div>
 
-            {/* Section headings across the page are the sans at this scale; the serif is
-                reserved for the two bookends, the hero and the closing call. This one was
-                set in the serif and sat a size below its neighbours, so it read as a
-                different kind of moment than the section it opens. */}
+            {/* Every section heading on this page is the sans at this one scale. Down
+                here the serif is the hero's alone, so arriving is the only point the
+                voice changes; a heading that borrows it mid-scroll reads as a different
+                kind of moment than the section it opens. */}
             <Reveal delay={0.05}>
               <h2
                 className="font-bold leading-[1.0] tracking-tight text-white mb-8"
@@ -1973,11 +1973,17 @@ export default function HomePage() {
                 <MessageSquarePlus size={28} className="text-matcha-300" />
               </motion.div>
 
-              <h2 className="font-display text-4xl sm:text-6xl font-bold text-white mb-5 leading-tight" style={{ letterSpacing: "-0.02em" }}>
+              <h2
+                className="font-bold leading-[1.0] tracking-tight text-white mb-8"
+                style={{ fontSize: "clamp(2.5rem, 6vw, 4.5rem)", letterSpacing: "-0.035em" }}
+              >
                 Know a cafe we missed?
               </h2>
-              <p className="max-w-lg mx-auto mb-10 leading-relaxed text-lg" style={{ color: "rgba(255,255,255,0.5)" }}>
-                Suggest a cafe or submit sourcing evidence. If the evidence checks out, they'll be added and classified.
+              <p
+                className="max-w-2xl mx-auto mb-10 leading-relaxed"
+                style={{ fontSize: "clamp(1.05rem, 2.5vw, 1.3rem)", color: "rgba(255,255,255,0.5)" }}
+              >
+                Suggest a cafe or submit sourcing evidence. If the evidence checks out, they&apos;ll be added and classified.
               </p>
 
               <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
