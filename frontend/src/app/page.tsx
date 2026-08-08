@@ -1514,7 +1514,7 @@ export default function HomePage() {
       </section>
 
       {/* ── PRESS PROOF ────────────────────────────────────────────── */}
-      <section className="py-28 sm:py-36 px-5" style={{ background: "#fafaf8" }}>
+      <section className="py-28 sm:py-36 px-5" style={{ background: "#ffffff" }}>
         <div className="max-w-5xl mx-auto">
 
           {/* Eyebrow */}
@@ -1550,7 +1550,7 @@ export default function HomePage() {
       </section>
 
       {/* ── TRANSPARENCY LEVELS ──────────────────────────────────────── */}
-      <section className="relative py-36 sm:py-48 px-5 overflow-hidden" style={{ background: "#f7f7f5" }}>
+      <section className="relative py-36 sm:py-48 px-5 overflow-hidden" style={{ background: "#ffffff" }}>
         {/* Subtle background grid */}
         <div className="absolute inset-0 pointer-events-none opacity-[0.4]" style={{
           backgroundImage: "linear-gradient(rgba(0,0,0,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.03) 1px, transparent 1px)",
