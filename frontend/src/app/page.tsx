@@ -74,7 +74,9 @@ const DEFAULT_DISCLOSURE = {
 // with the two classes that carry the finding.
 const HATCH = { angle: 45, period: 5.5, weight: 1.9, ink: "rgba(28,43,26,0.34)" };
 const DISCLOSURE_ROWS = [
-  { key: "unchecked" as const, label: "No page we could read",     color: "var(--surface-1)" },
+  // Transparent because nothing is painted behind the hatch — both the arc and the
+  // swatch draw stripes straight onto the card, so this row has no flat colour of its own.
+  { key: "unchecked" as const, label: "No page we could read",     color: "transparent" },
   { key: "nothing" as const,   label: "Nothing found",             color: "var(--text-muted)" },
   { key: "japanOnly" as const, label: "“Japanese matcha” only",    color: "#4FB99A" },
   { key: "named" as const,     label: "Named source, with a link", color: "#4d7c1a" },
@@ -947,9 +949,11 @@ function DisclosureBlock({ data }: { data: typeof DEFAULT_DISCLOSURE }) {
 
             {/* The hatch the unread class is drawn in. userSpaceOnUse keeps the stripes
                 a fixed size and angle across the whole arc, so the band reads as one
-                surface rather than a texture that fans out as it curves. The tint under
-                the stripes gives the band a body, so it holds its shape between the
-                solid arcs without ever being taken for a fill. */}
+                surface rather than a texture that fans out as it curves.
+                Nothing is painted between the stripes: the card shows through, which is
+                what keeps the band reading as an absence. A tint here would give it a
+                fill, and a fill is the one thing this class must never look like. The
+                two edge hairlines are what hold its shape. */}
             <pattern
               id="arcUnchecked"
               width={HATCH.period}
@@ -957,7 +961,6 @@ function DisclosureBlock({ data }: { data: typeof DEFAULT_DISCLOSURE }) {
               patternUnits="userSpaceOnUse"
               patternTransform={`rotate(${HATCH.angle})`}
             >
-              <rect width={HATCH.period} height={HATCH.period} fill="var(--surface-1)" />
               <line
                 x1={0}
                 y1={0}
@@ -1140,7 +1143,7 @@ function DisclosureBlock({ data }: { data: typeof DEFAULT_DISCLOSURE }) {
                         ? "linear-gradient(135deg,#97C459,#4d7c1a)"
                         : r.key === "unchecked"
                           ? `repeating-linear-gradient(${HATCH.angle + 90}deg,` +
-                            ` var(--surface-1) 0 1.6px, ${HATCH.ink} 1.6px 2.9px)`
+                            ` transparent 0 1.6px, ${HATCH.ink} 1.6px 2.9px)`
                           : r.color,
                     opacity: r.key === "nothing" ? 0.3 : 1,
                   }}
