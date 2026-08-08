@@ -57,12 +57,24 @@ const DEFAULT_DISCLOSURE = {
 // — it is de-emphasis, not a category — and its sub-3:1 contrast is relieved by
 // the labelled rows beside it, which carry every value in text.
 // `named` draws as a gradient in the ring, so its hex is the swatch fallback.
-// `unchecked` is not a finding and is styled so it cannot be mistaken for one: no fill,
-// only an outline, because an empty band reads as absence where a solid one reads as a
-// result. It is on the ring at all because a ring drawn over 588 of 1,147 cafes silently
+//
+// `unchecked` is not a finding and must not be mistaken for one, but it was drawn as a
+// 1.5px hairline and that overcorrected: the largest class on the card — very nearly
+// half of every cafe found — was the one thing on it nobody could see, and the row
+// carried no swatch at all, so the only class without a mark was the biggest. It is
+// hatched now instead. Hatching is the standing convention for "no reading taken", so it
+// still cannot be read as a result, while its angle carries its true share the way every
+// other class's does. Its band is narrower than theirs: in a ring the angle is the
+// quantity and the width is free, so the width is what says this is a different kind of
+// thing. It is on the ring at all because a ring drawn over 588 of 1,147 cafes silently
 // asserts the other 559 do not exist.
+//
+// The stripes are tuned against the solid arcs beside them: dense enough to read as one
+// band at a glance rather than as loose scratches, light enough that they never compete
+// with the two classes that carry the finding.
+const HATCH = { angle: 45, period: 5.5, weight: 1.9, ink: "rgba(28,43,26,0.34)" };
 const DISCLOSURE_ROWS = [
-  { key: "unchecked" as const, label: "No page we could read",     color: "transparent" },
+  { key: "unchecked" as const, label: "No page we could read",     color: "var(--surface-1)" },
   { key: "nothing" as const,   label: "Nothing found",             color: "var(--text-muted)" },
   { key: "japanOnly" as const, label: "“Japanese matcha” only",    color: "#4FB99A" },
   { key: "named" as const,     label: "Named source, with a link", color: "#4d7c1a" },
@@ -710,8 +722,13 @@ function PressRow({ card }: { card: typeof PRESS_CARDS[number] }) {
 // One geometry for the whole drawing. Every arc length, the leader-line anchor
 // and the centre figure derive from the live counts, so the picture cannot
 // drift from the numbers printed beside it.
-const DONUT = { cx: 120, cy: 130, r: 88, stroke: 20, frame: 103 };
+// `hatch` is the band width for the one class that is not a finding — narrower than
+// `stroke`, so it can carry its true share without being read as one of the three.
+const DONUT = { cx: 120, cy: 130, r: 88, stroke: 20, hatch: 14, frame: 103 };
 const CIRC = 2 * Math.PI * DONUT.r; // 552.92
+
+/** The two radii that close a hatched band of the given width. */
+const hatchEdges = (width: number) => [DONUT.r - width / 2, DONUT.r + width / 2];
 const DONUT_EASE = "cubic-bezier(.25,.8,.3,1)";
 const ACCENT = "#639922";
 
@@ -914,8 +931,9 @@ function DisclosureBlock({ data }: { data: typeof DEFAULT_DISCLOSURE }) {
             `Of ${num(checked)} cafés whose pages could be read, ${num(data.nothing)} have ` +
             `nothing about origin, ${num(data.japanOnly)} say only that the matcha is Japanese, ` +
             `and ${num(data.named)} name a source and link to it. The ring also carries ` +
-            `${num(data.unchecked)} cafés with no page we could read, drawn as an outline ` +
-            `because they are uncounted rather than silent, for ${num(everyCafe)} in total.`
+            `${num(data.unchecked)} cafés with no page we could read, hatched rather than ` +
+            `filled because they are uncounted rather than silent, for ${num(everyCafe)} ` +
+            `in total.`
           }
         >
           <defs>
@@ -923,6 +941,29 @@ function DisclosureBlock({ data }: { data: typeof DEFAULT_DISCLOSURE }) {
               <stop offset="0%" stopColor="#97C459" />
               <stop offset="100%" stopColor="#4d7c1a" />
             </linearGradient>
+
+            {/* The hatch the unread class is drawn in. userSpaceOnUse keeps the stripes
+                a fixed size and angle across the whole arc, so the band reads as one
+                surface rather than a texture that fans out as it curves. The tint under
+                the stripes gives the band a body, so it holds its shape between the
+                solid arcs without ever being taken for a fill. */}
+            <pattern
+              id="arcUnchecked"
+              width={HATCH.period}
+              height={HATCH.period}
+              patternUnits="userSpaceOnUse"
+              patternTransform={`rotate(${HATCH.angle})`}
+            >
+              <rect width={HATCH.period} height={HATCH.period} fill="var(--surface-1)" />
+              <line
+                x1={0}
+                y1={0}
+                x2={0}
+                y2={HATCH.period}
+                stroke={HATCH.ink}
+                strokeWidth={HATCH.weight}
+              />
+            </pattern>
           </defs>
 
           {/* Hairline frame — gives the ring an outer edge to sit against so the
@@ -939,44 +980,87 @@ function DisclosureBlock({ data }: { data: typeof DEFAULT_DISCLOSURE }) {
           <g transform={`rotate(-90 ${DONUT.cx} ${DONUT.cy})`}>
             {arcs.map((a) => {
               const dim = hovered !== null && hovered !== a.key;
+              const unchecked = a.key === "unchecked";
+              const grow = `stroke-dasharray ${a.duration}s ${DONUT_EASE} ${a.delay}s`;
+              // The hatched band widens on hover like the others, and its edges have to
+              // move with it — pinned to the resting width they would sit inside the
+              // raised band and read as scratches across it.
+              const band =
+                hovered === a.key ? DONUT.hatch + 5 : DONUT.hatch;
               return (
-                <circle
-                  key={a.key}
-                  cx={DONUT.cx}
-                  cy={DONUT.cy}
-                  r={DONUT.r}
-                  fill="none"
-                  stroke={
-                    a.key === "named"
-                      ? "url(#arcNamed)"
-                      // Absence gets a hairline, not a band: an unfilled span reads as
-                      // "no reading taken" where a filled one would read as a result.
-                      : a.key === "unchecked"
-                        ? "var(--border-strong)"
-                        : a.row.color
-                  }
-                  strokeWidth={
-                    a.key === "unchecked" ? 1.5 : hovered === a.key ? 26 : DONUT.stroke
-                  }
-                  strokeLinecap="butt"
-                  strokeDasharray={drawn ? `${a.len} ${CIRC}` : `0 ${CIRC}`}
-                  strokeDashoffset={a.offset}
-                  onMouseEnter={() => setHovered(a.key)}
-                  onMouseLeave={() => setHovered(null)}
-                  style={{
-                    // The grey is de-emphasis, not a category — no gradient, no
-                    // glow, and it sits back at a third of its own weight.
-                    opacity: dim ? 0.08 : a.key === "nothing" ? 0.3 : a.key === "unchecked" ? 0.55 : 1,
-                    filter:
+                <g key={a.key}>
+                  <circle
+                    cx={DONUT.cx}
+                    cy={DONUT.cy}
+                    r={DONUT.r}
+                    fill="none"
+                    stroke={
                       a.key === "named"
-                        ? "drop-shadow(0 0 5px rgba(99,153,34,.45))"
-                        : undefined,
-                    transition: reduced
-                      ? "none"
-                      : `stroke-dasharray ${a.duration}s ${DONUT_EASE} ${a.delay}s,` +
-                        " stroke-width .25s ease, opacity .25s ease",
-                  }}
-                />
+                        ? "url(#arcNamed)"
+                        // Hatched, never filled: the convention reads as "no reading
+                        // taken", where a solid band would read as a result.
+                        : unchecked
+                          ? "url(#arcUnchecked)"
+                          : a.row.color
+                    }
+                    strokeWidth={
+                      // The angle carries the share; the width says what kind of thing
+                      // it is. This one runs narrower than the three findings so it can
+                      // be seen at its true size without being read as one of them.
+                      unchecked ? band : hovered === a.key ? 26 : DONUT.stroke
+                    }
+                    strokeLinecap="butt"
+                    strokeDasharray={drawn ? `${a.len} ${CIRC}` : `0 ${CIRC}`}
+                    strokeDashoffset={a.offset}
+                    onMouseEnter={() => setHovered(a.key)}
+                    onMouseLeave={() => setHovered(null)}
+                    style={{
+                      // The grey is de-emphasis, not a category — no gradient, no
+                      // glow, and it sits back at a third of its own weight. The hatch
+                      // is already quiet by construction, so it stays at full strength.
+                      opacity: dim ? 0.08 : a.key === "nothing" ? 0.3 : 1,
+                      filter:
+                        a.key === "named"
+                          ? "drop-shadow(0 0 5px rgba(99,153,34,.45))"
+                          : undefined,
+                      transition: reduced
+                        ? "none"
+                        : `${grow}, stroke-width .25s ease, opacity .25s ease`,
+                    }}
+                  />
+
+                  {/* Both edges of the hatched band, closed with a hairline so it holds
+                      a defined shape instead of fraying into the card. Each edge sits on
+                      its own radius, so its dash lengths are the band's scaled to that
+                      circumference — the same span, measured on a different circle. */}
+                  {unchecked &&
+                    hatchEdges(band).map((r, edge) => {
+                      const k = r / DONUT.r;
+                      return (
+                        <circle
+                          key={edge}
+                          cx={DONUT.cx}
+                          cy={DONUT.cy}
+                          r={r}
+                          fill="none"
+                          stroke="var(--border-strong)"
+                          strokeWidth={0.5}
+                          strokeLinecap="butt"
+                          strokeDasharray={
+                            drawn ? `${a.len * k} ${CIRC * k}` : `0 ${CIRC * k}`
+                          }
+                          strokeDashoffset={a.offset * k}
+                          pointerEvents="none"
+                          style={{
+                            opacity: dim ? 0.08 : 0.75,
+                            transition: reduced
+                              ? "none"
+                              : `${grow}, r .25s ease, opacity .25s ease`,
+                          }}
+                        />
+                      );
+                    })}
+                </g>
               );
             })}
           </g>
@@ -1032,6 +1116,11 @@ function DisclosureBlock({ data }: { data: typeof DEFAULT_DISCLOSURE }) {
                       " background .25s ease",
                 }}
               >
+                {/* The swatch carries the arc's own treatment, hatch included, so the row
+                    and the band are recognisably the same thing. The unread class used to
+                    be the only row with no mark at all, which left the largest class on
+                    the card as the one a reader had nothing to match against. At 10px the
+                    stripes need a tighter period than the arc to still read as stripes. */}
                 <span
                   aria-hidden="true"
                   className="shrink-0"
@@ -1039,10 +1128,17 @@ function DisclosureBlock({ data }: { data: typeof DEFAULT_DISCLOSURE }) {
                     width: 10,
                     height: 10,
                     borderRadius: 1,
+                    boxShadow:
+                      r.key === "unchecked"
+                        ? "inset 0 0 0 0.5px var(--border-strong)"
+                        : undefined,
                     background:
                       r.key === "named"
                         ? "linear-gradient(135deg,#97C459,#4d7c1a)"
-                        : r.color,
+                        : r.key === "unchecked"
+                          ? `repeating-linear-gradient(${HATCH.angle + 90}deg,` +
+                            ` var(--surface-1) 0 1.6px, ${HATCH.ink} 1.6px 2.9px)`
+                          : r.color,
                     opacity: r.key === "nothing" ? 0.3 : 1,
                   }}
                 />
