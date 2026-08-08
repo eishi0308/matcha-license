@@ -330,7 +330,10 @@ function ComparisonCard() {
               <span className="text-[16px] uppercase tracking-[0.22em] font-semibold" style={{ color: "#9ca3af" }}>
                 Without Origin Disclosure
               </span>
-              <span className="text-[16px] font-bold px-2.5 py-1 rounded-full" style={{ background: "#fef2f2", color: "#dc2626" }}>
+              {/* A pill has to stay a pill. The label is two words and the eyebrow beside
+                  it wraps to two lines, so without this the badge broke across lines and
+                  the rounded-full went with it — an oval blob instead of a chip. */}
+              <span className="text-[16px] font-bold px-2.5 py-1 rounded-full shrink-0 whitespace-nowrap" style={{ background: "#fef2f2", color: "#dc2626" }}>
                 Level C
               </span>
             </div>
@@ -375,7 +378,7 @@ function ComparisonCard() {
               <span className="text-[16px] uppercase tracking-[0.22em] text-matcha-700 font-semibold">
                 With Origin Disclosure
               </span>
-              <span className="text-[16px] font-bold px-2.5 py-1 rounded-full" style={{ background: "#e6f4e0", color: "#2e6027" }}>
+              <span className="text-[16px] font-bold px-2.5 py-1 rounded-full shrink-0 whitespace-nowrap" style={{ background: "#e6f4e0", color: "#2e6027" }}>
                 Level A
               </span>
             </div>
@@ -1795,13 +1798,23 @@ export default function HomePage() {
               </span>
             </motion.div>
 
+            {/* Section headings across the page are the sans at this scale; the serif is
+                reserved for the two bookends, the hero and the closing call. This one was
+                set in the serif and sat a size below its neighbours, so it read as a
+                different kind of moment than the section it opens. */}
             <Reveal delay={0.05}>
-              <h2 className="font-display text-4xl sm:text-5xl font-bold text-white mb-5" style={{ letterSpacing: "-0.02em" }}>
+              <h2
+                className="font-bold leading-[1.0] tracking-tight text-white mb-8"
+                style={{ fontSize: "clamp(2.5rem, 6vw, 4.5rem)", letterSpacing: "-0.035em" }}
+              >
                 The evidence<br />speaks for itself
               </h2>
             </Reveal>
             <Reveal delay={0.1}>
-              <p className="max-w-md mx-auto text-[17px] leading-relaxed" style={{ color: "rgba(255,255,255,0.42)" }}>
+              <p
+                className="max-w-2xl mx-auto leading-relaxed"
+                style={{ fontSize: "clamp(1.05rem, 2.5vw, 1.3rem)", color: "rgba(255,255,255,0.42)" }}
+              >
                 Three real classifications from our database — every claim, every source, fully verifiable by anyone.
               </p>
             </Reveal>
@@ -1865,7 +1878,7 @@ export default function HomePage() {
                             <div className="font-semibold text-[16px] text-gray-900 leading-tight">{card.cafe}</div>
                             <div className="text-[16px] text-gray-400 mt-0.5">{card.suburb}</div>
                           </div>
-                          <span className="text-[16px] font-bold px-2.5 py-1 rounded-full shrink-0 mt-0.5"
+                          <span className="text-[16px] font-bold px-2.5 py-1 rounded-full shrink-0 whitespace-nowrap mt-0.5"
                             style={{ background: card.badgeBg, color: card.accent }}
                           >
                             Level {card.level}
@@ -1888,19 +1901,21 @@ export default function HomePage() {
                           </div>
                         )}
 
-                        {/* Footer */}
-                        <div className="flex items-end justify-between pt-3.5"
-                          style={{ borderTop: "1px solid rgba(0,0,0,0.06)" }}
-                        >
-                          <div>
-                            <div className="text-[16px] font-medium text-gray-500 leading-tight">{card.source}</div>
-                            <div className="text-[16px] text-gray-400 mt-0.5">Verified {card.date}</div>
-                          </div>
+                        {/* Footer. The stamp sits on its own line above the provenance
+                            rather than beside it: in a third of a three-column grid there
+                            is no room for both, and sharing the row broke "Evidence found"
+                            across two lines and ran it into the source beside it. It reads
+                            better this way round anyway — the verdict, then what backs it. */}
+                        <div className="pt-3.5" style={{ borderTop: "1px solid rgba(0,0,0,0.06)" }}>
                           {card.level !== "C" && (
-                            <span className="text-[16px] font-semibold flex items-center gap-1" style={{ color: card.accent }}>
-                              <CheckCircle2 size={11} />Evidence found
+                            <span className="text-[16px] font-semibold inline-flex items-center gap-1 whitespace-nowrap mb-2"
+                              style={{ color: card.accent }}
+                            >
+                              <CheckCircle2 size={11} className="shrink-0" />Evidence found
                             </span>
                           )}
+                          <div className="text-[16px] font-medium text-gray-500 leading-tight">{card.source}</div>
+                          <div className="text-[16px] text-gray-400 mt-0.5">Verified {card.date}</div>
                         </div>
                       </div>
                     </motion.div>
