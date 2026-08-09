@@ -1823,108 +1823,85 @@ export default function HomePage() {
             </Reveal>
           </div>
 
-          {/* App window chrome */}
+          {/* The cards stand on the page on their own. They used to sit inside a mock
+              browser window — traffic lights and an address bar reading
+              matcha-origin.com/map, a domain this site does not own. On a page whose
+              argument is that a claim is worth nothing without a source you can check,
+              dressing three examples up as a screenshot of a real product was the one
+              piece of decoration the page could not afford. */}
           <Reveal delay={0.15}>
-            <div className="rounded-2xl overflow-hidden"
-              style={{
-                border: "1px solid rgba(255,255,255,0.09)",
-                background: "rgba(255,255,255,0.025)",
-                boxShadow: "0 48px 140px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.04), inset 0 1px 0 rgba(255,255,255,0.06)",
-              }}
-            >
-              {/* Title bar */}
-              <div className="flex items-center gap-4 px-5 py-3.5"
-                style={{ background: "rgba(255,255,255,0.035)", borderBottom: "1px solid rgba(255,255,255,0.07)" }}
-              >
-                <div className="flex gap-2">
-                  <div className="w-3 h-3 rounded-full" style={{ background: "rgba(255,95,87,0.55)" }} />
-                  <div className="w-3 h-3 rounded-full" style={{ background: "rgba(255,189,46,0.55)" }} />
-                  <div className="w-3 h-3 rounded-full" style={{ background: "rgba(40,202,66,0.55)" }} />
-                </div>
-                <div className="flex-1 flex justify-center">
-                  <div className="flex items-center gap-2 px-4 py-1 rounded-md"
-                    style={{ background: "rgba(255,255,255,0.045)", border: "1px solid rgba(255,255,255,0.07)" }}
+            <div className="grid md:grid-cols-3 gap-5">
+              {EVIDENCE_CARDS.map((card, i) => (
+                // The window frame used to give the three a common edge. Without it they
+                // stretch to a shared height instead, or their ragged bottoms read as a
+                // layout accident rather than as three cards carrying different amounts
+                // of evidence.
+                <Reveal key={card.cafe} delay={0.22 + i * 0.1} className="h-full">
+                  <motion.div
+                    className="rounded-xl overflow-hidden bg-white h-full flex flex-col"
+                    style={{
+                      border: `1.5px solid ${card.border}`,
+                      boxShadow: `0 8px 40px ${card.glow}, 0 2px 8px rgba(0,0,0,0.1)`,
+                    }}
+                    whileHover={{
+                      y: -6,
+                      boxShadow: `0 24px 70px ${card.glow}, 0 4px 20px rgba(0,0,0,0.14)`,
+                      transition: SPRING,
+                    }}
                   >
-                    <motion.span className="w-1.5 h-1.5 rounded-full bg-matcha-400/70"
-                      animate={{ opacity: [0.7, 1, 0.7] }}
-                      transition={{ duration: 2.8, repeat: Infinity }}
-                    />
-                    <span className="text-[16px]" style={{ color: "rgba(255,255,255,0.28)" }}>matcha-origin.com/map</span>
-                  </div>
-                </div>
-                <div className="w-16" />
-              </div>
+                    {/* Level accent strip */}
+                    <div className="h-[3px]" style={{ background: card.accent }} />
 
-              {/* Cards grid */}
-              <div className="p-5 grid md:grid-cols-3 gap-4">
-                {EVIDENCE_CARDS.map((card, i) => (
-                  <Reveal key={card.cafe} delay={0.22 + i * 0.1}>
-                    <motion.div
-                      className="rounded-xl overflow-hidden bg-white"
-                      style={{
-                        border: `1.5px solid ${card.border}`,
-                        boxShadow: `0 8px 40px ${card.glow}, 0 2px 8px rgba(0,0,0,0.1)`,
-                      }}
-                      whileHover={{
-                        y: -6,
-                        boxShadow: `0 24px 70px ${card.glow}, 0 4px 20px rgba(0,0,0,0.14)`,
-                        transition: SPRING,
-                      }}
-                    >
-                      {/* Level accent strip */}
-                      <div className="h-[3px]" style={{ background: card.accent }} />
-
-                      <div className="p-5">
-                        {/* Cafe header */}
-                        <div className="flex items-start justify-between gap-2 mb-4">
-                          <div>
-                            <div className="font-semibold text-[16px] text-gray-900 leading-tight">{card.cafe}</div>
-                            <div className="text-[16px] text-gray-400 mt-0.5">{card.suburb}</div>
-                          </div>
-                          <span className="text-[16px] font-bold px-2.5 py-1 rounded-full shrink-0 whitespace-nowrap mt-0.5"
-                            style={{ background: card.badgeBg, color: card.accent }}
-                          >
-                            Level {card.level}
-                          </span>
+                    <div className="p-5 flex-1 flex flex-col">
+                      {/* Cafe header */}
+                      <div className="flex items-start justify-between gap-2 mb-4">
+                        <div>
+                          <div className="font-semibold text-[16px] text-gray-900 leading-tight">{card.cafe}</div>
+                          <div className="text-[16px] text-gray-400 mt-0.5">{card.suburb}</div>
                         </div>
-
-                        {/* Quote or no-disclosure */}
-                        {card.quote ? (
-                          <div className="rounded-lg p-3.5 mb-4" style={{ background: card.badgeBg, borderLeft: `3px solid ${card.accent}` }}>
-                            <p className="text-[16px] leading-relaxed italic text-gray-700">"{card.quote}"</p>
-                          </div>
-                        ) : (
-                          <div className="rounded-lg p-3.5 mb-4 flex items-start gap-2.5"
-                            style={{ background: "#f9fafb", border: "1px dashed #e5e7eb" }}
-                          >
-                            <span className="text-[16px] text-gray-300 mt-px leading-none">—</span>
-                            <p className="text-[16px] text-gray-400 italic leading-relaxed">
-                              No sourcing information found on any public channel.
-                            </p>
-                          </div>
-                        )}
-
-                        {/* Footer. The stamp sits on its own line above the provenance
-                            rather than beside it: in a third of a three-column grid there
-                            is no room for both, and sharing the row broke "Evidence found"
-                            across two lines and ran it into the source beside it. It reads
-                            better this way round anyway — the verdict, then what backs it. */}
-                        <div className="pt-3.5" style={{ borderTop: "1px solid rgba(0,0,0,0.06)" }}>
-                          {card.level !== "C" && (
-                            <span className="text-[16px] font-semibold inline-flex items-center gap-1 whitespace-nowrap mb-2"
-                              style={{ color: card.accent }}
-                            >
-                              <CheckCircle2 size={11} className="shrink-0" />Evidence found
-                            </span>
-                          )}
-                          <div className="text-[16px] font-medium text-gray-500 leading-tight">{card.source}</div>
-                          <div className="text-[16px] text-gray-400 mt-0.5">Verified {card.date}</div>
-                        </div>
+                        <span className="text-[16px] font-bold px-2.5 py-1 rounded-full shrink-0 whitespace-nowrap mt-0.5"
+                          style={{ background: card.badgeBg, color: card.accent }}
+                        >
+                          Level {card.level}
+                        </span>
                       </div>
-                    </motion.div>
-                  </Reveal>
-                ))}
-              </div>
+
+                      {/* Quote or no-disclosure */}
+                      {card.quote ? (
+                        <div className="rounded-lg p-3.5 mb-4" style={{ background: card.badgeBg, borderLeft: `3px solid ${card.accent}` }}>
+                          <p className="text-[16px] leading-relaxed italic text-gray-700">"{card.quote}"</p>
+                        </div>
+                      ) : (
+                        <div className="rounded-lg p-3.5 mb-4 flex items-start gap-2.5"
+                          style={{ background: "#f9fafb", border: "1px dashed #e5e7eb" }}
+                        >
+                          <span className="text-[16px] text-gray-300 mt-px leading-none">—</span>
+                          <p className="text-[16px] text-gray-400 italic leading-relaxed">
+                            No sourcing information found on any public channel.
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Footer. The stamp sits on its own line above the provenance
+                          rather than beside it: in a third of a three-column grid there
+                          is no room for both, and sharing the row broke "Evidence found"
+                          across two lines and ran it into the source beside it. It reads
+                          better this way round anyway — the verdict, then what backs it. */}
+                      <div className="pt-3.5 mt-auto" style={{ borderTop: "1px solid rgba(0,0,0,0.06)" }}>
+                        {card.level !== "C" && (
+                          <span className="text-[16px] font-semibold inline-flex items-center gap-1 whitespace-nowrap mb-2"
+                            style={{ color: card.accent }}
+                          >
+                            <CheckCircle2 size={11} className="shrink-0" />Evidence found
+                          </span>
+                        )}
+                        <div className="text-[16px] font-medium text-gray-500 leading-tight">{card.source}</div>
+                        <div className="text-[16px] text-gray-400 mt-0.5">Verified {card.date}</div>
+                      </div>
+                    </div>
+                </motion.div>
+              </Reveal>
+              ))}
             </div>
           </Reveal>
 
