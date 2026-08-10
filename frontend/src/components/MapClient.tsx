@@ -190,7 +190,7 @@ function MapStateTracker({ city }: { city: string }) {
 interface Props {
   cafes: Cafe[];
   selectedCafe: Cafe | null;
-  onSelectCafe: (cafe: Cafe) => void;
+  onSelectCafe: (cafe: Cafe | null) => void;
   city: string;
   isMobile?: boolean;
 }
@@ -233,7 +233,8 @@ export default function MapClient({ cafes, selectedCafe, onSelectCafe, city, isM
             key={cafe.id}
             position={[cafe.lat, cafe.lng]}
             icon={getIcon(cafe.level, isSelected, cafe.name)}
-            eventHandlers={{ click: () => onSelectCafe(cafe) }}
+            // Clicking the selected pin again clears it — back to every cafe shown equally
+            eventHandlers={{ click: () => onSelectCafe(isSelected ? null : cafe) }}
             zIndexOffset={isSelected ? 1000 : 0}
           />
         );
