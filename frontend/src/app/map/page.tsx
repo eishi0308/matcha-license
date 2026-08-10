@@ -2,10 +2,11 @@
 
 import dynamic from "next/dynamic";
 import { useState, useMemo, useEffect } from "react";
-import { Search, SlidersHorizontal, X, ChevronDown, MapPin, List, Map } from "lucide-react";
+import { Search, SlidersHorizontal, X, ChevronDown, Check, MapPin, List, Map } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import CafeDetailPanel from "@/components/CafeDetailPanel";
+import LevelFilter from "@/components/LevelFilter";
 import { Cafe, levelConfig, TransparencyLevel, City, CafeType } from "@/data/cafes";
 import { fetchCafes, fetchStats } from "@/lib/api";
 
@@ -31,16 +32,10 @@ const MapClient = dynamic(() => import("@/components/MapClient"), {
   ),
 });
 
-type LevelFilter = TransparencyLevel | "All";
 type CityFilter  = City | "All";
 
-const LEVEL_OPTS: { value: LevelFilter; label: string }[] = [
-  { value: "All", label: "All Levels" },
-  { value: "A",   label: "A — Verified" },
-  { value: "B",   label: "B — Mentioned" },
-  { value: "C",   label: "C — No Disclosure" },
-  { value: "D",   label: "D — Unknown" },
-];
+const ALL_LEVELS: TransparencyLevel[] = ["A", "B", "C", "D"];
+
 const CITY_OPTS: { value: CityFilter; label: string }[] = [
   { value: "All",       label: "All Cities" },
   { value: "Sydney",    label: "Sydney" },
@@ -71,7 +66,8 @@ export default function MapPage() {
   const [loading,      setLoading]     = useState(true);
   const [discovering,  setDiscovering] = useState(false);
   const [query,        setQuery]       = useState("");
-  const [levelFilter,  setLevelFilter] = useState<LevelFilter>("All");
+  // Empty array = no level filter (all levels shown)
+  const [levelFilter,  setLevelFilter] = useState<TransparencyLevel[]>([]);
   const [cityFilter,   setCityFilter]  = useState<CityFilter>("All");
   const [typeFilter,   setTypeFilter]  = useState<CafeType | "All">("All");
   const [selectedCafe, setSelectedCafe] = useState<Cafe | null>(null);
@@ -117,24 +113,35 @@ export default function MapPage() {
     return () => { if (pollInterval) clearInterval(pollInterval); };
   }, []);
 
-  const filtered = useMemo(() => cafes.filter((c) => {
+  // Everything except the level filter — so level counts stay stable while toggling levels
+  const baseFiltered = useMemo(() => cafes.filter((c) => {
     const q = query.toLowerCase();
     return (
       (!q || c.name.toLowerCase().includes(q) || c.suburb.toLowerCase().includes(q) || c.city.toLowerCase().includes(q) || c.specialties.some((s) => s.toLowerCase().includes(q))) &&
-      (levelFilter === "All" || c.level === levelFilter) &&
-      (cityFilter  === "All" || c.city  === cityFilter) &&
-      (typeFilter  === "All" || c.type  === typeFilter)
+      (cityFilter === "All" || c.city === cityFilter) &&
+      (typeFilter === "All" || c.type === typeFilter)
     );
-  }), [cafes, query, levelFilter, cityFilter, typeFilter]);
+  }), [cafes, query, cityFilter, typeFilter]);
+
+  const filtered = useMemo(
+    () => (levelFilter.length === 0 ? baseFiltered : baseFiltered.filter((c) => levelFilter.includes(c.level))),
+    [baseFiltered, levelFilter],
+  );
 
   const levelCounts = useMemo(() => {
     const counts: Record<string, number> = { A: 0, B: 0, C: 0, D: 0 };
-    filtered.forEach((c) => counts[c.level]++);
+    baseFiltered.forEach((c) => counts[c.level]++);
     return counts;
-  }, [filtered]);
+  }, [baseFiltered]);
 
-  const activeFilters = [levelFilter, cityFilter, typeFilter].filter((f) => f !== "All").length;
-  const clearAll = () => { setLevelFilter("All"); setCityFilter("All"); setTypeFilter("All"); setQuery(""); };
+  const toggleLevel = (lvl: TransparencyLevel) =>
+    setLevelFilter((prev) =>
+      ALL_LEVELS.filter((l) => (l === lvl ? !prev.includes(l) : prev.includes(l))),
+    );
+
+  const activeFilters =
+    (levelFilter.length > 0 ? 1 : 0) + [cityFilter, typeFilter].filter((f) => f !== "All").length;
+  const clearAll = () => { setLevelFilter([]); setCityFilter("All"); setTypeFilter("All"); setQuery(""); };
 
   // On mobile list view, tapping a cafe switches to map view then opens detail
   const handleSelectCafe = (cafe: Cafe | null) => {
@@ -154,23 +161,42 @@ export default function MapPage() {
         animate={{ opacity: 1 }}
         transition={{ delay: 0.2, duration: 0.4, ease: EASE }}
       >
-        <div className="text-[16px] uppercase tracking-widest text-gray-400 font-semibold mb-3">
-          Transparency Levels
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-[16px] uppercase tracking-widest text-gray-400 font-semibold">
+            Transparency Levels
+          </span>
+          <AnimatePresence>
+            {levelFilter.length > 0 && (
+              <motion.button
+                onClick={() => setLevelFilter([])}
+                className="text-[16px] font-medium text-matcha-700 hover:underline"
+                initial={{ opacity: 0, x: 6 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 6 }}
+                transition={{ duration: 0.15 }}
+              >
+                Reset
+              </motion.button>
+            )}
+          </AnimatePresence>
         </div>
         <div className="space-y-1.5">
-          {(["A", "B", "C", "D"] as TransparencyLevel[]).map((lvl) => {
+          {ALL_LEVELS.map((lvl) => {
             const cfg = levelConfig[lvl];
-            const active = levelFilter === lvl;
+            const active = levelFilter.includes(lvl);
+            const dimmed = levelFilter.length > 0 && !active;
             return (
               <motion.button
                 key={lvl}
-                onClick={() => setLevelFilter(active ? "All" : lvl)}
+                onClick={() => toggleLevel(lvl)}
+                aria-pressed={active}
                 className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left"
                 animate={{
                   background: active ? cfg.bg : "transparent",
                   outline: active ? `1.5px solid ${cfg.color}30` : "1.5px solid transparent",
+                  opacity: dimmed ? 0.5 : 1,
                 }}
-                whileHover={{ background: active ? cfg.bg : "#f9fafb" } as any}
+                whileHover={{ background: active ? cfg.bg : "#f9fafb", opacity: 1 } as any}
                 whileTap={{ scale: 0.97 }}
                 transition={{ duration: 0.15 }}
               >
@@ -193,6 +219,27 @@ export default function MapPage() {
                 >
                   {levelCounts[lvl]}
                 </motion.span>
+                <span
+                  className="w-4 h-4 rounded-md flex-shrink-0 flex items-center justify-center"
+                  style={{
+                    background: active ? cfg.color : "transparent",
+                    border: active ? `1.5px solid ${cfg.color}` : "1.5px solid #e5e7eb",
+                  }}
+                >
+                  <AnimatePresence>
+                    {active && (
+                      <motion.span
+                        className="flex"
+                        initial={{ scale: 0.4, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={{ scale: 0.4, opacity: 0 }}
+                        transition={SPRING}
+                      >
+                        <Check size={11} strokeWidth={3.5} color="#ffffff" />
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+                </span>
               </motion.button>
             );
           })}
@@ -234,7 +281,7 @@ export default function MapPage() {
             </motion.div>
           ) : (
             <motion.div
-              key={`${levelFilter}-${cityFilter}-${typeFilter}-${query}`}
+              key={`${levelFilter.join("")}-${cityFilter}-${typeFilter}-${query}`}
               className="space-y-1.5"
               variants={listVariants}
               initial="hidden"
@@ -361,8 +408,14 @@ export default function MapPage() {
 
         {/* Row 2: filters (horizontal scroll on mobile) */}
         <div className="flex items-center gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden pb-0.5 sm:pb-0">
+          <LevelFilter
+            selected={levelFilter}
+            onChange={setLevelFilter}
+            counts={levelCounts}
+            total={baseFiltered.length}
+          />
+
           {[
-            { val: levelFilter, opts: LEVEL_OPTS, set: setLevelFilter as (v: string) => void },
             { val: cityFilter,  opts: CITY_OPTS,  set: setCityFilter  as (v: string) => void },
             { val: typeFilter,  opts: TYPE_OPTS,  set: setTypeFilter  as (v: string) => void },
           ].map((f, i) => (
@@ -576,16 +629,18 @@ export default function MapPage() {
                         boxShadow: "0 8px 32px rgba(0,0,0,0.1), 0 2px 8px rgba(0,0,0,0.06)",
                       }}
                     >
-                      {(["A", "B", "C", "D"] as TransparencyLevel[]).map((lvl, i) => {
+                      {ALL_LEVELS.map((lvl, i) => {
                         const cfg = levelConfig[lvl];
-                        const active = levelFilter === lvl;
+                        const active = levelFilter.includes(lvl);
+                        const dimmed = levelFilter.length > 0 && !active;
                         return (
                           <motion.button
                             key={lvl}
-                            onClick={() => setLevelFilter(active ? "All" : lvl)}
+                            onClick={() => toggleLevel(lvl)}
+                            aria-pressed={active}
                             className={`flex items-center gap-2.5 w-full px-3.5 py-2.5 text-left ${i < 3 ? "border-b border-gray-100" : ""}`}
-                            style={{ background: active ? cfg.bg : "transparent" }}
-                            whileHover={{ background: active ? cfg.bg : "#f9fafb" } as any}
+                            animate={{ background: active ? cfg.bg : "transparent", opacity: dimmed ? 0.5 : 1 }}
+                            whileHover={{ background: active ? cfg.bg : "#f9fafb", opacity: 1 } as any}
                             whileTap={{ scale: 0.97 }}
                             transition={{ duration: 0.1 }}
                           >
@@ -597,6 +652,13 @@ export default function MapPage() {
                             <span className="ml-auto pl-3 text-[16px] font-semibold tabular-nums" style={{ color: cfg.color }}>
                               {levelCounts[lvl]}
                             </span>
+                            <motion.span
+                              className="flex-shrink-0"
+                              animate={{ opacity: active ? 1 : 0, scale: active ? 1 : 0.6 }}
+                              transition={SPRING}
+                            >
+                              <Check size={12} strokeWidth={3.5} color={cfg.color} />
+                            </motion.span>
                           </motion.button>
                         );
                       })}
