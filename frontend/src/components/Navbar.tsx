@@ -54,7 +54,8 @@ export default function Navbar() {
           boxShadow:    scrolled || isMap ? "0 1px 20px rgba(0,0,0,0.06)" : "none",
         }}
       >
-        <div className="max-w-7xl mx-auto px-5 sm:px-8 flex items-center justify-between h-16">
+        {/* Full-bleed, not max-w-7xl — the lockup hugs the top-left corner */}
+        <div className="w-full px-3 sm:px-4 flex items-center justify-between h-16">
 
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2.5 group" onClick={() => setMobileMenuOpen(false)}>
@@ -158,7 +159,7 @@ export default function Navbar() {
         <AnimatePresence>
           {mobileMenuOpen && (
             <motion.div
-              className="md:hidden absolute top-16 left-0 right-0 border-b border-gray-100 px-5 pb-5"
+              className="md:hidden absolute top-16 left-0 right-0 border-b border-gray-100 px-3 sm:px-4 pb-5"
               style={{
                 background: "rgba(255,255,255,0.97)",
                 backdropFilter: "blur(20px)",
