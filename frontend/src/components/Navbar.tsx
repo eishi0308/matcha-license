@@ -3,9 +3,10 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Leaf, Map, Info, ChevronRight, Menu, X } from "lucide-react";
+import { Map, Info, ChevronRight, Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import AuthModal from "./AuthModal";
+import MatchaMark from "./MatchaMark";
 
 const NAV_LINKS = [
   { href: "/map",           icon: Map,  label: "Explore Map" },
@@ -58,21 +59,20 @@ export default function Navbar() {
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2.5 group" onClick={() => setMobileMenuOpen(false)}>
             <motion.div
-              className="w-8 h-8 rounded-full flex items-center justify-center"
-              style={{ background: "linear-gradient(135deg, #2e6027, #6eb35c)" }}
-              whileHover={{ rotate: 20, scale: 1.12 }}
+              whileHover={{ scale: 1.09, y: -1 }}
+              whileTap={{ scale: 0.95 }}
               transition={{ type: "spring", stiffness: 400, damping: 18 }}
             >
-              <Leaf size={15} className="text-white" />
+              <MatchaMark size={34} />
             </motion.div>
             <div className="flex flex-col leading-none">
-              <span className="font-semibold text-[16px] tracking-tight transition-colors duration-300"
+              <span className="font-semibold text-[18px] tracking-tight transition-colors duration-300"
                 style={{ color: light ? "#fff" : "#1a1a1a" }}
               >
                 MatchaScope
               </span>
-              <span className="text-[16px] tracking-widest uppercase font-medium transition-colors duration-300"
-                style={{ color: light ? "rgba(255,255,255,0.65)" : "#6eb35c" }}
+              <span className="hidden sm:block text-[16px] uppercase font-medium mt-0.5 transition-colors duration-300"
+                style={{ color: light ? "rgba(255,255,255,0.6)" : "#8cc47c", letterSpacing: "0.08em" }}
               >
                 Transparency Map
               </span>

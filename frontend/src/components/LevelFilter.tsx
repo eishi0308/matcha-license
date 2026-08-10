@@ -10,7 +10,16 @@ const LEVELS: TransparencyLevel[] = ["A", "B", "C", "D"];
 const SPRING = { type: "spring" as const, stiffness: 420, damping: 32 };
 const EASE = [0.25, 0.46, 0.45, 0.94] as const;
 
-const PANEL_W = 288;
+const PANEL_W = 300;
+
+/** Short enough to sit on one line next to the count — levelConfig's own labels overflow. */
+const BLURB: Record<TransparencyLevel, string> = {
+  A: "Origin stated publicly",
+  B: "Japan mentioned",
+  C: "No origin given",
+  D: "Not enough info",
+};
+
 const GAP = 8;
 const MARGIN = 8;
 
@@ -291,7 +300,7 @@ export default function LevelFilter({ selected, onChange, counts, total }: Props
                       {lvl}
                     </span>,
                     cfg.shortLabel,
-                    cfg.label,
+                    BLURB[lvl],
                     counts[lvl] ?? 0,
                     cfg.color,
                   );

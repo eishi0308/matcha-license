@@ -162,8 +162,8 @@ export default function MapPage() {
         transition={{ delay: 0.2, duration: 0.4, ease: EASE }}
       >
         <div className="flex items-center justify-between mb-3">
-          <span className="text-[16px] uppercase tracking-widest text-gray-400 font-semibold">
-            Transparency Levels
+          <span className="text-[16px] uppercase tracking-widest text-gray-400 font-semibold whitespace-nowrap">
+            Transparency
           </span>
           <AnimatePresence>
             {levelFilter.length > 0 && (

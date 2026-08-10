@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, Eye, EyeOff, Leaf } from "lucide-react";
+import { X, Eye, EyeOff } from "lucide-react";
+import MatchaMark from "./MatchaMark";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/lib/supabase";
 
@@ -112,12 +113,8 @@ export default function AuthModal({ isOpen, onClose, defaultTab = "login" }: Aut
                 initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.08, duration: 0.4, ease: EASE }}
               >
-                <motion.div
-                  className="w-8 h-8 rounded-full bg-matcha-700 flex items-center justify-center"
-                  whileHover={{ rotate: 20, scale: 1.1 }}
-                  transition={SPRING}
-                >
-                  <Leaf size={15} className="text-white" />
+                <motion.div whileHover={{ scale: 1.09, y: -1 }} transition={SPRING}>
+                  <MatchaMark size={32} />
                 </motion.div>
                 <span className="font-semibold text-matcha-900 text-[16px] tracking-wide">MatchaScope</span>
               </motion.div>

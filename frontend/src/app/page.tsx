@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import AuthModal from "@/components/AuthModal";
+import MatchaMark from "@/components/MatchaMark";
 import { fetchStats } from "@/lib/api";
 
 // ── Constants ──────────────────────────────────────────────────────────────
@@ -1992,9 +1993,7 @@ export default function HomePage() {
       <footer style={{ borderTop: "1px solid rgba(0,0,0,0.06)" }} className="py-10 px-5">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-full flex items-center justify-center" style={{ background: "linear-gradient(135deg, #2e6027, #6eb35c)" }}>
-              <Leaf size={12} className="text-white" />
-            </div>
+            <MatchaMark size={28} />
             <span className="text-[16px] font-semibold text-gray-700">MatchaScope</span>
           </div>
           <p className="text-[16px] text-gray-400">© 2026 MatchaScope. All classifications based on publicly verifiable evidence.</p>
