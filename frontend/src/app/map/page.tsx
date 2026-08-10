@@ -498,6 +498,7 @@ export default function MapPage() {
                 selectedCafe={selectedCafe}
                 onSelectCafe={handleSelectCafe}
                 city={cityFilter}
+                isMobile
               />
             </div>
 
