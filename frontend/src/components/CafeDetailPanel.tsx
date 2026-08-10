@@ -1,9 +1,24 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { X, ExternalLink, MapPin, Calendar, Quote, Shield, Tag, Star } from "lucide-react";
+import { X, ExternalLink, MapPin, Navigation, Calendar, Quote, Shield, Tag, Star } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Cafe, levelConfig } from "@/data/cafes";
+
+/**
+ * Google Maps links. Searching by name + address lands on the business listing
+ * (hours, photos, reviews) rather than an anonymous dropped pin, and falls back
+ * to coordinates when a listing has no address. These are universal links, so
+ * they open the Google Maps app on phones that have it.
+ */
+const mapsQuery = (cafe: Cafe) =>
+  encodeURIComponent(cafe.address ? `${cafe.name}, ${cafe.address}` : `${cafe.lat},${cafe.lng}`);
+
+const mapsPlaceUrl = (cafe: Cafe) =>
+  `https://www.google.com/maps/search/?api=1&query=${mapsQuery(cafe)}`;
+
+const mapsDirectionsUrl = (cafe: Cafe) =>
+  `https://www.google.com/maps/dir/?api=1&destination=${mapsQuery(cafe)}`;
 
 interface Props {
   cafe: Cafe | null;
@@ -199,12 +214,42 @@ function PanelContent({
           )}
         </motion.div>
 
-        {/* Address */}
+        {/* Address — the block itself is the way out to Google Maps */}
         <motion.div variants={rowVariants}>
           <div className="text-[16px] uppercase tracking-widest text-gray-400 font-semibold mb-2">Address</div>
-          <div className="flex items-start gap-2">
-            <MapPin size={14} className="text-gray-400 mt-0.5 flex-shrink-0" />
-            <span className="text-[16px] text-gray-600">{cafe.address}</span>
+          <div className="rounded-2xl border border-gray-200 overflow-hidden">
+            <div className="flex items-start gap-2.5 p-3.5">
+              <MapPin size={14} className="text-gray-400 mt-0.5 flex-shrink-0" />
+              <span className="text-[16px] text-gray-600">{cafe.address}</span>
+            </div>
+            <div className="grid grid-cols-2 border-t border-gray-200">
+              <motion.a
+                href={mapsPlaceUrl(cafe)}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={`Open ${cafe.name} in Google Maps`}
+                className="flex items-center justify-center gap-1.5 py-2.5 text-[16px] font-semibold text-gray-700 border-r border-gray-200"
+                whileHover={{ backgroundColor: "#f2f8f0", color: "#2e6027" } as any}
+                whileTap={{ scale: 0.97 }}
+                transition={{ duration: 0.15 }}
+              >
+                <ExternalLink size={13} />
+                Google Maps
+              </motion.a>
+              <motion.a
+                href={mapsDirectionsUrl(cafe)}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={`Directions to ${cafe.name} in Google Maps`}
+                className="flex items-center justify-center gap-1.5 py-2.5 text-[16px] font-semibold text-gray-700"
+                whileHover={{ backgroundColor: "#f2f8f0", color: "#2e6027" } as any}
+                whileTap={{ scale: 0.97 }}
+                transition={{ duration: 0.15 }}
+              >
+                <Navigation size={13} />
+                Directions
+              </motion.a>
+            </div>
           </div>
         </motion.div>
 
