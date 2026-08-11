@@ -1142,7 +1142,7 @@ export default function HomePage() {
       {/* ── STATS ──────────────────────────────────────────────────────── */}
       {/* Top padding is small: the 17% statement above hands straight over to
           its own breakdown, so a full section break here reads as a dead gap. */}
-      <section className="pt-14 pb-28 sm:pt-16 sm:pb-36 px-5 bg-white">
+      <section className="pt-14 pb-16 sm:pt-16 sm:pb-24 px-5 bg-white">
         <div className="max-w-4xl mx-auto">
           {/* Editorial lead-in */}
           <div className="mb-20">
@@ -1213,7 +1213,7 @@ export default function HomePage() {
         <div className="relative px-5">
 
           {/* Top section — headline & subline */}
-          <div className="max-w-5xl mx-auto pt-36 sm:pt-44 pb-24 sm:pb-32">
+          <div className="max-w-5xl mx-auto pt-24 sm:pt-28 pb-16 sm:pb-20">
 
             {/* Eyebrow pill */}
             <motion.div
@@ -1263,7 +1263,7 @@ export default function HomePage() {
           </div>
 
           {/* Menu evidence card — the omission, made visible */}
-          <div className="max-w-5xl mx-auto pb-24 sm:pb-32">
+          <div className="max-w-5xl mx-auto pb-16 sm:pb-20">
             <MenuEvidenceCard />
           </div>
 
@@ -1279,14 +1279,14 @@ export default function HomePage() {
           </div>
 
           {/* Facts — a causal chain, not a list */}
-          <div className="max-w-5xl mx-auto py-24 sm:py-32">
+          <div className="max-w-5xl mx-auto py-16 sm:py-20">
             {PROBLEM_FACTS.map((item, i) => (
               <ChainStep key={item.num} item={item} isLast={i === PROBLEM_FACTS.length - 1} />
             ))}
           </div>
 
           {/* Harm split — who actually pays for the silence */}
-          <div className="max-w-4xl mx-auto pb-24 sm:pb-32">
+          <div className="max-w-4xl mx-auto pb-16 sm:pb-20">
             <div className="text-center mb-16 sm:mb-20">
               <span
                 className="block uppercase tracking-[0.22em] font-semibold mb-5"
@@ -1316,7 +1316,7 @@ export default function HomePage() {
       </section>
 
       {/* ── PRESS PROOF ────────────────────────────────────────────── */}
-      <section className="py-28 sm:py-36 px-5" style={{ background: "#ffffff" }}>
+      <section className="py-16 sm:py-24 px-5" style={{ background: "#ffffff" }}>
         <div className="max-w-5xl mx-auto">
 
           {/* Eyebrow */}
@@ -1352,7 +1352,7 @@ export default function HomePage() {
       </section>
 
       {/* ── TRANSPARENCY LEVELS ──────────────────────────────────────── */}
-      <section className="relative py-36 sm:py-48 px-5 overflow-hidden" style={{ background: "#ffffff" }}>
+      <section className="relative py-20 sm:py-28 px-5 overflow-hidden" style={{ background: "#ffffff" }}>
         {/* Subtle background grid */}
         <div className="absolute inset-0 pointer-events-none opacity-[0.4]" style={{
           backgroundImage: "linear-gradient(rgba(0,0,0,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.03) 1px, transparent 1px)",
@@ -1482,7 +1482,7 @@ export default function HomePage() {
       </section>
 
       {/* ── HOW IT WORKS ─────────────────────────────────────────────── */}
-      <section id="how-it-works" className="py-36 sm:py-48 px-5" style={{ background: "#ffffff" }}>
+      <section id="how-it-works" className="py-20 sm:py-28 px-5" style={{ background: "#ffffff" }}>
         <div className="max-w-6xl mx-auto">
 
           {/* Header */}
@@ -1571,9 +1571,9 @@ export default function HomePage() {
       <LandingProof verified={verified} />
 
       {/* ── CTA ──────────────────────────────────────────────────────── */}
-      <section className="py-28 px-5 max-w-7xl mx-auto">
+      <section className="py-16 sm:py-20 px-5 max-w-7xl mx-auto">
         <Reveal>
-          <div className="relative rounded-3xl p-12 sm:p-20 text-center overflow-hidden"
+          <div className="relative rounded-3xl p-10 sm:p-14 text-center overflow-hidden"
             style={{ background: "linear-gradient(145deg, #0a1a0b 0%, #1e4a1a 55%, #2d6025 100%)" }}
           >
             {[
