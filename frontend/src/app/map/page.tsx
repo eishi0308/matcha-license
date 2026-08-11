@@ -82,6 +82,28 @@ export default function MapPage() {
     return () => window.removeEventListener("resize", check);
   }, []);
 
+  // Seed search and level filter from the URL so the landing page's search box
+  // and its "Verified only" chip land on actual results
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const q = params.get("q");
+    if (q) setQuery(q);
+
+    const levels = (params.get("level") ?? "")
+      .split(",")
+      .map((l) => l.trim().toUpperCase())
+      .filter((l): l is TransparencyLevel => (ALL_LEVELS as string[]).includes(l));
+    if (levels.length) setLevelFilter(ALL_LEVELS.filter((l) => levels.includes(l)));
+
+    // ?city= drives the city filter, not the text search — only the filter
+    // recentres the map, so a text search alone leaves you looking at Sydney
+    const city = params.get("city");
+    const match = CITY_OPTS.find(
+      (o) => o.value !== "All" && o.value.toLowerCase() === city?.trim().toLowerCase(),
+    );
+    if (match) setCityFilter(match.value);
+  }, []);
+
   useEffect(() => {
     let pollInterval: ReturnType<typeof setInterval> | null = null;
 
