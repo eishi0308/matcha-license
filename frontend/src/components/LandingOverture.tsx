@@ -200,13 +200,17 @@ function Hero({ stats }: { stats: Props["stats"] }) {
 
   const go = (q: string) => router.push(q.trim() ? `/map?q=${encodeURIComponent(q.trim())}` : "/map");
 
-  // "Verified only" is a level filter, not a text search — it needs its own route
-  const chips: { label: string; href: string }[] = [
-    { label: "Surry Hills",   href: "/map?q=Surry%20Hills" },
-    { label: "Uji",           href: "/map?q=Uji" },
-    { label: "Melbourne",     href: "/map?q=Melbourne" },
-    { label: "Verified only", href: "/map?level=A" },
-  ];
+  // The chip row is gone; the suggestions it carried now cycle through the
+  // placeholder, so discovery survives without a second row of controls.
+  const hints = ["Surry Hills", "Uji", "Melbourne", "Fitzroy", "ceremonial"];
+  const [hint, setHint] = useState(0);
+  const [focused, setFocused] = useState(false);
+
+  useEffect(() => {
+    if (reduce || focused || query) return;
+    const t = setInterval(() => setHint((h) => (h + 1) % hints.length), 2600);
+    return () => clearInterval(t);
+  }, [reduce, focused, query, hints.length]);
 
   return (
     <section
@@ -263,60 +267,98 @@ function Hero({ stats }: { stats: Props["stats"] }) {
           say about where their matcha comes from — quoted, dated, and linked.
         </motion.p>
 
-        {/* Search is the CTA */}
+        {/* Search is the CTA — and the largest object on the screen */}
         <motion.form
           onSubmit={(e) => { e.preventDefault(); go(query); }}
-          className="mt-7 max-w-xl mx-auto"
+          className="mt-10 max-w-2xl mx-auto"
           initial={reduce ? false : { opacity: 0, y: 18 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, ease: EASE_EXPO, delay: 0.88 }}
         >
-          <div className="flex flex-col sm:flex-row sm:items-center gap-2 p-2 rounded-2xl bg-white"
-               style={{ border: "1.5px solid #e5e7eb", boxShadow: "0 10px 40px rgba(15,32,16,0.07)" }}>
-            <div className="relative flex-1">
-              <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-              <label htmlFor="overture-search" className="sr-only">Search cafes and suburbs</label>
+          <motion.div
+            className="relative flex flex-col sm:flex-row sm:items-center gap-2.5 p-2.5 rounded-[26px] bg-white"
+            animate={{
+              boxShadow: focused
+                ? "0 24px 70px rgba(15,32,16,0.18), 0 0 0 4px rgba(110,179,92,0.22)"
+                : "0 16px 50px rgba(15,32,16,0.10), 0 0 0 1.5px rgba(0,0,0,0.06)",
+              scale: focused && !reduce ? 1.015 : 1,
+            }}
+            transition={{ duration: 0.28, ease: EASE_OUT }}
+          >
+            <div className="relative flex-1 flex items-center">
+              <Search
+                size={24}
+                className="absolute left-4 text-gray-400 pointer-events-none"
+                strokeWidth={2.2}
+              />
+              <label htmlFor="overture-search" className="sr-only">
+                Search cafes and suburbs
+              </label>
               <input
                 id="overture-search"
+                type="search"
+                enterKeyHint="search"
+                autoComplete="off"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder={`Search ${total.toLocaleString()} cafes…`}
-                className="w-full bg-transparent pl-10 pr-3 py-3 text-[16px] text-gray-800 placeholder:text-gray-400 outline-none rounded-xl"
+                onFocus={() => setFocused(true)}
+                onBlur={() => setFocused(false)}
+                className="w-full bg-transparent pl-14 pr-4 py-4 sm:py-5 text-[20px] sm:text-[22px] text-gray-900 outline-none rounded-[20px] [&::-webkit-search-cancel-button]:appearance-none"
               />
+              {/* Animated placeholder — a real one would not fade between hints */}
+              {!query && (
+                <div className="absolute left-14 right-4 pointer-events-none flex items-baseline gap-1.5 text-[20px] sm:text-[22px] text-gray-400 overflow-hidden">
+                  <span className="flex-shrink-0">Search</span>
+                  <span className="relative flex-1 h-[1.4em] overflow-hidden">
+                    <AnimatePresence mode="wait" initial={false}>
+                      <motion.span
+                        key={reduce ? "static" : hint}
+                        className="absolute left-0 top-0 whitespace-nowrap text-gray-500"
+                        initial={reduce ? false : { y: "0.9em", opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        exit={reduce ? undefined : { y: "-0.9em", opacity: 0 }}
+                        transition={{ duration: 0.42, ease: EASE_EXPO }}
+                      >
+                        {reduce ? `${total.toLocaleString()} cafes and suburbs` : `“${hints[hint]}”`}
+                      </motion.span>
+                    </AnimatePresence>
+                  </span>
+                </div>
+              )}
             </div>
-            <Magnetic strength={0.25} className="block w-full sm:w-auto">
+
+            <Magnetic strength={0.22} className="block w-full sm:w-auto">
               <button
                 type="submit"
-                className="w-full inline-flex items-center justify-center gap-1.5 px-5 py-3 rounded-xl text-[16px] font-semibold text-white focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-matcha-500 outline-none whitespace-nowrap"
-                style={{ background: "linear-gradient(135deg,#2e6027,#4d9740)", boxShadow: "0 4px 16px rgba(46,96,39,0.32)" }}
+                className="group/cta w-full inline-flex items-center justify-center gap-2 px-7 sm:px-9 py-4 sm:py-5 rounded-[20px] text-[18px] sm:text-[19px] font-semibold text-white whitespace-nowrap focus-visible:ring-4 focus-visible:ring-matcha-300 outline-none"
+                style={{
+                  background: "linear-gradient(135deg,#2e6027,#4d9740)",
+                  boxShadow: "0 8px 24px rgba(46,96,39,0.34)",
+                }}
               >
                 Explore the map
-                <ArrowRight size={15} />
+                <motion.span
+                  className="inline-flex"
+                  animate={reduce ? {} : { x: [0, 3, 0] }}
+                  transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
+                >
+                  <ArrowRight size={19} />
+                </motion.span>
               </button>
             </Magnetic>
-          </div>
+          </motion.div>
 
-          <div className="mt-3.5 flex flex-wrap items-center justify-center gap-2">
-            <span className="text-[16px] text-gray-500">Popular:</span>
-            {chips.map((c, i) => (
-              <motion.button
-                key={c.label}
-                type="button"
-                onClick={() => router.push(c.href)}
-                className="px-3 py-1.5 rounded-full text-[16px] text-gray-600 bg-gray-100 hover:bg-matcha-50 hover:text-matcha-700 transition-colors focus-visible:ring-2 focus-visible:ring-matcha-500 outline-none"
-                initial={reduce ? false : { opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, ease: EASE_OUT, delay: 1 + i * 0.06 }}
-              >
-                {c.label}
-              </motion.button>
-            ))}
+          <div className="mt-3.5 text-[16px] text-gray-500">
+            Search by cafe, suburb or city — or open the map and browse all{" "}
+            {total.toLocaleString()}.
           </div>
         </motion.form>
 
-        {/* Live proof */}
+        {/* Live proof — divided, so the three figures read as one instrument */}
         <motion.div
-          className="mt-9 flex flex-wrap items-center justify-center gap-x-10 gap-y-4"
+          // grid, not flex-wrap: wrapping put one figure on its own row and left
+          // a divider stranded at the start of the next
+          className="mt-11 mx-auto grid grid-cols-3 max-w-xl divide-x divide-gray-200"
           initial={reduce ? false : { opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8, delay: 1.15 }}
@@ -326,11 +368,11 @@ function Hero({ stats }: { stats: Props["stats"] }) {
             { n: verified, label: "with verified disclosure" },
             { n: 2,        label: "cities" },
           ].map((s) => (
-            <div key={s.label} className="text-center">
-              <div className="font-display text-3xl sm:text-4xl font-bold text-gray-900">
+            <div key={s.label} className="px-2 sm:px-9 text-center">
+              <div className="font-display text-3xl sm:text-5xl font-bold text-gray-900 leading-none">
                 <Counter value={s.n} />
               </div>
-              <div className="text-[16px] text-gray-500 mt-0.5">{s.label}</div>
+              <div className="text-[16px] text-gray-500 mt-2">{s.label}</div>
             </div>
           ))}
         </motion.div>
@@ -350,50 +392,66 @@ function Hero({ stats }: { stats: Props["stats"] }) {
   );
 }
 
-/** Infinite marquee of the cafes that actually disclose. */
+/**
+ * Two lanes drifting against each other. One lane reads as a ticker; two
+ * moving in opposition read as a body of evidence, which is the point.
+ */
 function VerifiedMarquee({ verified }: { verified: Cafe[] }) {
   const reduce = useReducedMotion();
-  const names  = verified.length
-    ? verified.map((c) => c.name)
-    : ["Verified Japanese disclosure"];
-  const lane = [...names, ...names];
-  // Chips average ~230px, and the loop travels half the lane. Deriving the
-  // duration from the name count keeps the scroll at a readable ~50px/second
-  // however many cafes get verified later.
-  const duration = Math.max(60, names.length * 4.6);
+  const names  = verified.length ? verified.map((c) => c.name) : [];
+  if (!names.length) return null;
+
+  const half  = Math.ceil(names.length / 2);
+  const lanes = [names.slice(0, half), names.slice(half)];
 
   return (
-    <section className="py-8 border-y border-gray-100 bg-white overflow-hidden" aria-label="Cafes with verified disclosure">
-      <div className="flex items-center gap-3 justify-center mb-5 px-5">
-        <ShieldCheck size={15} className="text-matcha-600" />
-        <span className="text-[16px] uppercase tracking-widest text-gray-500 font-semibold text-center">
-          Level A — states its Japanese origin in public
+    <section
+      className="py-14 sm:py-16 overflow-hidden"
+      style={{ background: "#fdfcf7", borderTop: "1px solid #eee9dc", borderBottom: "1px solid #eee9dc" }}
+      aria-label="Cafes with verified disclosure"
+    >
+      <div className="flex items-center justify-center gap-2.5 mb-8 px-5">
+        <ShieldCheck size={16} className="text-matcha-600 flex-shrink-0" />
+        <span className="text-[16px] uppercase tracking-[0.18em] text-gray-500 font-semibold text-center">
+          {names.length} cafes state their Japanese origin in public
         </span>
       </div>
-      <div className="relative">
-        <div aria-hidden className="pointer-events-none absolute inset-y-0 left-0 w-24 z-10"
-             style={{ background: "linear-gradient(90deg,#fff,transparent)" }} />
-        <div aria-hidden className="pointer-events-none absolute inset-y-0 right-0 w-24 z-10"
-             style={{ background: "linear-gradient(270deg,#fff,transparent)" }} />
-        <motion.div
-          // Keyed on the count: the marquee first renders with the placeholder
-          // name, and framer keeps the transition it started with — without
-          // this it would run the 1-name duration over the 86-name lane.
-          key={names.length}
-          className="flex gap-3 w-max"
-          animate={reduce ? {} : { x: ["0%", "-50%"] }}
-          transition={{ duration, repeat: Infinity, ease: "linear" }}
-        >
-          {lane.map((n, i) => (
-            <span
-              key={`${n}-${i}`}
-              className="flex-shrink-0 px-4 py-2 rounded-full text-[16px] font-medium text-matcha-800"
-              style={{ background: "#f2f8f0", border: "1px solid #e0f0d8" }}
+
+      <div className="relative space-y-3">
+        <div aria-hidden className="pointer-events-none absolute inset-y-0 left-0 w-20 sm:w-40 z-10"
+             style={{ background: "linear-gradient(90deg,#fdfcf7 20%,rgba(253,252,247,0))" }} />
+        <div aria-hidden className="pointer-events-none absolute inset-y-0 right-0 w-20 sm:w-40 z-10"
+             style={{ background: "linear-gradient(270deg,#fdfcf7 20%,rgba(253,252,247,0))" }} />
+
+        {lanes.map((lane, i) => {
+          const items = [...lane, ...lane];
+          // ~50px/second, derived so the pace holds as more cafes qualify
+          const duration = Math.max(60, lane.length * 9);
+          return (
+            <motion.div
+              key={`${i}-${lane.length}`}
+              className="flex gap-3 w-max"
+              animate={reduce ? {} : { x: i === 0 ? ["0%", "-50%"] : ["-50%", "0%"] }}
+              transition={{ duration, repeat: Infinity, ease: "linear" }}
             >
-              {n}
-            </span>
-          ))}
-        </motion.div>
+              {items.map((n, k) => (
+                <span
+                  key={`${n}-${k}`}
+                  className="flex-shrink-0 inline-flex items-center gap-2 pl-3 pr-4 py-2.5 rounded-full text-[16px] font-medium text-matcha-900 bg-white"
+                  style={{ border: "1px solid #e0f0d8", boxShadow: "0 1px 3px rgba(15,32,16,0.04)" }}
+                >
+                  <span
+                    className="w-5 h-5 rounded-full flex items-center justify-center text-[16px] font-bold text-white flex-shrink-0"
+                    style={{ background: "#2e6027", fontSize: 11 }}
+                  >
+                    A
+                  </span>
+                  {n}
+                </span>
+              ))}
+            </motion.div>
+          );
+        })}
       </div>
     </section>
   );
@@ -405,32 +463,54 @@ function DisclosureStat({ stats }: { stats: Props["stats"] }) {
   const reduce = useReducedMotion();
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end end"] });
 
-  const scale   = useTransform(scrollYProgress, [0, 0.5], [reduce ? 1 : 0.82, 1]);
-  const ringLen = useTransform(scrollYProgress, [0.1, 0.65], [0, 1]);
-  const copyY   = useTransform(scrollYProgress, [0.35, 0.8], [reduce ? 0 : 40, 0]);
-  const copyOp  = useTransform(scrollYProgress, [0.35, 0.7], [reduce ? 1 : 0, 1]);
-
   // Same definition as the disclosure section further down the page: cafes that
   // say anything about Japanese origin (A + B), over the cafes we could read.
   // Two different figures for one fact would read as an error.
   const named = (stats?.byLevel?.A ?? 86) + (stats?.byLevel?.B ?? 14);
   const read  = stats?.assessable ?? 588;
   const pct   = Math.round((named / read) * 100);
+  const share = named / read;
+
+  const scale   = useTransform(scrollYProgress, [0, 0.5], [reduce ? 1 : 0.82, 1]);
+  const ringLen = useTransform(scrollYProgress, [0.1, 0.65], [0, 1]);
+  // dashoffset 1 = empty ring; 1 - share = arc drawn to the true proportion
+  const arcOffset = useTransform(scrollYProgress, [0.12, 0.62], [1, 1 - share]);
+  const copyY   = useTransform(scrollYProgress, [0.35, 0.8], [reduce ? 0 : 40, 0]);
+  const copyOp  = useTransform(scrollYProgress, [0.35, 0.7], [reduce ? 1 : 0, 1]);
 
   return (
     <section ref={ref} className="relative h-[108vh]" aria-label="Disclosure rate">
       <div className="sticky top-0 h-[100dvh] flex flex-col items-center justify-center overflow-hidden"
            style={{ background: "#0f2010" }}>
-        {/* concentric rings */}
-        <svg aria-hidden className="absolute inset-0 w-full h-full opacity-[0.16]" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice">
-          {[18, 30, 42].map((r) => (
+        {/* Faint field rings */}
+        <svg aria-hidden className="absolute inset-0 w-full h-full opacity-[0.13]" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice">
+          {[20, 32, 44].map((r) => (
             <motion.circle
               key={r}
               cx="50" cy="50" r={r}
-              fill="none" stroke="#6eb35c" strokeWidth="0.25"
+              fill="none" stroke="#6eb35c" strokeWidth="0.22"
               style={{ pathLength: ringLen }}
             />
           ))}
+        </svg>
+
+        {/* The share, drawn: the lit arc is the 17%, the dim ring the rest */}
+        <svg
+          aria-hidden
+          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[min(78vw,560px)] h-[min(78vw,560px)] -rotate-90"
+          viewBox="0 0 100 100"
+        >
+          <circle cx="50" cy="50" r="46" fill="none" stroke="rgba(255,255,255,0.10)" strokeWidth="1.1" />
+          <motion.circle
+            cx="50" cy="50" r="46"
+            fill="none"
+            stroke="#6eb35c"
+            strokeWidth="1.6"
+            strokeLinecap="round"
+            pathLength={1}
+            strokeDasharray={1}
+            style={{ strokeDashoffset: arcOffset }}
+          />
         </svg>
 
         <motion.div style={{ scale }} className="text-center px-5">
