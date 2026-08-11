@@ -305,15 +305,18 @@ function Hero({ stats }: { stats: Props["stats"] }) {
                 onBlur={() => setFocused(false)}
                 className="w-full bg-transparent pl-14 pr-4 py-4 sm:py-5 text-[20px] sm:text-[22px] text-gray-900 outline-none rounded-[20px] [&::-webkit-search-cancel-button]:appearance-none"
               />
-              {/* Animated placeholder — a real one would not fade between hints */}
+              {/* Animated placeholder. Both halves centre inside boxes of the
+                  same height so the rotating word shares a baseline with the
+                  static one — an absolutely positioned child cannot sit on the
+                  flex baseline of its siblings. */}
               {!query && (
-                <div className="absolute left-14 right-4 pointer-events-none flex items-baseline gap-1.5 text-[20px] sm:text-[22px] text-gray-400 overflow-hidden">
-                  <span className="flex-shrink-0">Search</span>
-                  <span className="relative flex-1 h-[1.4em] overflow-hidden">
+                <div className="absolute left-14 right-4 pointer-events-none flex items-center gap-1.5 text-[20px] sm:text-[22px] text-gray-400 leading-none overflow-hidden">
+                  <span className="flex-shrink-0 leading-none">Search</span>
+                  <span className="relative flex-1 h-[1.3em] overflow-hidden">
                     <AnimatePresence mode="wait" initial={false}>
                       <motion.span
                         key={reduce ? "static" : hint}
-                        className="absolute left-0 top-0 whitespace-nowrap text-gray-500"
+                        className="absolute inset-0 flex items-center whitespace-nowrap text-gray-500 leading-none"
                         initial={reduce ? false : { y: "0.9em", opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
                         exit={reduce ? undefined : { y: "-0.9em", opacity: 0 }}
@@ -461,7 +464,11 @@ function VerifiedMarquee({ verified }: { verified: Cafe[] }) {
 function DisclosureStat({ stats }: { stats: Props["stats"] }) {
   const ref    = useRef<HTMLElement>(null);
   const reduce = useReducedMotion();
-  const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end end"] });
+  // Measured from the moment the section appears at the bottom of the viewport,
+  // not from the moment it pins. The panel is 100dvh inside a 108vh section, so
+  // "start start"→"end end" left only 8vh of travel — every beat fired late,
+  // after the reader had already arrived.
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end end"] });
 
   // Same definition as the disclosure section further down the page: cafes that
   // say anything about Japanese origin (A + B), over the cafes we could read.
@@ -471,12 +478,15 @@ function DisclosureStat({ stats }: { stats: Props["stats"] }) {
   const pct   = Math.round((named / read) * 100);
   const share = named / read;
 
-  const scale   = useTransform(scrollYProgress, [0, 0.5], [reduce ? 1 : 0.82, 1]);
-  const ringLen = useTransform(scrollYProgress, [0.1, 0.65], [0, 1]);
+  // Travel here is one section height, and the panel pins at ~0.93 of it
+  // (measured). So the arc runs the length of the approach and completes just
+  // as the panel settles, rather than finishing halfway up the screen.
+  const scale   = useTransform(scrollYProgress, [0.08, 0.5], [reduce ? 1 : 0.86, 1]);
+  const ringLen = useTransform(scrollYProgress, [0.12, 0.6], [0, 1]);
   // dashoffset 1 = empty ring; 1 - share = arc drawn to the true proportion
-  const arcOffset = useTransform(scrollYProgress, [0.12, 0.62], [1, 1 - share]);
-  const copyY   = useTransform(scrollYProgress, [0.35, 0.8], [reduce ? 0 : 40, 0]);
-  const copyOp  = useTransform(scrollYProgress, [0.35, 0.7], [reduce ? 1 : 0, 1]);
+  const arcOffset = useTransform(scrollYProgress, [0.18, 0.8], [1, 1 - share]);
+  const copyY   = useTransform(scrollYProgress, [0.55, 0.85], [reduce ? 0 : 40, 0]);
+  const copyOp  = useTransform(scrollYProgress, [0.55, 0.8], [reduce ? 1 : 0, 1]);
 
   return (
     <section ref={ref} className="relative h-[108vh]" aria-label="Disclosure rate">

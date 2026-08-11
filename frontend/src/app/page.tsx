@@ -89,8 +89,8 @@ const DISCLOSURE_ROWS = [
   // swatch draw stripes straight onto the card, so this row has no flat colour of its own.
   { key: "unchecked" as const, label: "No page we could read",     color: "transparent" },
   { key: "nothing" as const,   label: "Nothing found",             color: "var(--text-muted)" },
-  { key: "japanOnly" as const, label: "“Japanese matcha” only",    color: "#4FB99A" },
-  { key: "named" as const,     label: "Named source, with a link", color: "#4d7c1a" },
+  { key: "japanOnly" as const, label: "“Japanese matcha” only",    color: "#6eb35c" },
+  { key: "named" as const,     label: "Named source, with a link", color: "#2e6027" },
 ];
 
 const LEVEL_CARDS = [
@@ -630,34 +630,21 @@ function PressRow({ card }: { card: typeof PRESS_CARDS[number] }) {
 // drift from the numbers printed beside it.
 // `hatch` is the band width for the one class that is not a finding — narrower than
 // `stroke`, so it can carry its true share without being read as one of the three.
-const DONUT = { cx: 120, cy: 130, r: 88, stroke: 20, hatch: 14, frame: 103 };
-const CIRC = 2 * Math.PI * DONUT.r; // 552.92
 
-/** The two radii that close a hatched band of the given width. */
-const hatchEdges = (width: number) => [DONUT.r - width / 2, DONUT.r + width / 2];
-const DONUT_EASE = "cubic-bezier(.25,.8,.3,1)";
-const ACCENT = "#639922";
+const BAR_EASE = "cubic-bezier(.25,.8,.3,1)";
+// The emphasis hue, validated against the de-emphasis grey (deutan ΔE 26.3)
+const ACCENT = "#2e6027";
 
-// Draw order is not reading order. The green sliver goes down first so the eye
-// anchors on the disclosing sliver before the grey floods the frame; the rows still read
-// largest-first, the way the sentence does.
-const ARC_ORDER = ["named", "japanOnly", "nothing", "unchecked"] as const;
+// Reading order along the bar: the largest absence first, the finding last, so
+// the eye travels from "nobody could ask" to "these ones answered".
+const BAR_ORDER = ["unchecked", "nothing", "japanOnly", "named"] as const;
 
-// Per-arc entrance. Each arc grows its own dash from nothing.
-const ARC_MOTION: Record<string, { duration: number; delay: number }> = {
+// Per-segment entrance. Each segment grows its own width from nothing.
+const SEGMENT_MOTION: Record<string, { duration: number; delay: number }> = {
   named:     { duration: 0.55, delay: 0.12 },
   japanOnly: { duration: 0.45, delay: 0.38 },
   nothing:   { duration: 1.10, delay: 0.55 },
   unchecked: { duration: 1.10, delay: 0.95 },
-};
-
-// What the centre reads while a row is hovered — its own count, plus a caption
-// short enough not to reflow the ring.
-const CENTRE_CAPTION: Record<string, string> = {
-  nothing:   "found nothing",
-  japanOnly: "say only “Japanese”",
-  named:     "name a source",
-  unchecked: "had no page to read",
 };
 
 /** True once the node has scrolled into view. Fires on first intersection only. */
@@ -758,17 +745,6 @@ function DisclosureBlock({ data }: { data: typeof DEFAULT_DISCLOSURE }) {
   const counting = p < 1;
 
   const [hovered, setHovered] = useState<string | null>(null);
-  const active = hovered ? get(hovered) : null;
-
-  // Arcs laid end to end from twelve o'clock, in draw order.
-  let cursor = 0;
-  const arcs = ARC_ORDER.map((key) => {
-    const row = get(key);
-    const len = (row.count / everyCafe) * CIRC;
-    const offset = -cursor;
-    cursor += len;
-    return { key, row, len, offset, ...ARC_MOTION[key] };
-  });
 
   // One scale for the whole block. Outside the SVG nothing drops below 18px and
   // nothing goes past weight 500 — where something needs to recede it is muted
@@ -824,183 +800,108 @@ function DisclosureBlock({ data }: { data: typeof DEFAULT_DISCLOSURE }) {
           borderTop: "0.5px solid var(--border)",
         }}
       >
-        {/* The ring is the only decorative element; every value it encodes is
-            also written out in the rows beside it, so nothing is reachable
-            through colour alone. */}
-        <svg
-          viewBox="0 0 300 250"
-          width={320}
-          className="shrink-0"
-          style={{ maxWidth: "100%", height: "auto" }}
-          role="img"
-          aria-label={
-            `Of ${num(checked)} cafés whose pages could be read, ${num(data.nothing)} have ` +
-            `nothing about origin, ${num(data.japanOnly)} say only that the matcha is Japanese, ` +
-            `and ${num(data.named)} name a source and link to it. The ring also carries ` +
-            `${num(data.unchecked)} cafés with no page we could read, hatched rather than ` +
-            `filled because they are uncounted rather than silent, for ${num(everyCafe)} ` +
-            `in total.`
-          }
-        >
-          <defs>
-            <linearGradient id="arcNamed" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor="#97C459" />
-              <stop offset="100%" stopColor="#4d7c1a" />
-            </linearGradient>
-
-            {/* The hatch the unread class is drawn in. userSpaceOnUse keeps the stripes
-                a fixed size and angle across the whole arc, so the band reads as one
-                surface rather than a texture that fans out as it curves.
-                Nothing is painted between the stripes: the card shows through, which is
-                what keeps the band reading as an absence. A tint here would give it a
-                fill, and a fill is the one thing this class must never look like. The
-                two edge hairlines are what hold its shape. */}
-            <pattern
-              id="arcUnchecked"
-              width={HATCH.period}
-              height={HATCH.period}
-              patternUnits="userSpaceOnUse"
-              patternTransform={`rotate(${HATCH.angle})`}
-            >
-              <line
-                x1={0}
-                y1={0}
-                x2={0}
-                y2={HATCH.period}
-                stroke={HATCH.ink}
-                strokeWidth={HATCH.weight}
-              />
-            </pattern>
-          </defs>
-
-          {/* Hairline frame — gives the ring an outer edge to sit against so the
-              grey arc does not read as the boundary of the drawing. */}
-          <circle
-            cx={DONUT.cx}
-            cy={DONUT.cy}
-            r={DONUT.frame}
-            fill="none"
-            stroke="var(--border)"
-            strokeWidth={0.5}
-          />
-
-          <g transform={`rotate(-90 ${DONUT.cx} ${DONUT.cy})`}>
-            {arcs.map((a) => {
-              const dim = hovered !== null && hovered !== a.key;
-              const unchecked = a.key === "unchecked";
-              const grow = `stroke-dasharray ${a.duration}s ${DONUT_EASE} ${a.delay}s`;
-              // The hatched band widens on hover like the others, and its edges have to
-              // move with it — pinned to the resting width they would sit inside the
-              // raised band and read as scratches across it.
-              const band =
-                hovered === a.key ? DONUT.hatch + 5 : DONUT.hatch;
+        {/* Part-to-whole with four long-named classes, two of them close in size
+            (559 vs 488) — the case a ring reads worst. A horizontal stacked bar
+            puts every class on one axis where the eye compares lengths directly,
+            and the rows beneath carry every value as text. */}
+        <div className="w-full min-w-0">
+          <div
+            role="img"
+            aria-label={
+              `Of ${num(everyCafe)} cafés found: ${num(data.unchecked)} had no page we ` +
+              `could read, ${num(data.nothing)} published nothing about origin, ` +
+              `${num(data.japanOnly)} say only that the matcha is Japanese, and ` +
+              `${num(data.named)} name a source and link to it.`
+            }
+            className="flex w-full"
+            style={{ height: 46, gap: 2, borderRadius: 6 }}
+          >
+            {BAR_ORDER.map((key, i) => {
+              const row = get(key);
+              const dim = hovered !== null && hovered !== key;
               return (
-                <g key={a.key}>
-                  <circle
-                    cx={DONUT.cx}
-                    cy={DONUT.cy}
-                    r={DONUT.r}
-                    fill="none"
-                    stroke={
-                      a.key === "named"
-                        ? "url(#arcNamed)"
-                        // Hatched, never filled: the convention reads as "no reading
-                        // taken", where a solid band would read as a result.
-                        : unchecked
-                          ? "url(#arcUnchecked)"
-                          : a.row.color
-                    }
-                    strokeWidth={
-                      // The angle carries the share; the width says what kind of thing
-                      // it is. This one runs narrower than the three findings so it can
-                      // be seen at its true size without being read as one of them.
-                      unchecked ? band : hovered === a.key ? 26 : DONUT.stroke
-                    }
-                    strokeLinecap="butt"
-                    strokeDasharray={drawn ? `${a.len} ${CIRC}` : `0 ${CIRC}`}
-                    strokeDashoffset={a.offset}
-                    onMouseEnter={() => setHovered(a.key)}
-                    onMouseLeave={() => setHovered(null)}
-                    style={{
-                      // The grey is de-emphasis, not a category — no gradient, no
-                      // glow, and it sits back at a third of its own weight. The hatch
-                      // is already quiet by construction, so it stays at full strength.
-                      opacity: dim ? 0.08 : a.key === "nothing" ? 0.3 : 1,
-                      filter:
-                        a.key === "named"
-                          ? "drop-shadow(0 0 5px rgba(99,153,34,.45))"
-                          : undefined,
-                      transition: reduced
-                        ? "none"
-                        : `${grow}, stroke-width .25s ease, opacity .25s ease`,
-                    }}
-                  />
+                <div
+                  key={key}
+                  onMouseEnter={() => setHovered(key)}
+                  onMouseLeave={() => setHovered(null)}
+                  className="relative h-full"
+                  style={{
+                    // The width is the datum. Grown from zero on first sight, in
+                    // draw order, so the shape assembles rather than appearing.
+                    flexGrow: drawn ? row.count : 0,
+                    flexBasis: 0,
+                    minWidth: drawn ? 3 : 0,
+                    opacity: dim ? 0.45 : 1,
+                    background:
+                      key === "unchecked"
+                        ? `repeating-linear-gradient(${HATCH.angle + 90}deg,` +
+                          ` transparent 0 3px, ${HATCH.ink} 3px 5px)`
+                        : key === "nothing"
+                          ? "var(--text-muted)"
+                          : key === "japanOnly"
+                            ? "#6eb35c"
+                            : "#2e6027",
+                    boxShadow:
+                      key === "unchecked" ? "inset 0 0 0 1px var(--border-strong)" : undefined,
+                    borderTopLeftRadius:     i === 0 ? 5 : 0,
+                    borderBottomLeftRadius:  i === 0 ? 5 : 0,
+                    borderTopRightRadius:    i === BAR_ORDER.length - 1 ? 5 : 0,
+                    borderBottomRightRadius: i === BAR_ORDER.length - 1 ? 5 : 0,
+                    transition: reduced
+                      ? "opacity .2s ease"
+                      : `flex-grow 1.1s ${BAR_EASE} ${SEGMENT_MOTION[key].delay}s,` +
+                        " opacity .25s ease",
+                  }}
+                >
+                  {/* Per-mark tooltip. A stacked bar is read by comparing lengths;
+                      the exact figure has to be reachable without leaving the mark. */}
+                  {hovered === key && (
+                    <div
+                      role="status"
+                      className="absolute left-1/2 -translate-x-1/2 whitespace-nowrap pointer-events-none z-20"
+                      style={{
+                        bottom: "calc(100% + 10px)",
+                        background: "var(--text-primary)",
+                        color: "var(--surface-1)",
+                        padding: "7px 11px",
+                        borderRadius: 8,
+                        fontSize: 16,
+                        boxShadow: "0 6px 20px rgba(0,0,0,0.18)",
+                      }}
+                    >
+                      {row.label} · {num(row.count)} · {row.pct.toFixed(1)}%
+                    </div>
+                  )}
 
-                  {/* Both edges of the hatched band, closed with a hairline so it holds
-                      a defined shape instead of fraying into the card. Each edge sits on
-                      its own radius, so its dash lengths are the band's scaled to that
-                      circumference — the same span, measured on a different circle. */}
-                  {unchecked &&
-                    hatchEdges(band).map((r, edge) => {
-                      const k = r / DONUT.r;
-                      return (
-                        <circle
-                          key={edge}
-                          cx={DONUT.cx}
-                          cy={DONUT.cy}
-                          r={r}
-                          fill="none"
-                          stroke="var(--border-strong)"
-                          strokeWidth={0.5}
-                          strokeLinecap="butt"
-                          strokeDasharray={
-                            drawn ? `${a.len * k} ${CIRC * k}` : `0 ${CIRC * k}`
-                          }
-                          strokeDashoffset={a.offset * k}
-                          pointerEvents="none"
-                          style={{
-                            opacity: dim ? 0.08 : 0.75,
-                            transition: reduced
-                              ? "none"
-                              : `${grow}, r .25s ease, opacity .25s ease`,
-                          }}
-                        />
-                      );
-                    })}
-                </g>
+                  {/* Labelled inline only where the text provably fits; the rest
+                      are carried by the rows, never clipped. */}
+                  {row.pct >= 18 && (
+                    <span
+                      className="absolute inset-0 flex items-center justify-center px-2"
+                      style={{
+                        fontSize: 17,
+                        fontWeight: 500,
+                        color: key === "unchecked" ? "var(--text-secondary)" : "#ffffff",
+                        opacity: drawn ? 1 : 0,
+                        transition: reduced ? undefined : `opacity .4s ease ${0.9 + i * 0.1}s`,
+                      }}
+                    >
+                      {row.pct.toFixed(1)}%
+                    </span>
+                  )}
+                </div>
               );
             })}
-          </g>
+          </div>
 
-          {/* Centre reads the hovered slice, or the headline when nothing is hovered */}
-          <text
-            x={DONUT.cx}
-            y={DONUT.cy}
-            textAnchor="middle"
-            dy="0.1em"
-            style={{
-              fontSize: 54,
-              fontWeight: 500,
-              letterSpacing: "-0.04em",
-              fill: active?.key === "named" ? ACCENT : "var(--text-primary)",
-            }}
-            aria-hidden={counting || undefined}
+          <div
+            className="flex items-baseline justify-between"
+            style={{ marginTop: 10, fontSize: 17, color: "var(--text-tertiary)" }}
           >
-            {active ? num(active.count) : `${Math.round(disclosePct * p)}%`}
-          </text>
-          <text
-            x={DONUT.cx}
-            y={DONUT.cy + 34}
-            textAnchor="middle"
-            style={{ fontSize: 17, fontWeight: 400, fill: "var(--text-secondary)" }}
-          >
-            {/* The count the ring is drawn from, so the sliver needs no leader
-                line out to a label of its own. */}
-            {active
-              ? CENTRE_CAPTION[active.key]
-              : `${num(disclosing)} of ${num(checked)}`}
-          </text>
-        </svg>
+            <span>every cafe we found</span>
+            <span style={{ fontVariantNumeric: "tabular-nums" }}>{num(everyCafe)}</span>
+          </div>
+        </div>
 
         <div className="flex-1" style={{ minWidth: 260 }}>
           {/* Rows — legend, direct labels and table view in one. */}
@@ -1018,8 +919,8 @@ function DisclosureBlock({ data }: { data: typeof DEFAULT_DISCLOSURE }) {
                   transform: drawn ? "translateY(0)" : "translateY(8px)",
                   transition: reduced
                     ? "background .25s ease"
-                    : `opacity .5s ${DONUT_EASE} ${0.9 + i * 0.12}s,` +
-                      ` transform .5s ${DONUT_EASE} ${0.9 + i * 0.12}s,` +
+                    : `opacity .5s ${BAR_EASE} ${0.9 + i * 0.12}s,` +
+                      ` transform .5s ${BAR_EASE} ${0.9 + i * 0.12}s,` +
                       " background .25s ease",
                 }}
               >
@@ -1041,7 +942,7 @@ function DisclosureBlock({ data }: { data: typeof DEFAULT_DISCLOSURE }) {
                         : undefined,
                     background:
                       r.key === "named"
-                        ? "linear-gradient(135deg,#97C459,#4d7c1a)"
+                        ? "#2e6027"
                         : r.key === "unchecked"
                           ? `repeating-linear-gradient(${HATCH.angle + 90}deg,` +
                             ` transparent 0 1.6px, ${HATCH.ink} 1.6px 2.9px)`
