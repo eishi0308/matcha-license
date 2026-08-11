@@ -18,7 +18,17 @@ import {
 import Navbar from "@/components/Navbar";
 import AuthModal from "@/components/AuthModal";
 import MatchaMark from "@/components/MatchaMark";
-import { fetchStats } from "@/lib/api";
+import LandingOverture, { LandingProof } from "@/components/LandingOverture";
+import { fetchCafes, fetchStats } from "@/lib/api";
+import { Cafe } from "@/data/cafes";
+
+type OvertureStats = {
+  total: number;
+  byLevel: Record<string, number>;
+  assessable: number;
+  sydney: number;
+  melbourne: number;
+} | null;
 
 // ── Constants ──────────────────────────────────────────────────────────────
 
@@ -902,11 +912,11 @@ function DisclosureBlock({ data }: { data: typeof DEFAULT_DISCLOSURE }) {
         padding: "2rem 2.25rem",
       }}
     >
-      {/* The finding leads the card at full width — it is the one line a reader
-          must leave with, so it is not competing with the ring for the eye. */}
+      {/* The full-height 17% statement immediately above this card already
+          delivers the finding; repeating it here was the same sentence twice.
+          The card now opens straight into how that figure breaks down. */}
       <p style={TYPE.statement}>
-        Only <span style={{ color: ACCENT }}>{disclosePct}%</span> of cafés tell you
-        where their matcha comes from.
+        Where the other <span style={{ color: ACCENT }}>{100 - disclosePct}%</span> leaves you.
       </p>
       <p className="mt-3" style={TYPE.caption}>
         Of {num(checked)} cafés whose website or social page we were able to read, across
@@ -1197,7 +1207,16 @@ function SectionLabel({ icon: Icon, text }: { icon: React.ElementType; text: str
 export default function HomePage() {
   const [authOpen, setAuthOpen] = useState(false);
   const [disclosure, setDisclosure] = useState(DEFAULT_DISCLOSURE);
+  // Live figures for the overture that plays above the original page
+  const [overtureStats, setOvertureStats] = useState<OvertureStats>(null);
+  const [verified, setVerified] = useState<Cafe[]>([]);
   const { scrollY } = useScroll();
+
+  useEffect(() => {
+    // Level A only — 86 rows, enough for the marquee, the plotted map and the
+    // quoted cards, without pulling all 1,147 onto the landing page.
+    fetchCafes({ level: "A" }).then(setVerified).catch(() => {/* section self-hides */});
+  }, []);
 
   useEffect(() => {
     fetchStats().then((s) => {
@@ -1211,6 +1230,13 @@ export default function HomePage() {
         japanOnly: s.byLevel.B ?? 0,
         named: s.byLevel.A ?? 0,
       });
+      setOvertureStats({
+        total: s.total,
+        byLevel: s.byLevel,
+        assessable: s.assessable,
+        sydney: s.sydney,
+        melbourne: s.melbourne,
+      });
     }).catch(() => {/* keep defaults */});
   }, []);
   const heroY = useTransform(scrollY, [0, 700], [0, -140]);
@@ -1220,117 +1246,13 @@ export default function HomePage() {
     <div className="min-h-screen bg-white overflow-x-hidden">
       <Navbar />
 
-      {/* ── HERO ──────────────────────────────────────────────────────── */}
-      <section
-        className="relative min-h-[100dvh] flex flex-col items-center justify-center text-center px-5 pt-20 pb-10 overflow-hidden bg-white"
-      >
-        <motion.div
-          style={{ y: heroY, opacity: heroOpacity }}
-          className="relative z-10 w-full max-w-5xl mx-auto flex flex-col items-center"
-        >
-          {/* Badge — gentle tea-leaf float after entrance */}
-          <motion.div
-            animate={{ y: [0, -5, 0] }}
-            transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut", delay: 2.2 }}
-            className="mb-10"
-          >
-            <motion.div
-              initial={{ opacity: 0, y: -14, scale: 0.88 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ duration: 0.7, delay: 0.1, ease: EASE_EXPO }}
-              className="inline-flex items-center px-5 py-2 rounded-full"
-              style={{ background: "#e8ede8", border: "1px solid #d0ddd0" }}
-            >
-              <span className="text-[16px] font-semibold tracking-[0.2em] uppercase" style={{ color: "#5a7a58" }}>
-                Sydney & Melbourne
-              </span>
-            </motion.div>
-          </motion.div>
-
-          {/* Headline */}
-          <h1 className="font-display tracking-tight text-center mb-12 w-full">
-
-            {/* Lead-in: slides up through clip mask like ink rising */}
-            <div className="overflow-hidden mb-5">
-              <motion.span
-                className="block font-normal"
-                style={{ fontSize: "clamp(1.2rem, 3.5vw, 2.1rem)", color: "#5a8f3c", letterSpacing: "0.08em", fontWeight: 500 }}
-                initial={{ y: "120%" }}
-                animate={{ y: "0%" }}
-                transition={{ duration: 0.8, delay: 0.35, ease: EASE_EXPO }}
-              >
-                Find cafes
-              </motion.span>
-            </div>
-
-            {/* "honest" — brush-stroke clip sweep left→right + drawn underline */}
-            <div className="flex justify-center mb-3">
-              <div className="relative inline-block">
-                <motion.span
-                  className="italic font-bold inline-block"
-                  style={{ fontSize: "clamp(4.5rem, 18vw, 10.5rem)", color: "#2e6027", lineHeight: 0.88, letterSpacing: "-0.03em" }}
-                  initial={{ clipPath: "inset(0% 100% 0% 0%)" }}
-                  animate={{ clipPath: "inset(0% 0% 0% 0%)" }}
-                  transition={{ duration: 1.05, delay: 0.82, ease: [0.76, 0, 0.24, 1] }}
-                >
-                  honest
-                </motion.span>
-
-                {/* SVG brush underline — draws itself after text is revealed */}
-                <svg
-                  className="absolute left-0 w-full"
-                  style={{ bottom: "-6px", height: "18px" }}
-                  viewBox="0 0 100 18"
-                  fill="none"
-                  preserveAspectRatio="none"
-                >
-                  <motion.path
-                    d="M 1 12 C 15 5, 38 16, 62 11 S 84 6, 99 11"
-                    stroke="#4a8a40"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    fill="none"
-                    initial={{ pathLength: 0, opacity: 0 }}
-                    animate={{ pathLength: 1, opacity: 1 }}
-                    transition={{ duration: 0.8, delay: 1.7, ease: EASE }}
-                  />
-                </svg>
-              </div>
-            </div>
-
-            {/* "about matcha." — same brush sweep, slightly delayed */}
-            <div className="flex justify-center">
-              <motion.span
-                className="font-bold inline-block"
-                style={{ fontSize: "clamp(3.2rem, 15vw, 9rem)", color: "#1c2b1a", lineHeight: 1, letterSpacing: "-0.03em" }}
-                initial={{ clipPath: "inset(0% 100% 0% 0%)" }}
-                animate={{ clipPath: "inset(0% 0% 0% 0%)" }}
-                transition={{ duration: 1.05, delay: 1.15, ease: [0.76, 0, 0.24, 1] }}
-              >
-                about matcha.
-              </motion.span>
-            </div>
-          </h1>
-
-          {/* CTA — spring bounce entrance */}
-          <motion.div
-            initial={{ opacity: 0, y: 30, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 0.65, delay: 2.0, ease: EASE_EXPO }}
-          >
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.96 }}>
-              <Link href="/map" className="inline-flex items-center gap-2.5 px-8 py-3.5 rounded-full font-semibold text-white text-[16px]"
-                style={{ background: "#3d6b35" }}
-              >
-                Explore the map <ArrowRight size={14} />
-              </Link>
-            </motion.div>
-          </motion.div>
-        </motion.div>
-      </section>
+      {/* ── OVERTURE ─ new full-height sequence, plays before the original page ─ */}
+      <LandingOverture stats={overtureStats} verified={verified} />
 
       {/* ── STATS ──────────────────────────────────────────────────────── */}
-      <section className="py-28 sm:py-36 px-5 bg-white" style={{ borderTop: "1px solid rgba(0,0,0,0.06)" }}>
+      {/* Top padding is small: the 17% statement above hands straight over to
+          its own breakdown, so a full section break here reads as a dead gap. */}
+      <section className="pt-14 pb-28 sm:pt-16 sm:pb-36 px-5 bg-white">
         <div className="max-w-4xl mx-auto">
           {/* Editorial lead-in */}
           <div className="mb-20">
@@ -1500,17 +1422,6 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Comparison card */}
-          <div className="flex flex-col items-center justify-center px-1 pb-24 sm:pb-36 lg:pb-44">
-            <span
-              className="uppercase tracking-[0.22em] font-semibold mb-6"
-              style={{ fontSize: "16px", color: "rgba(255,255,255,0.4)" }}
-            >
-              What we check for
-            </span>
-            <ComparisonCard />
-          </div>
-
         </div>
       </section>
 
@@ -1562,7 +1473,21 @@ export default function HomePage() {
 
           {/* Header */}
           <div className="text-center mb-24 sm:mb-32">
-            <Reveal>
+            {/* Absorbed from the section above: this is what separates a grade
+              from the one below it, so it belongs with the grades. */}
+          <Reveal>
+            <div className="flex flex-col items-center justify-center px-1 mb-20 sm:mb-28">
+              <span
+                className="uppercase tracking-[0.22em] font-semibold mb-6"
+                style={{ fontSize: "16px", color: "#9ca3af" }}
+              >
+                What we check for
+              </span>
+              <ComparisonCard />
+            </div>
+          </Reveal>
+
+          <Reveal>
               <div className="flex items-center justify-center gap-3 mb-10">
                 <div style={{ width: 40, height: 1, background: "#2e6027" }} />
                 <span className="uppercase tracking-[0.22em] font-semibold" style={{ fontSize: "16px", color: "#2e6027" }}>
@@ -1766,166 +1691,8 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── EVIDENCE PREVIEW ─────────────────────────────────────────── */}
-      <section className="relative py-28 px-5 overflow-hidden"
-        style={{ background: "linear-gradient(145deg, #060e07 0%, #0c1c0d 35%, #162e17 70%, #1e4a1a 100%)" }}
-      >
-        {/* Ambient glow orbs */}
-        {[
-          { w: 600, x: "5%",  y: "60%", color: "#1a3d17", dur: 11, d: 0 },
-          { w: 480, x: "90%", y: "30%", color: "#2d6025", dur: 14, d: 3 },
-        ].map((b, i) => (
-          <motion.div key={i} className="absolute rounded-full pointer-events-none"
-            style={{ width: b.w, height: b.w, left: b.x, top: b.y, background: b.color, filter: "blur(100px)", opacity: 0.22, transform: "translate(-50%,-50%)" }}
-            animate={{ x: [0, 24, -16, 10, 0], y: [0, -18, 16, -8, 0] }}
-            transition={{ duration: b.dur, delay: b.d, repeat: Infinity, ease: "easeInOut" }}
-          />
-        ))}
-
-        <div className="relative max-w-6xl mx-auto">
-
-          {/* Header */}
-          <div className="text-center mb-14">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.88, y: -12 }}
-              whileInView={{ opacity: 1, scale: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.65, ease: EASE }}
-              className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full border border-white/10 bg-white/5 backdrop-blur-sm mb-7"
-            >
-              <motion.span className="w-1.5 h-1.5 rounded-full bg-matcha-400"
-                animate={{ scale: [1, 1.7, 1], opacity: [1, 0.45, 1] }}
-                transition={{ duration: 2.2, repeat: Infinity }}
-              />
-              <span className="text-white/55 text-[16px] font-medium tracking-[0.18em] uppercase">
-                Real Evidence · From Our Database
-              </span>
-            </motion.div>
-
-            {/* Every section heading on this page is the sans at this one scale. Down
-                here the serif is the hero's alone, so arriving is the only point the
-                voice changes; a heading that borrows it mid-scroll reads as a different
-                kind of moment than the section it opens. */}
-            <Reveal delay={0.05}>
-              <h2
-                className="font-bold leading-[1.0] tracking-tight text-white mb-8"
-                style={{ fontSize: "clamp(2.5rem, 6vw, 4.5rem)", letterSpacing: "-0.035em" }}
-              >
-                The evidence<br />speaks for itself
-              </h2>
-            </Reveal>
-            <Reveal delay={0.1}>
-              <p
-                className="max-w-2xl mx-auto leading-relaxed"
-                style={{ fontSize: "clamp(1.05rem, 2.5vw, 1.3rem)", color: "rgba(255,255,255,0.42)" }}
-              >
-                Three real classifications from our database — every claim, every source, fully verifiable by anyone.
-              </p>
-            </Reveal>
-          </div>
-
-          {/* The cards stand on the page on their own. They used to sit inside a mock
-              browser window — traffic lights and an address bar reading
-              matcha-origin.com/map, a domain this site does not own. On a page whose
-              argument is that a claim is worth nothing without a source you can check,
-              dressing three examples up as a screenshot of a real product was the one
-              piece of decoration the page could not afford. */}
-          <Reveal delay={0.15}>
-            <div className="grid md:grid-cols-3 gap-5">
-              {EVIDENCE_CARDS.map((card, i) => (
-                // The window frame used to give the three a common edge. Without it they
-                // stretch to a shared height instead, or their ragged bottoms read as a
-                // layout accident rather than as three cards carrying different amounts
-                // of evidence.
-                <Reveal key={card.cafe} delay={0.22 + i * 0.1} className="h-full">
-                  <motion.div
-                    className="rounded-xl overflow-hidden bg-white h-full flex flex-col"
-                    style={{
-                      border: `1.5px solid ${card.border}`,
-                      boxShadow: `0 8px 40px ${card.glow}, 0 2px 8px rgba(0,0,0,0.1)`,
-                    }}
-                    whileHover={{
-                      y: -6,
-                      boxShadow: `0 24px 70px ${card.glow}, 0 4px 20px rgba(0,0,0,0.14)`,
-                      transition: SPRING,
-                    }}
-                  >
-                    {/* Level accent strip */}
-                    <div className="h-[3px]" style={{ background: card.accent }} />
-
-                    <div className="p-5 flex-1 flex flex-col">
-                      {/* Cafe header */}
-                      <div className="flex items-start justify-between gap-2 mb-4">
-                        <div>
-                          <div className="font-semibold text-[16px] text-gray-900 leading-tight">{card.cafe}</div>
-                          <div className="text-[16px] text-gray-400 mt-0.5">{card.suburb}</div>
-                        </div>
-                        <span className="text-[16px] font-bold px-2.5 py-1 rounded-full shrink-0 whitespace-nowrap mt-0.5"
-                          style={{ background: card.badgeBg, color: card.accent }}
-                        >
-                          Level {card.level}
-                        </span>
-                      </div>
-
-                      {/* Quote or no-disclosure */}
-                      {card.quote ? (
-                        <div className="rounded-lg p-3.5 mb-4" style={{ background: card.badgeBg, borderLeft: `3px solid ${card.accent}` }}>
-                          <p className="text-[16px] leading-relaxed italic text-gray-700">"{card.quote}"</p>
-                        </div>
-                      ) : (
-                        <div className="rounded-lg p-3.5 mb-4 flex items-start gap-2.5"
-                          style={{ background: "#f9fafb", border: "1px dashed #e5e7eb" }}
-                        >
-                          <span className="text-[16px] text-gray-300 mt-px leading-none">—</span>
-                          <p className="text-[16px] text-gray-400 italic leading-relaxed">
-                            No sourcing information found on any public channel.
-                          </p>
-                        </div>
-                      )}
-
-                      {/* Footer. The stamp sits on its own line above the provenance
-                          rather than beside it: in a third of a three-column grid there
-                          is no room for both, and sharing the row broke "Evidence found"
-                          across two lines and ran it into the source beside it. It reads
-                          better this way round anyway — the verdict, then what backs it. */}
-                      <div className="pt-3.5 mt-auto" style={{ borderTop: "1px solid rgba(0,0,0,0.06)" }}>
-                        {card.level !== "C" && (
-                          <span className="text-[16px] font-semibold inline-flex items-center gap-1 whitespace-nowrap mb-2"
-                            style={{ color: card.accent }}
-                          >
-                            <CheckCircle2 size={11} className="shrink-0" />Evidence found
-                          </span>
-                        )}
-                        <div className="text-[16px] font-medium text-gray-500 leading-tight">{card.source}</div>
-                        <div className="text-[16px] text-gray-400 mt-0.5">Verified {card.date}</div>
-                      </div>
-                    </div>
-                </motion.div>
-              </Reveal>
-              ))}
-            </div>
-          </Reveal>
-
-          {/* CTA + disclaimer */}
-          <div className="flex flex-col items-center gap-5 mt-10">
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.96 }}>
-              <Link href="/map"
-                className="inline-flex items-center gap-2.5 px-8 py-3.5 rounded-full font-semibold text-white text-[16px]"
-                style={{
-                  background: "linear-gradient(135deg, #2d6025, #5aab47)",
-                  boxShadow: "0 0 48px rgba(90,171,71,0.38), 0 4px 24px rgba(0,0,0,0.35)",
-                }}
-              >
-                <Map size={15} />Explore all {disclosure.total}+ cafes<ArrowRight size={13} />
-              </Link>
-            </motion.div>
-            <p className="text-[16px] text-center" style={{ color: "rgba(255,255,255,0.2)" }}>
-              Illustrative examples based on our classification format. Visit the map for live verified data.
-            </p>
-          </div>
-
-        </div>
-      </section>
+      {/* ── PROOF ─ real evidence, then the map, right before the ask ──── */}
+      <LandingProof verified={verified} />
 
       {/* ── CTA ──────────────────────────────────────────────────────── */}
       <section className="py-28 px-5 max-w-7xl mx-auto">
