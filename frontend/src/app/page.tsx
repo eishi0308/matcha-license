@@ -315,116 +315,6 @@ function FactList({ items }: { items: typeof PROBLEM_FACTS }) {
   );
 }
 
-function ComparisonCard() {
-  const ref = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref, { once: true, margin: "-80px" });
-  return (
-    <div ref={ref} className="relative w-full max-w-[420px]">
-      {/* Ambient glow */}
-      <motion.div
-        className="absolute inset-0 rounded-2xl pointer-events-none"
-        style={{ boxShadow: "0 48px 110px rgba(46,96,39,0.14), 0 10px 40px rgba(0,0,0,0.08)" }}
-        initial={{ opacity: 0 }}
-        animate={inView ? { opacity: 1 } : {}}
-        transition={{ duration: 1.2, delay: 0.4 }}
-      />
-
-      <motion.div
-        className="rounded-2xl overflow-hidden relative"
-        style={{ border: "1.5px solid #e5e7eb" }}
-        initial={{ opacity: 0, y: 52 }}
-        animate={inView ? { opacity: 1, y: 0 } : {}}
-        transition={{ duration: 0.88, ease: EASE_EXPO }}
-      >
-        {/* WITHOUT section */}
-        <div style={{ background: "#f9f9f9" }}>
-          <div className="px-7 pt-7 pb-6">
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-[16px] uppercase tracking-[0.22em] font-semibold" style={{ color: "#9ca3af" }}>
-                Without Origin Disclosure
-              </span>
-              {/* A pill has to stay a pill. The label is two words and the eyebrow beside
-                  it wraps to two lines, so without this the badge broke across lines and
-                  the rounded-full went with it — an oval blob instead of a chip. */}
-              <span className="text-[16px] font-bold px-2.5 py-1 rounded-full shrink-0 whitespace-nowrap" style={{ background: "#fef2f2", color: "#dc2626" }}>
-                Level C
-              </span>
-            </div>
-            <p className="text-[16px] leading-relaxed italic mb-5" style={{ color: "#9ca3af" }}>
-              "Premium authentic Japanese matcha, ceremonial grade experience crafted with care and passion..."
-            </p>
-            <div className="space-y-2.5">
-              {["No source URL provided", "Country of origin not stated", "Cannot be independently verified"].map((t) => (
-                <div key={t} className="flex items-center gap-2.5">
-                  <span className="text-[16px]" style={{ color: "#fca5a5" }}>✕</span>
-                  <span className="text-[16px]" style={{ color: "#d1d5db" }}>{t}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Animated divider */}
-        <div className="relative h-px overflow-hidden">
-          <div className="absolute inset-0" style={{ background: "#e5e7eb" }} />
-          <motion.div
-            className="absolute inset-0"
-            style={{
-              background: "linear-gradient(90deg, transparent 0%, #4d9740 35%, #7dd56f 55%, #4d9740 75%, transparent 100%)",
-              originX: 0,
-            }}
-            initial={{ scaleX: 0 }}
-            animate={inView ? { scaleX: 1 } : {}}
-            transition={{ duration: 1.05, delay: 0.55, ease: EASE }}
-          />
-        </div>
-
-        {/* WITH section — clip-path reveal */}
-        <motion.div
-          style={{ background: "#ffffff" }}
-          initial={{ clipPath: "inset(0% 0% 100% 0%)" }}
-          animate={inView ? { clipPath: "inset(0% 0% 0% 0%)" } : {}}
-          transition={{ duration: 0.82, delay: 0.68, ease: EASE_EXPO }}
-        >
-          <div className="px-7 pt-6 pb-7">
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-[16px] uppercase tracking-[0.22em] text-matcha-700 font-semibold">
-                With Origin Disclosure
-              </span>
-              <span className="text-[16px] font-bold px-2.5 py-1 rounded-full shrink-0 whitespace-nowrap" style={{ background: "#e6f4e0", color: "#2e6027" }}>
-                Level A
-              </span>
-            </div>
-            <div className="rounded-xl p-4 mb-5" style={{ background: "#f2f8f0", borderLeft: "3px solid #4d9740" }}>
-              <p className="text-[16px] leading-relaxed italic text-gray-700">
-                "Our matcha is sourced exclusively from Uji, Kyoto. Each tin includes the harvest date and garden name."
-              </p>
-            </div>
-            <div className="flex items-center justify-between pt-4" style={{ borderTop: "1px solid rgba(0,0,0,0.06)" }}>
-              <div className="flex items-center gap-1.5 text-[16px] font-semibold text-matcha-700">
-                <CheckCircle2 size={12} />Official Website
-              </div>
-              <span className="text-[16px] text-gray-400">Verified Jun 2026</span>
-            </div>
-          </div>
-        </motion.div>
-      </motion.div>
-
-      {/* Floating verify badge */}
-      <motion.div
-        className="absolute -right-3 -bottom-4 flex items-center gap-2 px-4 py-2 rounded-full bg-white text-[16px] font-semibold text-matcha-700"
-        style={{ boxShadow: "0 8px 28px rgba(46,96,39,0.18), 0 2px 8px rgba(0,0,0,0.07)", border: "1px solid #b3dda6" }}
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={inView ? { opacity: 1, scale: 1 } : {}}
-        transition={{ duration: 0.5, delay: 1.15, ease: EASE_EXPO }}
-      >
-        <CheckCircle2 size={12} className="text-matcha-500" />
-        You can verify this yourself
-      </motion.div>
-    </div>
-  );
-}
-
 // ── Menu evidence card — a plausible cafe menu, scanned and stamped ────────
 
 const MENU_ITEMS = [
@@ -1473,20 +1363,6 @@ export default function HomePage() {
 
           {/* Header */}
           <div className="text-center mb-24 sm:mb-32">
-            {/* Absorbed from the section above: this is what separates a grade
-              from the one below it, so it belongs with the grades. */}
-          <Reveal>
-            <div className="flex flex-col items-center justify-center px-1 mb-20 sm:mb-28">
-              <span
-                className="uppercase tracking-[0.22em] font-semibold mb-6"
-                style={{ fontSize: "16px", color: "#9ca3af" }}
-              >
-                What we check for
-              </span>
-              <ComparisonCard />
-            </div>
-          </Reveal>
-
           <Reveal>
               <div className="flex items-center justify-center gap-3 mb-10">
                 <div style={{ width: 40, height: 1, background: "#2e6027" }} />
