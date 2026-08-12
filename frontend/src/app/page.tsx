@@ -391,12 +391,16 @@ function MenuEvidenceCard() {
           </p>
         </div>
 
-        {/* Ink stamp — snaps in like a rubber stamp hitting paper */}
+        {/* Ink stamp — snaps in like a rubber stamp hitting paper.
+            It hangs off the menu's right edge on purpose, but the overhang is a share of the
+            card, and on a phone the card is the screen: -9% put the stamp's edge exactly on
+            the viewport boundary at 390px and past it by 430px, so the word it exists to say
+            was the part that got cut. The overhang shrinks to a token -2% until there is a
+            margin to hang into. */}
         <motion.div
-          className="absolute select-none"
+          className="absolute select-none right-[-2%] sm:right-[-9%]"
           style={{
             top: "48%",
-            right: "-9%",
             padding: "14px 20px",
             borderRadius: 10,
             border: "4px solid #dc2626",

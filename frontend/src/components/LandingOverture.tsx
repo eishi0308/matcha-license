@@ -598,7 +598,9 @@ function ConstellationMap({ verified }: { verified: Cafe[] }) {
           </p>
         </Reveal>
 
-        <div ref={ref} className="mt-10 grid gap-5 sm:grid-cols-2">
+        {/* Same minmax(0,1fr) guard as the cards above — a long city name must not be able
+            to open the mobile track wider than the screen. */}
+        <div ref={ref} className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2">
           {cities.map((c, ci) => (
             <Reveal key={c.city} delay={ci * 0.12}>
               <Link
@@ -692,7 +694,14 @@ function FeaturedCafes({ verified }: { verified: Cafe[] }) {
           </Link>
         </Reveal>
 
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        {/* grid-cols-1 is load-bearing, not decoration: without it the single mobile track is
+            `auto`, which floors at the widest card's min-content — and the name below is
+            `truncate`, so its min-content is the whole un-wrapped cafe name. One long name
+            ("15cenchi Japanese Cheesecake Darling Square") then set a 454px track inside a
+            350px phone, and every card in the column overflowed with it. Tailwind's
+            grid-cols-* emits minmax(0,1fr), which is the guard that lets the name truncate
+            instead of pushing the column open. */}
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {picks.map((c, i) => (
             <Reveal key={c.id} delay={i * 0.07}>
               <motion.div
