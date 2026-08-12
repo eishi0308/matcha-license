@@ -13,7 +13,7 @@ import {
 } from "framer-motion";
 import {
   Leaf, Map, Shield, Search, ArrowRight, CheckCircle2,
-  TrendingUp, Eye, FileText, MessageSquarePlus, ExternalLink, Play, User,
+  TrendingUp, Eye, FileText, MessageSquarePlus, ExternalLink, Play, User, ChevronDown,
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import AuthModal from "@/components/AuthModal";
@@ -579,7 +579,16 @@ function PressRow({ card }: { card: typeof PRESS_CARDS[number] }) {
         {/* Content */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1.5">
-            {card.flag && <span className="text-[16px] leading-none">{card.flag}</span>}
+            {/* The flag leads the byline, before the masthead. Emoji are font-dependent
+                glyphs rather than assets, so this mark is the platform's to draw, not
+                ours — it will not take colour, weight or size from the type around it,
+                and it renders differently across Apple, Windows and Android. It is here
+                because the country is the first thing worth knowing about a source.
+                aria-hidden because the masthead beside it already names the outlet, and
+                "flag of Australia" read aloud mid-byline adds nothing a listener needs. */}
+            {card.flag && (
+              <span aria-hidden className="text-[16px] leading-none">{card.flag}</span>
+            )}
             <span className="text-[16px] font-semibold text-gray-400 uppercase tracking-wide">{card.source}</span>
           </div>
           <h3 className="font-semibold text-gray-900 leading-snug" style={{ fontSize: "clamp(1rem, 2.5vw, 1.2rem)" }}>
@@ -764,7 +773,13 @@ function DisclosureBlock({ data }: { data: typeof DEFAULT_DISCLOSURE }) {
       color: "var(--text-primary)",
     },
     subline:    { fontSize: "1.25rem",  fontWeight: 400, color: "var(--text-secondary)" },
-    caption:    { fontSize: "1.125rem", fontWeight: 400, color: "var(--text-tertiary)" },
+    // Secondary, not tertiary. --text-tertiary (#9ca3af) sits at 2.5:1 on this card —
+    // under the 4.5:1 floor — and the two lines wearing this style are the denominator
+    // the chart is quoted over and the control that opens the audit trail. Methodology
+    // that cannot be read is methodology that may as well not be published, and a
+    // control that recedes below the readability floor is one nobody will find.
+    // --text-secondary clears AA at 4.8:1 and still sits well behind the statement.
+    caption:    { fontSize: "1.125rem", fontWeight: 400, color: "var(--text-secondary)" },
     rowLabel:   { fontSize: "20px",     fontWeight: 400, color: "var(--text-primary)" },
     rowPercent: { fontSize: "18px",     fontWeight: 400, color: "var(--text-secondary)" },
     rowCount:   { fontSize: "21px",     fontWeight: 500, color: "var(--text-primary)" },
@@ -788,12 +803,41 @@ function DisclosureBlock({ data }: { data: typeof DEFAULT_DISCLOSURE }) {
       <p style={TYPE.statement}>
         Where the other <span style={{ color: ACCENT }}>{100 - disclosePct}%</span> leaves you.
       </p>
+      {/* The denominator, and then the reason for it — on two tiers instead of one.
+          This was a single 55-word block of body copy carrying both. The rigour in it is
+          the most valuable thing on the card: refusing to count a cafe as silent when we
+          simply could not reach its page is the difference between a survey and a smear,
+          and deleting it to tidy the layout would have cost the card its credibility. But
+          a reader scanning a chart will not read 55 words, so the sentence they need to
+          read the axis stays visible, and the audit trail they only need if they doubt us
+          moves one tap away. Native <details> so it is keyboard-operable, findable by
+          in-page search, and open by default for anyone printing or using a screen reader
+          that flattens the summary. */}
       <p className="mt-3" style={TYPE.caption}>
-        Of {num(checked)} cafés whose website or social page we were able to read, across
-        Sydney and Melbourne. For the other {num(data.unchecked)} of {num(data.total)}{" "}
-        there was nothing to read — no page listed, a profile behind a login, or a site
-        that no longer loads — so they are left uncounted rather than counted as silent.
+        Of the {num(checked)} cafés whose page we could read, across Sydney and Melbourne.
       </p>
+      <details className="group mt-1">
+        {/* py-2.5 takes the row from its natural 24px to a 44px tap target. The padding is
+            vertical only and the row is inline-flex, so the hit area grows without the
+            label appearing to float away from the sentence it belongs to. */}
+        <summary
+          className="inline-flex cursor-pointer list-none items-center gap-1.5 py-2.5 rounded outline-none transition-colors hover:text-[var(--text-primary)] focus-visible:ring-2 focus-visible:ring-[var(--accent)] [&::-webkit-details-marker]:hidden"
+          style={{ ...TYPE.caption, fontSize: "1rem" }}
+        >
+          Why {num(checked)} and not {num(data.total)}?
+          <ChevronDown
+            size={15}
+            aria-hidden
+            className="transition-transform duration-200 ease-out group-open:rotate-180"
+          />
+        </summary>
+        <p className="mt-2 max-w-prose" style={{ ...TYPE.caption, fontSize: "1rem" }}>
+          For the other {num(data.unchecked)} of {num(data.total)} there was nothing to
+          read — no page listed, a profile behind a login, or a site that no longer loads.
+          They are left uncounted rather than counted as silent: &ldquo;we could not
+          ask&rdquo; is not the same finding as &ldquo;they do not say&rdquo;.
+        </p>
+      </details>
 
       <div
         className="flex flex-wrap items-center"
@@ -1059,8 +1103,12 @@ export default function HomePage() {
               transition={{ duration: 0.6, ease: EASE }}
             >
               <div style={{ width: 40, height: 1, background: "#2e6027" }} />
+              {/* Was "How it works" — but the section under it is the breakdown of the
+                  finding, and the actual how-it-works (Steps 01–04, "How we verify every
+                  cafe") is its own section further down. Two sections claiming the same
+                  label is why the copy beneath this one kept drifting back into method. */}
               <span className="uppercase tracking-[0.2em] font-semibold" style={{ fontSize: "16px", color: "#2e6027" }}>
-                How it works
+                The breakdown
               </span>
               <div style={{ width: 40, height: 1, background: "#2e6027" }} />
             </motion.div>
@@ -1073,24 +1121,17 @@ export default function HomePage() {
               viewport={{ once: true }}
               transition={{ duration: 0.72, delay: 0.08, ease: EASE }}
             >
-              We scan each cafe&apos;s official website
-              <br className="hidden sm:block" />
-              {" "}and show you{" "}
-              <span style={{ color: "#2e6027" }}>exactly what they claim</span>
-              <br className="hidden sm:block" />
-              {" "}about their matcha sourcing.
+              {/* This read "We scan each cafe's official website and show you exactly what
+                  they claim about their matcha sourcing", followed by "No opinions, no
+                  guesses — just their own words." Both sentences were the hero's opening
+                  paragraph again in different words, which is the worst kind of repetition:
+                  it looks like an edit nobody finished. The method is stated once, up top.
+                  This heading now does the job this position actually needs — naming what
+                  the chart underneath is — so the reader arrives at the bar already knowing
+                  what is being counted. */}
+              Every cafe we found, sorted by{" "}
+              <span style={{ color: "#2e6027" }}>what it told us</span>.
             </motion.h2>
-
-            <motion.p
-              className="text-center mx-auto mt-6"
-              style={{ fontSize: "clamp(1.125rem, 2.5vw, 1.4rem)", color: "#9ca3af", maxWidth: "38rem", lineHeight: 1.7 }}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.72, delay: 0.16, ease: EASE }}
-            >
-              No opinions, no guesses — just their own words.
-            </motion.p>
           </div>
 
           {/* Origin disclosure — one whole, split three ways */}

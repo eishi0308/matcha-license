@@ -197,6 +197,9 @@ function Hero({ stats }: { stats: Props["stats"] }) {
 
   const total    = stats?.total ?? 1147;
   const verified = stats?.byLevel?.A ?? 86;
+  // Same source as the disclosure card's denominator, so the hero funnel and the
+  // breakdown below can never quote different totals for "we could read this".
+  const read     = stats?.assessable ?? 588;
 
   const go = (q: string) => router.push(q.trim() ? `/map?q=${encodeURIComponent(q.trim())}` : "/map");
 
@@ -248,23 +251,36 @@ function Hero({ stats }: { stats: Props["stats"] }) {
           </span>
         </motion.div>
 
-        {/* Statement */}
+        {/* Statement.
+            It used to read "Find cafes honest about matcha." Two things were wrong with it.
+            "Find cafes" is a directory instruction, so the page opened on a utility rather
+            than on what we actually found. And "honest" is an adjective — the word the
+            evidence section three screens down explicitly refuses ("Proof, not adjectives"),
+            so the loudest type on the site contradicted its own standard. The headline now
+            states the finding, which is a behaviour anyone can check, and the accent falls
+            on the verb rather than on a character judgement. */}
         <h1 className="font-display font-bold leading-[0.92] tracking-tight text-gray-900"
             style={{ fontSize: "clamp(2.5rem, 7vw, 5.5rem)", perspective: 800 }}>
-          <SplitHeadline text="Find cafes" />
+          <SplitHeadline text="Most cafes" />
           <br />
-          <SplitHeadline text="honest" delay={0.18} className="italic text-matcha-700" />{" "}
-          <SplitHeadline text="about matcha." delay={0.3} />
+          <SplitHeadline text="won’t tell you" delay={0.18} className="italic text-matcha-700" />
+          <br />
+          <SplitHeadline text="where the matcha comes from." delay={0.3} />
         </h1>
 
+        {/* The method, stated once on the whole page. "So" hinges off the headline and
+            "what they do say" answers its "won't tell you", which is what earns the search
+            below: the page has just told you most cafes are silent, so the field is the
+            way to find the ones that aren't. */}
         <motion.p
           className="mt-6 text-[16px] sm:text-[18px] text-gray-600 max-w-xl mx-auto leading-relaxed"
           initial={reduce ? false : { opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, ease: EASE_EXPO, delay: 0.75 }}
         >
-          We read every cafe&rsquo;s own website and menu, then show you exactly what they
-          say about where their matcha comes from — quoted, dated, and linked.
+          So we read all {total.toLocaleString()} — every website, every menu — and quoted
+          exactly what they <span className="text-gray-900 font-medium">do</span> say.
+          Dated and linked.
         </motion.p>
 
         {/* Search is the CTA — and the largest object on the screen */}
@@ -351,13 +367,21 @@ function Hero({ stats }: { stats: Props["stats"] }) {
             </Magnetic>
           </motion.div>
 
-          <div className="mt-3.5 text-[16px] text-gray-500">
-            Search by cafe, suburb or city — or open the map and browse all{" "}
-            {total.toLocaleString()}.
-          </div>
+          {/* The helper line that sat here — "Search by cafe, suburb or city — or open the
+              map and browse all 1,147" — said nothing the reader could not already see. The
+              placeholder demonstrates the query, the button names the destination, and the
+              count is in the paragraph above and the figures below. Three restatements of
+              one affordance inside 100px reads as an interface apologising for itself. */}
         </motion.form>
 
-        {/* Live proof — divided, so the three figures read as one instrument */}
+        {/* Live proof — divided, so the three figures read as one instrument.
+            These were "1,147 cafes mapped / 86 with verified disclosure / 2 cities". Two of
+            those were not findings: the city count is the eyebrow again, and "mapped" is
+            what any directory would claim. They are a funnel now — found, readable, named —
+            and read left to right they are the whole investigation in three numbers, with
+            the attrition visible instead of averaged away. The middle figure is the one no
+            competitor would print, which is exactly why it belongs here: it says out loud
+            that half the sample could not be read, before the reader has to ask. */}
         <motion.div
           // grid, not flex-wrap: wrapping put one figure on its own row and left
           // a divider stranded at the start of the next
@@ -367,16 +391,32 @@ function Hero({ stats }: { stats: Props["stats"] }) {
           transition={{ duration: 0.8, delay: 1.15 }}
         >
           {[
-            { n: total,    label: "cafes mapped" },
-            { n: verified, label: "with verified disclosure" },
-            { n: 2,        label: "cities" },
-          ].map((s) => (
-            <div key={s.label} className="px-2 sm:px-9 text-center">
+            // Three labels of near-equal length on purpose: the row is one instrument, and
+            // a middle label that wrapped to two lines while its neighbours sat on one put
+            // a visible step in a row whose whole job is to be read straight across.
+            { n: total,    label: "cafes found" },
+            { n: read,     label: "pages read" },
+            // "say where" rather than "name a source": it is the same fact, it fits the
+            // narrow mobile column on one line where the longer phrase wrapped, and it
+            // closes the headline's sentence — most cafes won't tell you where, and this
+            // is exactly how many do.
+            { n: verified, label: "say where" },
+          ].map((s, i) => (
+            // Staggered left to right at 90ms so the three land in funnel order rather than
+            // together — the drop from one figure to the next is the point, and arriving in
+            // sequence is what makes it legible as a drop rather than as three facts.
+            <motion.div
+              key={s.label}
+              className="px-2 sm:px-9 text-center"
+              initial={reduce ? false : { opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, ease: EASE_OUT, delay: 1.15 + i * 0.09 }}
+            >
               <div className="font-display text-3xl sm:text-5xl font-bold text-gray-900 leading-none">
                 <Counter value={s.n} />
               </div>
               <div className="text-[16px] text-gray-500 mt-2">{s.label}</div>
-            </div>
+            </motion.div>
           ))}
         </motion.div>
       </motion.div>
@@ -542,8 +582,10 @@ function DisclosureStat({ stats }: { stats: Props["stats"] }) {
           style={{ y: copyY, opacity: copyOp }}
           className="mt-7 max-w-lg text-center text-[16px] leading-relaxed text-white/60 px-6"
         >
+          {/* "The full breakdown is below" was a stage direction: the breakdown is below,
+              visibly, and a line of copy spent pointing at the next scroll is a line not
+              spent on the finding. */}
           Only {stats?.byLevel?.A ?? 86} of them name a region, farm or supplier.
-          The full breakdown is below.
         </motion.p>
       </div>
     </section>
