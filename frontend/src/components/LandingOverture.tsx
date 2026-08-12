@@ -99,14 +99,21 @@ function SplitHeadline({
 }
 
 /** Counts up to `value` the first time it scrolls into view. */
-function Counter({ value, className = "" }: { value: number; className?: string }) {
+// `immediate` is for figures that are above the fold by construction. The -15% viewport
+// margin below means an element must sit well inside the screen before it counts, and on a
+// 640px phone the hero's own figures land past that line — so the three numbers the hero
+// exists to deliver painted as "0 0 0" until the reader scrolled, which reads as broken
+// data rather than as an animation waiting its turn. Anything already on the first screen
+// should start on mount; the margin still governs everything further down the page.
+function Counter({ value, className = "", immediate = false }: { value: number; className?: string; immediate?: boolean }) {
   const ref     = useRef<HTMLSpanElement>(null);
   const inView  = useInView(ref, { once: true, margin: "-15%" });
   const reduce  = useReducedMotion();
   const [shown, setShown] = useState(0);
+  const start   = immediate || inView;
 
   useEffect(() => {
-    if (!inView) return;
+    if (!start) return;
     if (reduce) { setShown(value); return; }
     const controls = animate(0, value, {
       duration: 1.5,
@@ -114,7 +121,7 @@ function Counter({ value, className = "" }: { value: number; className?: string 
       onUpdate: (v) => setShown(Math.round(v)),
     });
     return () => controls.stop();
-  }, [inView, value, reduce]);
+  }, [start, value, reduce]);
 
   return (
     <span ref={ref} className={`tabular-nums ${className}`}>
@@ -218,7 +225,11 @@ function Hero({ stats }: { stats: Props["stats"] }) {
   return (
     <section
       ref={ref}
-      className="relative min-h-[100dvh] flex flex-col items-center justify-center px-5 pt-20 pb-14 overflow-hidden"
+      // Vertical rhythm is tighter below sm. The hero promises a first screen, and the
+      // desktop spacing spent 136px of a 568px phone on padding alone, which pushed the
+      // figures — the part that earns the search — under the fold on short devices.
+      // pt-[4.5rem] still clears the 64px fixed navbar with room to spare.
+      className="relative min-h-[100dvh] flex flex-col items-center justify-center px-5 pt-[4.5rem] pb-8 sm:pt-20 sm:pb-14 overflow-hidden"
     >
       {/* Parallax ground — three layers, slowest at the back */}
       <motion.div aria-hidden className="absolute inset-0 -z-10" style={{ y: glowY }}>
@@ -235,7 +246,7 @@ function Hero({ stats }: { stats: Props["stats"] }) {
       <motion.div style={{ y: headlineY, opacity: fade }} className="w-full max-w-4xl mx-auto text-center">
         {/* Eyebrow */}
         <motion.div
-          className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full mb-6"
+          className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full mb-4 sm:mb-6"
           style={{ background: "#f2f8f0", border: "1px solid #c2e1b5" }}
           initial={reduce ? false : { opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -259,8 +270,11 @@ function Hero({ stats }: { stats: Props["stats"] }) {
             so the loudest type on the site contradicted its own standard. The headline now
             states the finding, which is a behaviour anyone can check, and the accent falls
             on the verb rather than on a character judgement. */}
-        <h1 className="font-display font-bold leading-[0.92] tracking-tight text-gray-900"
-            style={{ fontSize: "clamp(2.5rem, 7vw, 5.5rem)", perspective: 800 }}>
+        {/* Size steps down only below 360px. From 360 up this is the same 2.5rem it has
+            always been, and from sm up the same clamp — the narrowest phones were the only
+            ones where a 40px display face wrapped this sentence to six lines. */}
+        <h1 className="font-display font-bold leading-[0.92] tracking-tight text-gray-900 text-[2.15rem] min-[360px]:text-[2.5rem] sm:text-[length:clamp(2.5rem,7vw,5.5rem)]"
+            style={{ perspective: 800 }}>
           <SplitHeadline text="Most cafes" />
           <br />
           <SplitHeadline text="won’t tell you" delay={0.18} className="italic text-matcha-700" />
@@ -273,7 +287,7 @@ function Hero({ stats }: { stats: Props["stats"] }) {
             below: the page has just told you most cafes are silent, so the field is the
             way to find the ones that aren't. */}
         <motion.p
-          className="mt-6 text-[16px] sm:text-[18px] text-gray-600 max-w-xl mx-auto leading-relaxed"
+          className="mt-4 sm:mt-6 text-[16px] sm:text-[18px] text-gray-600 max-w-xl mx-auto leading-relaxed"
           initial={reduce ? false : { opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, ease: EASE_EXPO, delay: 0.75 }}
@@ -286,7 +300,7 @@ function Hero({ stats }: { stats: Props["stats"] }) {
         {/* Search is the CTA — and the largest object on the screen */}
         <motion.form
           onSubmit={(e) => { e.preventDefault(); go(query); }}
-          className="mt-10 max-w-2xl mx-auto"
+          className="mt-6 sm:mt-10 max-w-2xl mx-auto"
           initial={reduce ? false : { opacity: 0, y: 18 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, ease: EASE_EXPO, delay: 0.88 }}
@@ -385,7 +399,7 @@ function Hero({ stats }: { stats: Props["stats"] }) {
         <motion.div
           // grid, not flex-wrap: wrapping put one figure on its own row and left
           // a divider stranded at the start of the next
-          className="mt-11 mx-auto grid grid-cols-3 max-w-xl divide-x divide-gray-200"
+          className="mt-7 sm:mt-11 mx-auto grid grid-cols-3 max-w-xl divide-x divide-gray-200"
           initial={reduce ? false : { opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8, delay: 1.15 }}
@@ -413,7 +427,7 @@ function Hero({ stats }: { stats: Props["stats"] }) {
               transition={{ duration: 0.5, ease: EASE_OUT, delay: 1.15 + i * 0.09 }}
             >
               <div className="font-display text-3xl sm:text-5xl font-bold text-gray-900 leading-none">
-                <Counter value={s.n} />
+                <Counter value={s.n} immediate />
               </div>
               <div className="text-[16px] text-gray-500 mt-2">{s.label}</div>
             </motion.div>
@@ -421,10 +435,13 @@ function Hero({ stats }: { stats: Props["stats"] }) {
         </motion.div>
       </motion.div>
 
-      {/* Scroll cue */}
+      {/* Scroll cue. Dropped on short viewports: at 720px and under the centred content
+          reaches down into it and the arrow sat on top of the figures (measured -7px). It is
+          decorative and aria-hidden, so on a screen with no room to spare it is the first
+          thing that should go — and a screen that full already shows content continuing. */}
       <motion.div
         aria-hidden
-        className="absolute bottom-7 left-1/2 -translate-x-1/2 text-gray-400"
+        className="absolute bottom-7 left-1/2 -translate-x-1/2 text-gray-400 [@media(max-height:720px)]:hidden"
         style={{ opacity: fade }}
         animate={reduce ? {} : { y: [0, 8, 0] }}
         transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
