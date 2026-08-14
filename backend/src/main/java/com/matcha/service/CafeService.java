@@ -238,12 +238,20 @@ public class CafeService {
                 cafe.setDescription("");
             }
         } else {
-            cafe.setLevel(TransparencyLevel.C);
+            // No content means nothing was ever read — website null, scrape failed, or
+            // whatever came back was blank. That is not the same finding as C, which means
+            // a page WAS read and it disclosed nothing: C is a confirmed negative, this is
+            // an absent measurement. Conflating the two here used to put "no page we could
+            // read" and "read the page, said nothing" behind the same label and the same
+            // cover colour, which is exactly the distinction the frontend's own level cards
+            // already draw ("no public sourcing information on any channel" vs "could not
+            // verify enough information") — this just makes the backend agree with it.
+            cafe.setLevel(TransparencyLevel.D);
             cafe.setType("cafe");
             cafe.setTagline("");
             cafe.setDescription("");
             cafe.setSpecialties("");
-            cafe.setCoverColor("#9ca3af");
+            cafe.setCoverColor(coverColorForLevel(TransparencyLevel.D.name()));
         }
 
         if (place.website() != null) {
