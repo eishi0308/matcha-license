@@ -458,13 +458,20 @@ function Hero({ stats }: { stats: Props["stats"] }) {
         </motion.div>
       </motion.div>
 
-      {/* Scroll cue. Dropped on short viewports: at 720px and under the centred content
-          reaches down into it and the arrow sat on top of the figures (measured -7px). It is
-          decorative and aria-hidden, so on a screen with no room to spare it is the first
-          thing that should go — and a screen that full already shows content continuing. */}
+      {/* Scroll cue. Dropped on short viewports: the 720px cutoff below was measured before
+          this session added the "Of 1,147 cafes found..." caption and the two-figure stat
+          block above it — that new content sits on the same horizontal centreline as this
+          arrow (both are centred on the section), and a reader's own screenshot showed the
+          arrow drifting into the gap between the two figures, on top of the divider between
+          them. 820px gives the taller content room to clear the arrow on more screens; it is
+          still an estimate, not a re-measurement — this needs confirming in an actual
+          browser, since nothing in this session can render and check the real pixel gap.
+          It is decorative and aria-hidden regardless, so on a screen with no room to spare
+          it is the first thing that should go — a screen that full already shows content
+          continuing. */}
       <motion.div
         aria-hidden
-        className="absolute bottom-7 left-1/2 -translate-x-1/2 text-gray-400 [@media(max-height:720px)]:hidden"
+        className="absolute bottom-7 left-1/2 -translate-x-1/2 text-gray-400 [@media(max-height:820px)]:hidden"
         style={{ opacity: fade }}
         animate={reduce ? {} : { y: [0, 8, 0] }}
         transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
@@ -496,7 +503,7 @@ function VerifiedMarquee({ verified }: { verified: Cafe[] }) {
       <div className="flex items-center justify-center gap-2.5 mb-8 px-5">
         <ShieldCheck size={16} className="text-matcha-600 flex-shrink-0" />
         <span className="text-[16px] uppercase tracking-[0.18em] text-gray-500 font-semibold text-center">
-          {names.length} cafes state their Japanese origin in public
+          {names.length} cafes say where their matcha is from
         </span>
       </div>
 
@@ -613,8 +620,8 @@ function DisclosureStat({ stats }: { stats: Props["stats"] }) {
             <span className="text-matcha-400 ml-1" style={{ fontSize: "0.42em" }}>%</span>
           </div>
           <div className="font-display text-2xl sm:text-4xl text-white/90 mt-3 leading-snug">
-            of cafes we could read say
-            <br className="sm:hidden" /> anything about Japanese origin.
+            of cafés we could read say
+            <br className="sm:hidden" /> their matcha is Japanese.
           </div>
         </motion.div>
 
@@ -675,8 +682,7 @@ function ConstellationMap({ verified }: { verified: Cafe[] }) {
             Every verified cafe, exactly where it stands.
           </h2>
           <p className="mt-4 text-[16px] text-gray-600 leading-relaxed">
-            Each dot below is a real cafe at its real coordinates — the same points you can open,
-            read and check on the live map.
+            Each dot is a real cafe you can open, read and check for yourself.
           </p>
         </Reveal>
 

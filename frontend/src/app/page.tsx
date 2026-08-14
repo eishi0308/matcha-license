@@ -88,15 +88,15 @@ const DISCLOSURE_ROWS = [
   // Transparent because nothing is painted behind the hatch — both the arc and the
   // swatch draw stripes straight onto the card, so this row has no flat colour of its own.
   { key: "unchecked" as const, label: "No page we could read",     color: "transparent" },
-  { key: "nothing" as const,   label: "Nothing found",             color: "var(--text-muted)" },
+  { key: "nothing" as const,   label: "No origin mentioned",       color: "var(--text-muted)" },
   { key: "japanOnly" as const, label: "“Japanese matcha” only",    color: "#6eb35c" },
   { key: "named" as const,     label: "Named source, with a link", color: "#2e6027" },
 ];
 
 const LEVEL_CARDS = [
-  { level: "A", title: "Verified Japanese Disclosure", desc: "Publicly states Japanese origin, prefecture, or direct sourcing with evidence URL.", accent: "#2e6027", bg: "#2e6027", border: "#2e6027", onDark: true },
-  { level: "B", title: "Japanese Matcha Mentioned",    desc: "References 'Japanese matcha' but no specific region, farm, or supplier named.",    accent: "#4d9740", bg: "#4d9740", border: "#4d9740", onDark: true },
-  { level: "C", title: "No Origin Disclosure",         desc: "Serves matcha but provides no public sourcing information on any channel.",         accent: "#6b7280", bg: "#6b7280", border: "#6b7280", onDark: true },
+  { level: "A", title: "Verified Japanese Disclosure", desc: "Names a specific Japanese region, farm or supplier — and links to proof.", accent: "#2e6027", bg: "#2e6027", border: "#2e6027", onDark: true },
+  { level: "B", title: "Japanese Matcha Mentioned",    desc: "Says the matcha is Japanese, but not which region, farm or supplier.",    accent: "#4d9740", bg: "#4d9740", border: "#4d9740", onDark: true },
+  { level: "C", title: "No Origin Disclosure",         desc: "Serves matcha, but says nothing about where it's from.",         accent: "#6b7280", bg: "#6b7280", border: "#6b7280", onDark: true },
   { level: "D", title: "Insufficient Information",     desc: "Could not verify enough information across website, menu, or social media.",        accent: "#9ca3af", bg: "#eceef0", border: "#e5e7eb", onDark: false },
 ];
 
@@ -164,7 +164,7 @@ const PRESS_CARDS = [
 ];
 
 const HOW_IT_WORKS = [
-  { icon: Search,   step: "01", title: "We Discover Cafes",        desc: "We scan Google Maps, Instagram, Broadsheet, and more to build a comprehensive list of matcha cafes in Sydney & Melbourne." },
+  { icon: Search,   step: "01", title: "We Discover Cafes",        desc: "We search Google's own business listings for matcha-related cafes across Sydney and Melbourne." },
   { icon: FileText, step: "02", title: "We Verify Evidence",       desc: "Every claim is cross-checked against official websites, menu pages, about sections, and public social media. No guessing allowed." },
   { icon: Shield,   step: "03", title: "We Classify Transparently",desc: "Each cafe receives a level A–D based solely on publicly verifiable evidence — never opinion or taste tests." },
   { icon: Eye,      step: "04", title: "You See the Evidence",     desc: "Every listing shows the exact quote, source URL, and verification date. You can check it yourself." },
@@ -820,7 +820,7 @@ function DisclosureBlock({ data }: { data: typeof DEFAULT_DISCLOSURE }) {
           reader is asking to be graded on effort. It stays where it belongs: an unfilled,
           labelled segment on the bar below, visible without being argued. */}
       <p className="mt-3" style={TYPE.caption}>
-        Of the {num(checked)} cafés whose page we could read, across Sydney and Melbourne.
+        Of the {num(checked)} cafés we could read, across Sydney and Melbourne.
       </p>
 
       <div
