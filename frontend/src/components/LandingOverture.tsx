@@ -402,33 +402,37 @@ function Hero({ stats }: { stats: Props["stats"] }) {
               one affordance inside 100px reads as an interface apologising for itself. */}
         </motion.form>
 
-        {/* Live proof — four figures read as one instrument, funnel order.
-            1,147 was pulled from this row once, on the reasoning that sitting next to 588 it
-            would read as a shortfall the hero couldn't explain. That objection doesn't hold
-            once the sourcing is stated: 1,147 is every business Google's own search matched
-            to a matcha-related query across both cities — a discovery count, not a claim of
-            having read anything. Read next to it, the drop to 588 is not the site failing to
-            reach 559 cafes; it is Google's index not having read them either (no site on
-            file, no page a crawl could resolve). The number is honest as long as its label
-            says what it counts, which "found" does and "read" does not.
-            So it leads again, and the row now runs the whole chain a reader would ask for:
-            found → read → said nothing → named a source. */}
+        {/* Live proof. This briefly ran as four figures of equal weight — found, read, said
+            nothing, named a source — but only two of those are findings. "1,147" and "588"
+            answer how thorough the search was; a reader does not come to the first screen
+            asking that question, and printing them at the same size as the two numbers that
+            do answer it argued all four carried equal news. They didn't, so scope moved to a
+            caption and only the findings still get the giant digits.
+            The move also closes a gap the four-up row had: 488 + 86 = 574, not 588 — 14
+            cafes name only "Japanese matcha," no location, and belonged to neither figure.
+            Set beside each other, 588/488/86 invited that subtraction. As caption-plus-two,
+            nothing here claims the two hero numbers sum to the caption's, so the omitted 14
+            stops reading as an error. */}
+        <motion.p
+          className="mt-7 sm:mt-9 text-[15px] sm:text-[16px] text-gray-500"
+          initial={reduce ? false : { opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: EASE_OUT, delay: 1.1 }}
+        >
+          Of <span className="text-gray-700 font-medium">{total.toLocaleString()}</span> cafes
+          found, <span className="text-gray-700 font-medium">{read.toLocaleString()}</span> had
+          a page we could read.
+        </motion.p>
+
         <motion.div
-          // grid, not flex-wrap: wrapping put a figure on its own row and left a divider
-          // stranded at the start of the next. Two columns under 640px, four from sm up —
-          // four across on a 360px phone put "1,147" ~70px wide with nothing to spare, so
-          // it steps through a 2×2 block on the narrowest screens instead of squeezing.
-          className="mt-7 sm:mt-11 mx-auto grid grid-cols-2 sm:grid-cols-4 max-w-xs sm:max-w-2xl gap-y-5 sm:gap-y-0 divide-gray-200 [&>*:nth-child(odd)]:border-r sm:[&>*:nth-child(odd)]:border-r-0 sm:divide-x"
+          // Two columns only — these are the two findings, so nothing about the layout should
+          // suggest a longer row was trimmed to fit.
+          className="mt-4 sm:mt-6 mx-auto grid grid-cols-2 max-w-xs sm:max-w-sm divide-x divide-gray-200"
           initial={reduce ? false : { opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.8, delay: 1.15 }}
+          transition={{ duration: 0.8, delay: 1.25 }}
         >
           {[
-            // Four labels kept short and near-equal length on purpose, same reason as
-            // before: a label that wraps to two lines puts a visible step in a row whose
-            // whole job is to be read straight across.
-            { n: total,    label: "cafes found" },
-            { n: read,     label: "pages read" },
             { n: silent,   label: "say nothing" },
             // "say where" rather than "name a source": it is the same fact, it fits the
             // narrow mobile column on one line where the longer phrase wrapped, and it
@@ -436,22 +440,19 @@ function Hero({ stats }: { stats: Props["stats"] }) {
             // is exactly how many do.
             { n: verified, label: "say where" },
           ].map((s, i) => (
-            // Staggered left to right at 90ms so the four land in funnel order rather than
-            // together — the drop from one figure to the next is the point, and arriving in
-            // sequence is what makes it legible as a drop rather than as four facts.
+            // Staggered left to right at 90ms so the two land in funnel order rather than
+            // together — the drop from one figure to the next is the point.
             <motion.div
               key={s.label}
-              className="px-2 sm:px-7 text-center"
+              className="px-3 sm:px-9 text-center"
               initial={reduce ? false : { opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, ease: EASE_OUT, delay: 1.15 + i * 0.09 }}
+              transition={{ duration: 0.5, ease: EASE_OUT, delay: 1.25 + i * 0.09 }}
             >
-              {/* One step smaller than the old three-figure row (text-2xl vs text-3xl) so
-                  "1,147" and its comma still land on one line in a 2-up 360px column. */}
-              <div className="font-display text-2xl sm:text-5xl font-bold text-gray-900 leading-none">
+              <div className="font-display text-4xl sm:text-6xl font-bold text-gray-900 leading-none">
                 <Counter value={s.n} immediate />
               </div>
-              <div className="text-[13px] sm:text-[16px] text-gray-500 mt-2">{s.label}</div>
+              <div className="text-[16px] sm:text-[18px] text-gray-500 mt-2">{s.label}</div>
             </motion.div>
           ))}
         </motion.div>
