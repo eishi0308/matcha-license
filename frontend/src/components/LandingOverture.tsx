@@ -207,12 +207,20 @@ function Hero({ stats }: { stats: Props["stats"] }) {
   // Same source as the disclosure card's denominator, so the hero funnel and the
   // breakdown below can never quote different totals for "we could read this".
   const read     = stats?.assessable ?? 588;
+  // Read, minus everyone who said something — A names a source, B says only
+  // "Japanese matcha". What is left published nothing about origin at all.
+  const silent   = Math.max(0, read - verified - (stats?.byLevel?.B ?? 14));
 
   const go = (q: string) => router.push(q.trim() ? `/map?q=${encodeURIComponent(q.trim())}` : "/map");
 
   // The chip row is gone; the suggestions it carried now cycle through the
   // placeholder, so discovery survives without a second row of controls.
-  const hints = ["Surry Hills", "Uji", "Melbourne", "Fitzroy", "ceremonial"];
+  // Places only. "ceremonial" used to sit here and was wrong twice: it is an
+  // unregulated marketing grade, which is the exact vocabulary the evidence
+  // section refuses, and it is the one hint the label above does not promise.
+  // Uji is not a suburb either, but it is an origin — the thing the headline
+  // is about — so it teaches the same category the other three do.
+  const hints = ["Surry Hills", "Uji", "Melbourne", "Fitzroy"];
   const [hint, setHint] = useState(0);
   const [focused, setFocused] = useState(false);
 
@@ -285,14 +293,20 @@ function Hero({ stats }: { stats: Props["stats"] }) {
         {/* The method, stated once on the whole page. "So" hinges off the headline and
             "what they do say" answers its "won't tell you", which is what earns the search
             below: the page has just told you most cafes are silent, so the field is the
-            way to find the ones that aren't. */}
+            way to find the ones that aren't.
+            This used to read "So we read all 1,147", which was not true — 1,147 is how many
+            cafes were found, and 588 is how many had a page that could be read. Claiming the
+            larger number under the verb "read" overstated the crawl by 559 cafes and put the
+            first screen in direct contradiction with the disclosure card further down. No
+            number here now: the funnel immediately below counts, in the right order, with
+            the right verbs, and the sentence only has to say what was done. */}
         <motion.p
           className="mt-4 sm:mt-6 text-[16px] sm:text-[18px] text-gray-600 max-w-xl mx-auto leading-relaxed"
           initial={reduce ? false : { opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, ease: EASE_EXPO, delay: 0.75 }}
         >
-          So we read all {total.toLocaleString()} — every website, every menu — and quoted
+          So we read every page we could open — website, menu, socials — and quoted
           exactly what they <span className="text-gray-900 font-medium">do</span> say.
           Dated and linked.
         </motion.p>
@@ -388,48 +402,56 @@ function Hero({ stats }: { stats: Props["stats"] }) {
               one affordance inside 100px reads as an interface apologising for itself. */}
         </motion.form>
 
-        {/* Live proof — divided, so the three figures read as one instrument.
-            These were "1,147 cafes mapped / 86 with verified disclosure / 2 cities". Two of
-            those were not findings: the city count is the eyebrow again, and "mapped" is
-            what any directory would claim. They are a funnel now — found, readable, named —
-            and read left to right they are the whole investigation in three numbers, with
-            the attrition visible instead of averaged away. The middle figure is the one no
-            competitor would print, which is exactly why it belongs here: it says out loud
-            that half the sample could not be read, before the reader has to ask. */}
+        {/* Live proof — four figures read as one instrument, funnel order.
+            1,147 was pulled from this row once, on the reasoning that sitting next to 588 it
+            would read as a shortfall the hero couldn't explain. That objection doesn't hold
+            once the sourcing is stated: 1,147 is every business Google's own search matched
+            to a matcha-related query across both cities — a discovery count, not a claim of
+            having read anything. Read next to it, the drop to 588 is not the site failing to
+            reach 559 cafes; it is Google's index not having read them either (no site on
+            file, no page a crawl could resolve). The number is honest as long as its label
+            says what it counts, which "found" does and "read" does not.
+            So it leads again, and the row now runs the whole chain a reader would ask for:
+            found → read → said nothing → named a source. */}
         <motion.div
-          // grid, not flex-wrap: wrapping put one figure on its own row and left
-          // a divider stranded at the start of the next
-          className="mt-7 sm:mt-11 mx-auto grid grid-cols-3 max-w-xl divide-x divide-gray-200"
+          // grid, not flex-wrap: wrapping put a figure on its own row and left a divider
+          // stranded at the start of the next. Two columns under 640px, four from sm up —
+          // four across on a 360px phone put "1,147" ~70px wide with nothing to spare, so
+          // it steps through a 2×2 block on the narrowest screens instead of squeezing.
+          className="mt-7 sm:mt-11 mx-auto grid grid-cols-2 sm:grid-cols-4 max-w-xs sm:max-w-2xl gap-y-5 sm:gap-y-0 divide-gray-200 [&>*:nth-child(odd)]:border-r sm:[&>*:nth-child(odd)]:border-r-0 sm:divide-x"
           initial={reduce ? false : { opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8, delay: 1.15 }}
         >
           {[
-            // Three labels of near-equal length on purpose: the row is one instrument, and
-            // a middle label that wrapped to two lines while its neighbours sat on one put
-            // a visible step in a row whose whole job is to be read straight across.
+            // Four labels kept short and near-equal length on purpose, same reason as
+            // before: a label that wraps to two lines puts a visible step in a row whose
+            // whole job is to be read straight across.
             { n: total,    label: "cafes found" },
             { n: read,     label: "pages read" },
+            { n: silent,   label: "say nothing" },
             // "say where" rather than "name a source": it is the same fact, it fits the
             // narrow mobile column on one line where the longer phrase wrapped, and it
             // closes the headline's sentence — most cafes won't tell you where, and this
             // is exactly how many do.
             { n: verified, label: "say where" },
           ].map((s, i) => (
-            // Staggered left to right at 90ms so the three land in funnel order rather than
+            // Staggered left to right at 90ms so the four land in funnel order rather than
             // together — the drop from one figure to the next is the point, and arriving in
-            // sequence is what makes it legible as a drop rather than as three facts.
+            // sequence is what makes it legible as a drop rather than as four facts.
             <motion.div
               key={s.label}
-              className="px-2 sm:px-9 text-center"
+              className="px-2 sm:px-7 text-center"
               initial={reduce ? false : { opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, ease: EASE_OUT, delay: 1.15 + i * 0.09 }}
             >
-              <div className="font-display text-3xl sm:text-5xl font-bold text-gray-900 leading-none">
+              {/* One step smaller than the old three-figure row (text-2xl vs text-3xl) so
+                  "1,147" and its comma still land on one line in a 2-up 360px column. */}
+              <div className="font-display text-2xl sm:text-5xl font-bold text-gray-900 leading-none">
                 <Counter value={s.n} immediate />
               </div>
-              <div className="text-[16px] text-gray-500 mt-2">{s.label}</div>
+              <div className="text-[13px] sm:text-[16px] text-gray-500 mt-2">{s.label}</div>
             </motion.div>
           ))}
         </motion.div>

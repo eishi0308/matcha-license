@@ -13,7 +13,7 @@ import {
 } from "framer-motion";
 import {
   Leaf, Map, Shield, Search, ArrowRight, CheckCircle2,
-  TrendingUp, Eye, FileText, MessageSquarePlus, ExternalLink, Play, User, ChevronDown,
+  TrendingUp, Eye, FileText, MessageSquarePlus, ExternalLink, Play, User,
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import AuthModal from "@/components/AuthModal";
@@ -742,10 +742,16 @@ function DisclosureBlock({ data }: { data: typeof DEFAULT_DISCLOSURE }) {
   const get = (key: string) => rows.find((r) => r.key === key)!;
 
   // Derived, never written down, so the headline cannot drift from the rows.
-  // Leads on how few disclose rather than how many don't: the scarcity is the
-  // point, and a small number carries it better than a large one.
-  const disclosing = data.japanOnly + data.named;
-  const disclosePct = Math.round((disclosing / checked) * 100);
+  // Odds rather than a percentage: "1 in 7" is a rate a reader can carry out of the
+  // page and apply to the next cafe they walk into, which "17%" is not.
+  // Denominator is the cafes whose page we could read, not every cafe found. Over
+  // all 1,147 this would read 1 in 13, but that rate can only be true if the 559 we
+  // could not reach are all silent — and we do not know that. The narrower claim is
+  // the one the evidence supports.
+  // Numerator is `named` alone: the japanOnly row says only "Japanese matcha", which
+  // is the headline's "won't tell you where" restated as a claim, so it does not
+  // count as telling you — even though it still counts as disclosure on the bar.
+  const odds = Math.round(checked / (data.named || 1));
 
   const num = (n: number) => n.toLocaleString("en-AU");
 
@@ -797,47 +803,25 @@ function DisclosureBlock({ data }: { data: typeof DEFAULT_DISCLOSURE }) {
         padding: "2rem 2.25rem",
       }}
     >
-      {/* The full-height 17% statement immediately above this card already
-          delivers the finding; repeating it here was the same sentence twice.
-          The card now opens straight into how that figure breaks down. */}
+      {/* This read "Where the other 83% leaves you", which was a transition rather than a
+          finding: it pointed at the chart instead of saying anything, and 83% is the
+          complement of the 17% on the screen before, so the card opened by asking the
+          reader to subtract their way back to a number they had just been shown.
+          It states the rate directly now, and closes the headline three screens up —
+          "most cafes won't tell you where" / "1 in 7 tells you". */}
       <p style={TYPE.statement}>
-        Where the other <span style={{ color: ACCENT }}>{100 - disclosePct}%</span> leaves you.
+        <span style={{ color: ACCENT }}>1 in {odds}</span> tells you.
       </p>
-      {/* The denominator, and then the reason for it — on two tiers instead of one.
-          This was a single 55-word block of body copy carrying both. The rigour in it is
-          the most valuable thing on the card: refusing to count a cafe as silent when we
-          simply could not reach its page is the difference between a survey and a smear,
-          and deleting it to tidy the layout would have cost the card its credibility. But
-          a reader scanning a chart will not read 55 words, so the sentence they need to
-          read the axis stays visible, and the audit trail they only need if they doubt us
-          moves one tap away. Native <details> so it is keyboard-operable, findable by
-          in-page search, and open by default for anyone printing or using a screen reader
-          that flattens the summary. */}
+      {/* The denominator, and nothing else. A "Why 588 and not 1,147?" disclosure used to
+          sit under this line, defending the gap between the two figures. It is gone because
+          the gap is gone: the page no longer claims to have read 1,147, so there is nothing
+          left to excuse. The 559 we could not reach was never a finding about cafes anyway —
+          it is a limit of the crawl, and a survey that footnotes its own tooling at the
+          reader is asking to be graded on effort. It stays where it belongs: an unfilled,
+          labelled segment on the bar below, visible without being argued. */}
       <p className="mt-3" style={TYPE.caption}>
         Of the {num(checked)} cafés whose page we could read, across Sydney and Melbourne.
       </p>
-      <details className="group mt-1">
-        {/* py-2.5 takes the row from its natural 24px to a 44px tap target. The padding is
-            vertical only and the row is inline-flex, so the hit area grows without the
-            label appearing to float away from the sentence it belongs to. */}
-        <summary
-          className="inline-flex cursor-pointer list-none items-center gap-1.5 py-2.5 rounded outline-none transition-colors hover:text-[var(--text-primary)] focus-visible:ring-2 focus-visible:ring-[var(--accent)] [&::-webkit-details-marker]:hidden"
-          style={{ ...TYPE.caption, fontSize: "1rem" }}
-        >
-          Why {num(checked)} and not {num(data.total)}?
-          <ChevronDown
-            size={15}
-            aria-hidden
-            className="transition-transform duration-200 ease-out group-open:rotate-180"
-          />
-        </summary>
-        <p className="mt-2 max-w-prose" style={{ ...TYPE.caption, fontSize: "1rem" }}>
-          For the other {num(data.unchecked)} of {num(data.total)} there was nothing to
-          read — no page listed, a profile behind a login, or a site that no longer loads.
-          They are left uncounted rather than counted as silent: &ldquo;we could not
-          ask&rdquo; is not the same finding as &ldquo;they do not say&rdquo;.
-        </p>
-      </details>
 
       <div
         className="flex flex-wrap items-center"
